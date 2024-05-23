@@ -839,7 +839,7 @@ s
             # object. If we can't get it now, the GL
             # object creation will be re-scheduled on
             # the next call to _draw (via _getGLObjects).
-            if not self._setGLContext():
+            if not self.setGLContext():
 
                 # Clear the pending flag so
                 # this GLObject creation
@@ -1460,7 +1460,7 @@ s
         if width == 0 or height == 0:
             return
 
-        if not self._setGLContext():
+        if not self.setGLContext():
             return
 
         gl.glViewport(0, 0, width, height)

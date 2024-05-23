@@ -970,7 +970,7 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if width == 0 or height == 0:
             return
 
-        if not self._setGLContext():
+        if not self.setGLContext():
             return
 
         gl.glViewport(0, 0, width, height)

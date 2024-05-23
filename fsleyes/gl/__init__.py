@@ -1068,7 +1068,7 @@ class OffScreenCanvasTarget:
                 id(self)))
 
 
-    def _setGLContext(self):
+    def setGLContext(self):
         """Configures the GL context to render to this canvas. """
         return getGLContext().setTarget(self)
 
@@ -1141,7 +1141,7 @@ class OffScreenCanvasTarget:
         subclasses.
         """
 
-        self._setGLContext()
+        self.setGLContext()
         self._initGL()
         self.__target.shape = self.__width, self.__height
 
@@ -1156,7 +1156,7 @@ class OffScreenCanvasTarget:
         :meth:`draw`).
         """
 
-        self._setGLContext()
+        self.setGLContext()
         return self.__target.getBitmap()
 
 
@@ -1268,6 +1268,11 @@ class WXGLCanvasTarget:
         self.__freezeDraw        = False
         self.__freezeSwapBuffers = False
         self.__context           = context
+
+        # configure the GL context for rendering
+        # to this canvas (must be done before any
+        # calls to gl functions)
+        self.setGLContext()
 
         # All renders are directed to an off-screen
         # frame buffer, which is then drawn to the
@@ -1425,7 +1430,7 @@ class WXGLCanvasTarget:
                 # set as the target for the GL
                 # context.
                 if not self.__freezeDraw:
-                    self._setGLContext()
+                    self.setGLContext()
                 self.SwapBuffers()
 
             # If not swapping the front/back
@@ -1462,7 +1467,16 @@ class WXGLCanvasTarget:
             wx.CallAfter(doInit)
 
 
-    def _setGLContext(self):
+    def IsShownOnScreen(self):
+        """Overrides ``wx.Window.IsShownOnScreen``. On Windows, delegates to
+        ``IsShown``.
+        """
+        if fslplatform.os.lower() == 'windows':
+            return super().IsShown()
+        return super().IsShownOnScreen()
+
+
+    def setGLContext(self):
         """Configures the GL context for drawing to this canvas.
 
         This method should be called before any OpenGL operations related to
@@ -1531,7 +1545,7 @@ class WXGLCanvasTarget:
         only if ``FreezeSwapBuffers`` is not active.
         """
         if not self.__freezeSwapBuffers:
-            if self._setGLContext():
+            if self.setGLContext():
                 super(WXGLCanvasTarget, self).SwapBuffers()
 
 

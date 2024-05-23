@@ -58,7 +58,7 @@ class OrthoLabels:
         :arg canvases:    The :class:`.SliceCanvas` instances to be labelled.
         """
 
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name        = f'{type(self).__name__}_{id(self)}'
         self.__orthoOpts   = orthoOpts
         self.__displayCtx  = displayCtx
         self.__overlayList = overlayList

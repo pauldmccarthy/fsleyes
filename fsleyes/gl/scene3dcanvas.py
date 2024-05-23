@@ -612,7 +612,7 @@ class Scene3DCanvas:
             if overlay not in self.__glObjects:
                 return
 
-            if not self._setGLContext():
+            if not self.setGLContext():
                 self.__glObjects.pop(overlay)
                 return
 
@@ -761,7 +761,7 @@ class Scene3DCanvas:
         if self.destroyed:
             return
 
-        if not self._setGLContext():
+        if not self.setGLContext():
             return
 
         opts          = self.opts
