@@ -29,7 +29,7 @@ from . import                          base
 log = logging.getLogger(__name__)
 
 
-_FSLEYES_URL = 'https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes'
+_FSLEYES_URL = 'https://fsl.fmrib.ox.ac.uk/fsl/docs/#/utilities/fsleyes'
 """A url to direct the user towards to download the latest version of FSLeyes.
 """
 
