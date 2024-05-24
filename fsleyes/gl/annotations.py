@@ -35,11 +35,12 @@ following annotation types are defined:
 import time
 import logging
 
-import numpy       as np
-import OpenGL.GL   as gl
+import numpy as np
 
 import fsl.transform.affine     as affine
+
 import fsleyes_props            as props
+from   fsleyes.utils        import lazyimport
 import fsleyes.gl               as fslgl
 import fsleyes.gl.globject      as globject
 import fsleyes.gl.shaders       as shaders
@@ -48,6 +49,9 @@ import fsleyes.gl.resources     as glresources
 import fsleyes.gl.textures      as textures
 import fsleyes.gl.text          as gltext
 import fsleyes.gl.textures.data as texdata
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 log = logging.getLogger(__name__)
@@ -167,66 +171,56 @@ class Annotations(props.HasProperties):
         return shader
 
 
-    def line(self, *args, **kwargs):
-        """Queues a line for drawing - see the :class:`Line` class. """
+    def __create(self, atype, *args, **kwargs):
+        """Used by the annotation creation methods below. Creates and
+        enqueues an annotation of type ``atype``.
+        """
+        self.__canvas.setGLContext()
         hold  = kwargs.pop('hold',  False)
         fixed = kwargs.pop('fixed', True)
-        obj   = Line(self, *args, **kwargs)
+        obj   = atype(self, *args, **kwargs)
         return self.obj(obj, hold, fixed)
+
+
+    def line(self, *args, **kwargs):
+        """Queues a line for drawing - see the :class:`Line` class. """
+        return self.__create(Line, *args, **kwargs)
 
 
     def arrow(self, *args, **kwargs):
         """Queues an arrow for drawing - see the :class:`Arrow` class. """
-        hold  = kwargs.pop('hold',  False)
-        fixed = kwargs.pop('fixed', True)
-        obj   = Arrow(self, *args, **kwargs)
-        return self.obj(obj, hold, fixed)
+        return self.__create(Arrow, *args, **kwargs)
 
 
     def point(self, *args, **kwargs):
         """Queues a point for drawing - see the :class:`Point` class. """
-        hold  = kwargs.pop('hold',  False)
-        fixed = kwargs.pop('fixed', True)
-        obj   = Point(self, *args, **kwargs)
-        return self.obj(obj, hold, fixed)
+        return self.__create(Point, *args, **kwargs)
 
 
     def rect(self, *args, **kwargs):
         """Queues a rectangle for drawing - see the :class:`Rectangle` class.
         """
-        hold  = kwargs.pop('hold',  False)
-        fixed = kwargs.pop('fixed', True)
-        obj   = Rect(self, *args, **kwargs)
-        return self.obj(obj, hold, fixed)
+        return self.__create(Rect, *args, **kwargs)
 
 
     def ellipse(self, *args, **kwargs):
         """Queues a circle for drawing - see the :class:`Ellipse` class.
         """
-        hold  = kwargs.pop('hold',  False)
-        fixed = kwargs.pop('fixed', True)
-        obj   = Ellipse(self, *args, **kwargs)
-        return self.obj(obj, hold, fixed)
+        return self.__create(Ellipse, *args, **kwargs)
 
 
     def selection(self, *args, **kwargs):
         """Queues a selection for drawing - see the :class:`VoxelSelection`
         class.
         """
-        hold  = kwargs.pop('hold',  False)
-        fixed = kwargs.pop('fixed', True)
-        obj   = VoxelSelection(self, *args, **kwargs)
-        return self.obj(obj, hold, fixed)
+        return self.__create(VoxelSelection, *args, **kwargs)
 
 
     def text(self, *args, **kwargs):
         """Queues a text annotation for drawing - see the
         :class:`TextAnnotation` class.
         """
-        hold  = kwargs.pop('hold',  False)
-        fixed = kwargs.pop('fixed', True)
-        obj   = TextAnnotation(self, *args, **kwargs)
-        return self.obj(obj, hold, fixed)
+        return self.__create(TextAnnotation, *args, **kwargs)
 
 
     def obj(self, obj, hold=False, fixed=True):

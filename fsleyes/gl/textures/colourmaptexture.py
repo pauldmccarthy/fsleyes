@@ -12,15 +12,17 @@
 import logging
 import collections.abc as abc
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
 import fsleyes_widgets.utils.colourbarbitmap as cbarbmp
-
-from . import texture
+from   fsleyes.gl.textures               import texture
+from   fsleyes.utils                     import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class ColourMapTexture(texture.Texture):

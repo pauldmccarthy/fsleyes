@@ -11,19 +11,20 @@ by the :class:`.SliceCanvas` class to store a collection of off-screen
 """
 
 
-from __future__ import division
-
 import logging
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
-import fsleyes.gl.routines as glroutines
-import fsl.utils.idle      as idle
-from . import                 rendertexture
+from   fsl.utils           import idle
+import fsleyes.gl.routines     as glroutines
+from   fsleyes.gl.textures import rendertexture
+from   fsleyes.utils       import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class RenderTextureStack:

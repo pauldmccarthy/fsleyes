@@ -10,12 +10,15 @@ object to render text to a GL canvas.
 """
 
 
-import OpenGL.GL as gl
-import numpy     as np
+import numpy as np
 
-import fsleyes.gl.textures              as textures
-import fsleyes.gl.routines              as glroutines
 import fsleyes_widgets.utils.textbitmap as textbmp
+from   fsleyes.gl                   import textures
+import fsleyes.gl.routines              as glroutines
+from   fsleyes.utils                import lazyimport
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class Text:

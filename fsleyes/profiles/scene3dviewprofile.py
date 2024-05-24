@@ -11,18 +11,21 @@
 
 import logging
 
-import              wx
-import numpy     as np
-import OpenGL.GL as gl
+import          wx
+import numpy as np
 
-import fsleyes_props        as props
-import fsl.transform.affine as affine
-import fsl.utils.idle       as idle
-import fsleyes.profiles     as profiles
-import fsleyes.actions      as actions
+import fsleyes_props      as props
+from   fsl.transform import affine
+from   fsl.utils     import idle
+from   fsleyes       import profiles
+from   fsleyes       import actions
+from   fsleyes.utils import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class Scene3DViewProfile(profiles.Profile):

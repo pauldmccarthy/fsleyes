@@ -190,16 +190,28 @@ import sys
 import logging
 import platform
 
-import fsl.utils.idle                     as idle
-import fsl.version                        as fslversion
+from   fsl.utils                      import idle
 from   fsl.utils.platform import platform as fslplatform
+import fsl.version                        as fslversion
 import fsleyes_widgets                    as fwidgets
+from   fsleyes.utils                  import lazyimport
+
+import OpenGL  # noqa
 
 
 log = logging.getLogger(__name__)
 
 
-import OpenGL  # noqa
+GL = lazyimport('OpenGL.GL', 'fsleyes.gl.GL')
+"""This attribute contains a reference to the ``OpenGL.GL`` module. It is
+available to other parts of the code base as an alternative to importing
+the ``OpenGL.GL`` module directly.
+
+This module is lazily imported, because importing the ``OpenGL.GL`` module
+causes the GL backend (GLX, EGL, etc) to be selected and frozen (i.e. once
+selected, it cannot be changed). This is because we need an open window
+before we know which back end needs to be selected.
+"""
 
 
 # Make PyOpenGL throw an error, instead of implicitly
@@ -236,45 +248,73 @@ GL_RENDERER = None
 """
 
 
-def _selectPyOpenGLPlatform():
-    """Pyopengl sometimes doesn't select a suitable platform, so in some
-    circumstances we need to force things (but not if ``PYOPENGL_PLATFORM``
-    is already set in the environment).
+def selectPyOpenGLPlatform(offscreen=False):
+    """Set the ``PYOPENGL_PLATFORM`` environment variable. Called by the
+    :class:`GLContext` class during initialisation.  Not intended to be called
+    from any other location.
+
+    1. If ``PYOPENGL_PLATFORM`` is already set, this function does nothing.
+    2. If ``offscreen=True``, or we appear to be running on a headless system,
+       ``PYOPENGL_PLATFORM`` is set to ``'osmesa'``.
+    3. If running on a system other than Linux, this function does nothing.
+
+    When running on Linux/Wayland, PyOpenGL will select EGL as its backend
+    platform, which is not always the correct choice, as this depends on which
+    backend wxPython/wxWidgets has been compiled to use.  So in some
+    circumstances we need to force PyOpenGL to select a different platform, by
+    setting the ``PYOPENGL_PLATFORM`` environment variable.
+
+    Identifying the correct value is annoyingly complicated, and involves
+    determining whether wxPython/wxWidgets was compiled to use EGL or GLX for
+    its ``GLCanvas``.
+
+    For certain wxPython builds, this is easy:
+      - All GTK2 versions of wxPython/wxWidgets use GLX.
+      - All versions of wxPython older than 4.1.1 (wxWidgets ~= 3.1.4) use GLX.
+
+    Versions of wxPython 4.1.1 or newer may have been compiled to use either
+    GLX or EGL, and there is no direct means of knowing which. This function
+    uses a heuristic - testing whether the ``GLX_ARB_multisample`` extension
+    is available - it should be available when GLX has been initialised, but
+    not for systems using EGL.
+
+    Note that this function must be called after a wxPython frame and GL
+    context have been created (via :func:`fsleyes.gl.getGLContext`), but
+    before import of any PyOpenGL modules (with the exception of the top-level
+    ``OpenGL`` package). The ``PYOPENGL_PLATFORM`` variable must be set before
+    any ``OpenGL`` sub-modules are imported, and the selected platform cannot
+    be changed after import.
     """
+
+    offscreen = offscreen or (not fwidgets.canHaveGui())
+    plat      = fslplatform.os.lower()
+
+    # Do nothing if PYOPENGL_PLATFORM is already set
     if 'PYOPENGL_PLATFORM' in os.environ:
         return
 
-    # If no display, osmesa on all platforms
-    if not fwidgets.canHaveGui():
+    # Do nothing on windows
+    if plat == 'windows':
+        return
+
+    # If no display, osmesa on macOS/linux
+    if offscreen:
+        log.debug('Setting PYOPENGL_PLATFORM to osmesa')
         os.environ['PYOPENGL_PLATFORM'] = 'osmesa'
         return
 
     # We only need special handling on linux
-    if not fslplatform.os.lower() == 'linux':
+    if plat != 'linux':
         return
 
-    wxver  = fwidgets.wxVersion()
-    wxplat = fwidgets.wxPlatform()
+    # Test whether GLX_ARB_multisample is available -
+    # if it is, we assume that GLX has been initialised
+    ctx = getGLContext()
+    if ctx.canvas.IsExtensionSupported(b'GLX_ARB_multisample'): plat = 'x11'
+    else:                                                       plat = 'egl'
 
-    # Don't know what version of wxpython
-    # we have - don't do anything
-    if wxver is None:
-        return
-
-    # GTK3 versions of wxpython>=4.1.1 use EGL
-    # for GL initialisation. All older wxpython
-    # versions, and all GTK2 versions, use GLX.
-    #
-    # PyOpenGL>=3.1.6 will use EGL if it detects
-    # that it is running under Wayland.  But this
-    # breaks things if we have a GTK2 wxpython.
-    if wxplat == fwidgets.WX_GTK2:
-        os.environ['PYOPENGL_PLATFORM'] = 'x11'
-    elif fslversion.compareVersions(wxver, '4.1.1') >= 0:
-        os.environ['PYOPENGL_PLATFORM'] = 'egl'
-
-
-_selectPyOpenGLPlatform()
+    log.debug('Setting PYOPENGL_PLATFORM to %s', plat)
+    os.environ['PYOPENGL_PLATFORM'] = plat
 
 
 def glIsSoftwareRenderer():
@@ -386,7 +426,6 @@ def bootstrap(glVersion=None):
                     version will be used.
     """
 
-    import OpenGL.GL             as gl
     import fsleyes.gl.gl14       as gl14
     import fsleyes.gl.gl21       as gl21
     import fsleyes.gl.gl33       as gl33
@@ -398,7 +437,7 @@ def bootstrap(glVersion=None):
         return
 
     if glVersion is None:
-        glver = gl.glGetString(gl.GL_VERSION).decode('latin1').split()[0]
+        glver = GL.glGetString(GL.GL_VERSION).decode('latin1').split()[0]
         major, minor = [int(v) for v in glver.split('.')][:2]
     else:
         major, minor = glVersion
@@ -432,9 +471,9 @@ def bootstrap(glVersion=None):
 
         if not all(hasExtension(e, 2.1) for e in exts):
             log.warning('One of these OpenGL extensions is '
-                        'not available: [{}]. Falling back '
-                        'to an older OpenGL implementation.'
-                        .format(', '.join(exts)))
+                        'not available: [%s]. Falling back '
+                        'to an older OpenGL implementation.',
+                        ', '.join(exts))
             verstr = '1.4'
             glpkg  = gl14
 
@@ -466,9 +505,9 @@ def bootstrap(glVersion=None):
         dc.OVERLAY_TYPES['Image']       .remove('tensor')
         dc.OVERLAY_TYPES['Image']       .remove('mip')
 
-    renderer = gl.glGetString(gl.GL_RENDERER).decode('latin1')
-    log.debug('Using OpenGL {} implementation with renderer {}'.format(
-        verstr, renderer))
+    renderer = GL.glGetString(GL.GL_RENDERER).decode('latin1')
+    log.debug('Using OpenGL %s implementation with renderer %s',
+              verstr, renderer)
 
     # Import GL version-specific sub-modules
     globjects = ['glvolume', 'glrgbvolume', 'glrgbvector', 'gllinevector',
@@ -476,7 +515,7 @@ def bootstrap(glVersion=None):
                  'gltractogram']
 
     for globj in globjects:
-        modname = '{}_funcs'.format(globj)
+        modname = f'{globj}_funcs'
         setattr(thismod, modname, getattr(glpkg, modname, None))
 
     thismod.GL_VERSION       = str(glVersion)
@@ -676,6 +715,10 @@ class GLContext:
         # dictated by PYOPENGL_PLATFORM.
         # Otherewise we use wx if possible.
         if offscreen and (osmesa or (not canHaveGui)):
+            # Make sure PyOpenGL is set to use
+            # osmesa as its backend before
+            # creating an osmesa GL context
+            selectPyOpenGLPlatform(offscreen=True)
             self.__createOSMesaContext()
             ready()
             return
@@ -716,6 +759,11 @@ class GLContext:
 
             self.__createWXGLContext(requestVersion=requestVersion)
 
+            # Once a GL context has been created, we
+            # can determine whether PyOpenGL should
+            # be using EGL or GLX
+            selectPyOpenGLPlatform()
+
             # If we've created and started
             # our own loop, kill it
             if self.__ownApp:
@@ -728,10 +776,8 @@ class GLContext:
                     ready()
 
                 except Exception as e:
-                    log.warning('GLContext callback function raised '
-                                '{}: {}'.format(type(e).__name__,
-                                                str(e)),
-                                                exc_info=True)
+                    log.warning('GLContext callback function raised %s: %s',
+                                type(e).__name__, str(e), exc_info=True)
                     if raiseErrors:
                         raise e
 
@@ -755,6 +801,14 @@ class GLContext:
         if self.__ownApp:
             log.debug('Starting temporary wx.MainLoop')
             self.__app.MainLoop()
+
+
+    @property
+    def canvas(self):
+        """Return a reference to the ``wx.glcanvas.GLCanvas`` that was used
+        to create the GL context.
+        """
+        return self.__canvas
 
 
     def destroy(self):
@@ -904,10 +958,7 @@ class GLContext:
         #  2. In 4.1.1, the GLContext interface changed
         #     so that we have to create and pass a
         #     GLContextAttrs object
-        #  3. Step 2 works on macOS, but on linux only
-        #     seems to work with GTK3/wayland/EGL builds
-        #     of wxpython.
-        #  4. In order to find out whether we can use
+        #  3. In order to find out whether we can use
         #     OpenGL 3.3, we have to create a GLContext,
         #     and check whether it isOK().
         #
@@ -927,12 +978,15 @@ class GLContext:
                 coreAttrs = wxgl.GLContextAttrs()
                 coreAttrs.OGLVersion(3, 3)
                 coreAttrs.CoreProfile()
+                coreAttrs.PlatformDefaults()
                 coreAttrs.EndList()
                 candidates.append({'ctxAttrs' : coreAttrs})
+
             # Request compat profile if we
             # can't request a core profile.
             compatAttrs = wxgl.GLContextAttrs()
             compatAttrs.CompatibilityProfile()
+            compatAttrs.PlatformDefaults()
             compatAttrs.EndList()
             candidates.append({'ctxAttrs' : compatAttrs})
 
@@ -943,7 +997,7 @@ class GLContext:
 
         log.debug('Creating wx.GLContext')
 
-        for  candidate in candidates:
+        for candidate in candidates:
             if other is not None:
                 ctx = wxgl.GLContext(target, other=other, **candidate)
             else:
@@ -953,6 +1007,7 @@ class GLContext:
                 break
             if ctx.IsOK():
                 break
+
         else:
             raise RuntimeError('Cannot create GL context')
 
@@ -972,7 +1027,6 @@ class GLContext:
         ``__context``.
         """
 
-        import OpenGL.GL              as gl
         import OpenGL.raw.osmesa.mesa as osmesa
         import OpenGL.arrays          as glarrays
 
@@ -982,10 +1036,10 @@ class GLContext:
         # for the off-screen context.
         buffer  = glarrays.GLubyteArray.zeros((640, 480, 4))
         context = osmesa.OSMesaCreateContextExt(
-            gl.GL_RGBA, 8, 4, 0, None)
+            GL.GL_RGBA, 8, 4, 0, None)
         osmesa.OSMesaMakeCurrent(context,
                                  buffer,
-                                 gl.GL_UNSIGNED_BYTE,
+                                 GL.GL_UNSIGNED_BYTE,
                                  640,
                                  480)
 
@@ -1014,7 +1068,7 @@ class OffScreenCanvasTarget:
                 id(self)))
 
 
-    def _setGLContext(self):
+    def setGLContext(self):
         """Configures the GL context to render to this canvas. """
         return getGLContext().setTarget(self)
 
@@ -1087,7 +1141,7 @@ class OffScreenCanvasTarget:
         subclasses.
         """
 
-        self._setGLContext()
+        self.setGLContext()
         self._initGL()
         self.__target.shape = self.__width, self.__height
 
@@ -1102,7 +1156,7 @@ class OffScreenCanvasTarget:
         :meth:`draw`).
         """
 
-        self._setGLContext()
+        self.setGLContext()
         return self.__target.getBitmap()
 
 
@@ -1205,7 +1259,7 @@ class WXGLCanvasTarget:
            'software' in GL_RENDERER.lower():
 
             log.debug('Creating separate GL context for '
-                      'WXGLCanvasTarget {id(self)}')
+                      'WXGLCanvasTarget %s', id(self))
 
             context = GLContext(other=context, target=self)
 
@@ -1214,6 +1268,11 @@ class WXGLCanvasTarget:
         self.__freezeDraw        = False
         self.__freezeSwapBuffers = False
         self.__context           = context
+
+        # configure the GL context for rendering
+        # to this canvas (must be done before any
+        # calls to gl functions)
+        self.setGLContext()
 
         # All renders are directed to an off-screen
         # frame buffer, which is then drawn to the
@@ -1338,7 +1397,6 @@ class WXGLCanvasTarget:
         # honours FreezeDraw and FreezeSwapBuffers.
         subClassDraw = self._draw
 
-        import OpenGL.GL as gl
         import fsleyes.gl.routines as glroutines
 
         def drawWrapper(*a, **kwa):
@@ -1361,7 +1419,7 @@ class WXGLCanvasTarget:
 
                 # Draw the fbo contents to the main
                 # frame buffer
-                gl.glViewport(0, 0, width, height)
+                GL.glViewport(0, 0, width, height)
                 glroutines.clear((0, 0, 0, 0))
                 self.__fbo.drawOnBounds(0, -1, 1, -1, 1, 0, 1)
 
@@ -1372,7 +1430,7 @@ class WXGLCanvasTarget:
                 # set as the target for the GL
                 # context.
                 if not self.__freezeDraw:
-                    self._setGLContext()
+                    self.setGLContext()
                 self.SwapBuffers()
 
             # If not swapping the front/back
@@ -1381,7 +1439,7 @@ class WXGLCanvasTarget:
             # operations, otherwise we may lose
             # them.
             elif not self.__freezeDraw:
-                gl.glFlush()
+                GL.glFlush()
 
         def doInit(*a):
 
@@ -1409,7 +1467,16 @@ class WXGLCanvasTarget:
             wx.CallAfter(doInit)
 
 
-    def _setGLContext(self):
+    def IsShownOnScreen(self):
+        """Overrides ``wx.Window.IsShownOnScreen``. On Windows, delegates to
+        ``IsShown``.
+        """
+        if fslplatform.os.lower() == 'windows':
+            return super().IsShown()
+        return super().IsShownOnScreen()
+
+
+    def setGLContext(self):
         """Configures the GL context for drawing to this canvas.
 
         This method should be called before any OpenGL operations related to
@@ -1418,8 +1485,8 @@ class WXGLCanvasTarget:
         if not (fwidgets.isalive(self) and self.IsShownOnScreen()):
             return False
 
-        log.debug('Setting context target to {} ({})'.format(
-            type(self).__name__, id(self)))
+        log.debug('Setting context target to %s (%s)',
+                  type(self).__name__, id(self))
 
         return self.__context.setTarget(self)
 
@@ -1478,7 +1545,7 @@ class WXGLCanvasTarget:
         only if ``FreezeSwapBuffers`` is not active.
         """
         if not self.__freezeSwapBuffers:
-            if self._setGLContext():
+            if self.setGLContext():
                 super(WXGLCanvasTarget, self).SwapBuffers()
 
 
@@ -1487,3 +1554,51 @@ class WXGLCanvasTarget:
         rendered scene as an RGBA bitmap.
         """
         return self.__fbo.getBitmap()
+
+
+
+def glTypeName(gltype):
+    """Returns the name of a GL type.
+
+    Given an OpenGL type identifier, e.g. ``OpenGL.GL.GL_FLOAT``, returns
+    the type name as a string, e.g. ``'GL_FLOAT'``.
+
+    This function is only intended to be used for log messages and debugging.
+    """
+
+    import OpenGL.GL.ARB.texture_float as arbtf
+
+    return {
+        GL.GL_UNSIGNED_BYTE       : 'GL_UNSIGNED_BYTE',
+        GL.GL_UNSIGNED_SHORT      : 'GL_UNSIGNED_SHORT',
+        GL.GL_FLOAT               : 'GL_FLOAT',
+
+        GL.GL_ALPHA               : 'GL_ALPHA',
+        GL.GL_RED                 : 'GL_RED',
+        GL.GL_LUMINANCE           : 'GL_LUMINANCE',
+        GL.GL_RGB                 : 'GL_RGB',
+        GL.GL_RGBA                : 'GL_RGBA',
+
+        GL.GL_LUMINANCE8          : 'GL_LUMINANCE8',
+        GL.GL_LUMINANCE16         : 'GL_LUMINANCE16',
+
+        # These non-standard types are only
+        # used when OpenGL <= 2.1 is in use,
+        arbtf.GL_LUMINANCE16F_ARB : 'GL_LUMINANCE16F',
+        arbtf.GL_LUMINANCE32F_ARB : 'GL_LUMINANCE32F',
+
+        GL.GL_R32F                : 'GL_R32F',
+
+        GL.GL_ALPHA8              : 'GL_ALPHA8',
+
+        GL.GL_R8                  : 'GL_R8',
+        GL.GL_R16                 : 'GL_R16',
+
+        GL.GL_RGB8                : 'GL_RGB8',
+        GL.GL_RGB16               : 'GL_RGB16',
+        GL.GL_RGB32F              : 'GL_RGB32F',
+
+        GL.GL_RGBA8               : 'GL_RGBA8',
+        GL.GL_RGBA16              : 'GL_RGBA16',
+        GL.GL_RGBA32F             : 'GL_RGBA32F',
+    }[gltype]

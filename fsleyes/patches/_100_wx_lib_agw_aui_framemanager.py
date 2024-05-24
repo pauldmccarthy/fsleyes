@@ -1,32 +1,37 @@
 #!/usr/bin/env python
 
 
-import                                  wx
-import wx.lib.agw.aui                as aui
-import wx.lib.agw.aui.framemanager   as auifm
-import fsleyes_widgets               as fwidgets
-import fsleyes.controls.controlpanel as ctrlpanel
+import                                     wx
+import wx.lib.agw.aui                     as aui
+import wx.lib.agw.aui.framemanager        as auifm
+from   fsl.utils.platform import platform as fslplatform
+import fsleyes_widgets                    as fwidgets
+import fsleyes.controls.controlpanel      as ctrlpanel
 
 
 class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
     """Here I am monkey patching the
     ``wx.agw.aui.framemanager.AuiFloatingFrame.__init__`` method.
 
-    I am doing this because I have observed some strange behaviour when running
-    a remote instance of this application over an SSH/X11 session, with the X11
-    server (i.e. the local machine) running in OS X. When a combobox is embedded
-    in a floating frame (either a pane or a toolbar), its dropdown list appears
-    underneath the frame, meaning that the user is unable to actually select any
-    items from the list!
+    The ``wx.FRAME_TOOL_WINDOW`` style, as passed to the ``wx.MiniFrame``
+    constructor (from which the ``AuiFloatingFrame`` class derives) seems to
+    cause problems in various environments.
 
-    I have only seen this behaviour when using XQuartz on macOS.
+    When this style flag is active:
 
-    Ultimately, this appears to be caused by the ``wx.FRAME_TOOL_WINDOW``
-    style, as passed to the ``wx.MiniFrame`` constructor (from which the
-    ``AuiFloatingFrame`` class derives). Removing this style flag fixes the
-    problem, so this is exactly what I'm doing. I haven't looked any deeper
-    into the situation.
+     - When running over an SSH/X11 session using XQuartz running on macOS,
+       When a combobox is embedded in a floating frame (either a pane or a
+       toolbar), its dropdown list appears underneath the frame, meaning that
+       the user is unable to actually select any items from the list!
 
+     - When running under the Windows wslg wayland servver (with
+       GDK_BACKEND=x11, which is required for versions of wxPython/wxWidgets
+       that have been compiled to use GLX for OpenGL), all ``wx.MiniFrame``
+       instances seem to be completely unresponsive to user interaction.
+
+    Removing this style flag seems to resolve both of the above problems, so
+    this is exactly what I'm doing. I haven't looked any deeper into the
+    situation.
 
     This class also overrieds the ``SetPaneWindow`` method, because under gtk3,
     the maximum size if a frame musr be set.
@@ -48,8 +53,9 @@ class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
                      wx.FRAME_NO_TASKBAR      |
                      wx.CLIP_CHILDREN)
 
-        if fwidgets.inSSHSession():
-            style &= ~wx.FRAME_TOOL_WINDOW
+        # disable FRAME_TOOL_WINDOW if
+        # running over X11/SSH or in WSL
+        style &= ~wx.FRAME_TOOL_WINDOW
 
         kwargs['style'] = style
 
@@ -57,8 +63,7 @@ class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
 
 
     def SetPaneWindow(self, pane):
-        """Make sure that floated toolbars are sized correctly.
-        """
+        """Make sure that floated toolbars are sized correctly. """
         super().SetPaneWindow(pane)
         if isinstance(pane.window, ctrlpanel.ControlToolBar):
             size = self.GetBestSize()
@@ -87,15 +92,15 @@ def _AuiDockingGuide_init(self, *args, **kwargs):
                  wx.FRAME_NO_TASKBAR  |
                  wx.NO_BORDER)
 
-    if fwidgets.inSSHSession():
-        style &= ~wx.FRAME_TOOL_WINDOW
+    # Disable wx.FRAME_TOOL_WINDOW style
+    style &= ~wx.FRAME_TOOL_WINDOW
 
     kwargs['style'] = style
 
     _AuiDockingGuide_real_init(self, *args, **kwargs)
 
 
-if fwidgets.inSSHSession():
+if fwidgets.inSSHSession() or fslplatform.wsl:
     aui  .AuiFloatingFrame       = MyAuiFloatingFrame
     auifm.AuiFloatingFrame       = MyAuiFloatingFrame
     _AuiDockingGuide_real_init   = aui.AuiDockingGuide.__init__
