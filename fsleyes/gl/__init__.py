@@ -986,7 +986,7 @@ class GLContext:
             # can't request a core profile.
             compatAttrs = wxgl.GLContextAttrs()
             compatAttrs.CompatibilityProfile()
-            coreAttrs.PlatformDefaults()
+            compatAttrs.PlatformDefaults()
             compatAttrs.EndList()
             candidates.append({'ctxAttrs' : compatAttrs})
 
