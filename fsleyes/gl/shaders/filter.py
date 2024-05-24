@@ -12,12 +12,14 @@ to loading and running simple filter shader programs, which require a
 
 import collections
 
-import OpenGL.GL            as gl
-
 import fsl.transform.affine as affine
 import fsleyes.gl           as fslgl
 import fsleyes.gl.routines  as glroutines
-import fsleyes.gl.shaders   as shaders
+from   fsleyes.gl       import shaders
+from   fsleyes.utils    import lazyimport
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 GL14_CONSTANTS = collections.defaultdict(dict, {

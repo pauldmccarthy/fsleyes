@@ -92,7 +92,7 @@ rst_epilog = """
 .. |fsl_version|     replace:: 6.0.4
 
 .. |fsleyes_homepage| replace:: FSLeyes
-.. _fsleyes_homepage: https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes
+.. _fsleyes_homepage: https://fsl.fmrib.ox.ac.uk/fsl/docs/#/utilities/fsleyes
 
 
 .. |fsleyes_repository| replace:: FSLeyes source code

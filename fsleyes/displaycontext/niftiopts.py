@@ -75,7 +75,7 @@ oriented according to this space, so if the input data is in neurological
 orientation, these vectors need to be inverted along the x axis.
 
 
-http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FLIRT/FAQ#What_is_the_format_of_the_matrix_used_by_FLIRT.2C_and_how_does_it_relate_to_the_transformation_parameters.3F
+https://fsl.fmrib.ox.ac.uk/fsl/docs/#/registration/flirt/faq?id=what-is-the-format-of-the-matrix-used-by-flirt-and-how-does-it-relate-to-the-transformation-parameters
 
 
 What is a voxel?

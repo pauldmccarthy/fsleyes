@@ -10,15 +10,18 @@ various :class:`.GLObject` classes for managing texture resources.
 """
 
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
-import fsl.data.image                   as fslimage
-import fsl.transform.affine             as affine
+import fsl.data.image             as fslimage
+from   fsl.transform          import affine
 
-import fsleyes.displaycontext.niftiopts as niftiopts
-import fsleyes.gl.textures              as textures
-import fsleyes.gl.resources             as glresources
+from   fsleyes.displaycontext import niftiopts
+from   fsleyes.gl             import textures
+import fsleyes.gl.resources       as glresources
+from   fsleyes.utils          import lazyimport
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class ColourMapTextureManager:

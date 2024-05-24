@@ -15,30 +15,38 @@ import contextlib
 
 import jinja2                as j2
 import numpy                 as np
-import OpenGL.GL             as gl
-import OpenGL.raw.GL._types  as gltypes
 
-import fsleyes.gl.extensions as glexts
-import fsleyes.gl.resources  as glresources
-import fsleyes.gl            as fslgl
-import fsl.utils.memoize     as memoize
-from . import                   parse
+from   fsl.utils               import memoize
+import fsleyes.gl.extensions       as glexts
+import fsleyes.gl.resources        as glresources
+import fsleyes.gl                  as fslgl
+from   fsleyes.gl.shaders.glsl import parse
+from   fsleyes.utils           import lazyimport
 
 
 log = logging.getLogger(__name__)
 
 
-GLSL_ATTRIBUTE_TYPES = {
-    'bool'  : (gl.GL_BOOL,  1),
-    'int'   : (gl.GL_INT,   1),
-    'float' : (gl.GL_FLOAT, 1),
-    'vec2'  : (gl.GL_FLOAT, 2),
-    'vec3'  : (gl.GL_FLOAT, 3),
-    'vec4'  : (gl.GL_FLOAT, 4)
-}
-"""This dictionary contains mappings between GLSL data types, and their
-corresponding GL types and sizes.
-"""
+gl      = lazyimport('OpenGL.GL',            f'{__name__}.gl')
+gltypes = lazyimport('OpenGL.raw.GL._types', f'{__name__}.gltypes')
+
+
+def glslAttributeType(typename):
+    """Returns the GL type for a GLSL type.
+
+    Given the name fo a GLSL type, e.g. ``vec3``, returns a tuple containing
+    the corresponding GL type, and the number of values, e.g.
+    ``(OpenGL.GL.GL_FLOAT, 4)``
+    """
+
+    return {
+        'bool'  : (gl.GL_BOOL,  1),
+        'int'   : (gl.GL_INT,   1),
+        'float' : (gl.GL_FLOAT, 1),
+        'vec2'  : (gl.GL_FLOAT, 2),
+        'vec3'  : (gl.GL_FLOAT, 3),
+        'vec4'  : (gl.GL_FLOAT, 4)
+    }[typename]
 
 
 class GLSLShader:
@@ -290,7 +298,7 @@ class GLSLShader:
             aType          = self.types[          att]
             aBuf           = self.buffers[        att]
             aDivisor       = self.attDivisors.get(att)
-            glType, glSize = GLSL_ATTRIBUTE_TYPES[aType]
+            glType, glSize = glslAttributeType(aType)
 
             gl.glBindBuffer(gl.GL_ARRAY_BUFFER, aBuf)
             gl.glEnableVertexAttribArray(aPos)
@@ -489,8 +497,6 @@ class GLSLShader:
 
         :returns:  A dictionary of ``{name : position}`` mappings.
         """
-
-        import OpenGL.GL as gl
 
         shaderVars = {}
 

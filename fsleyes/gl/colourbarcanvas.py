@@ -17,17 +17,20 @@ colour bar is created.
 
 import logging
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
 import fsleyes_props              as props
-import fsl.utils.idle             as idle
+from   fsl.utils              import idle
 import fsleyes.controls.colourbar as cbar
-import fsleyes.gl.textures        as textures
+from   fsleyes.gl             import textures
 import fsleyes.gl.routines        as glroutines
+from   fsleyes.utils          import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class ColourBarCanvas(props.HasProperties):
@@ -105,7 +108,7 @@ class ColourBarCanvas(props.HasProperties):
         copies it to a :class:`.Texture2D`.
         """
 
-        if not self._setGLContext():
+        if not self.setGLContext():
             return
 
         # we may have already
@@ -133,8 +136,8 @@ class ColourBarCanvas(props.HasProperties):
         bitmap = np.fliplr(bitmap).transpose([2, 0, 1])
 
         if self.__tex is None:
-            self.__tex = textures.Texture2D('{}_{}'.format(
-                type(self).__name__, id(self)), interp=gl.GL_LINEAR)
+            self.__tex = textures.Texture2D(
+                f'{type(self).__name__}_{id(self)}', interp=gl.GL_LINEAR)
 
         self.__tex.set(data=bitmap)
 
@@ -142,7 +145,7 @@ class ColourBarCanvas(props.HasProperties):
     def _draw(self):
         """Renders the colour bar texture using all available canvas space."""
 
-        if self.__tex is None or not self._setGLContext():
+        if self.__tex is None or not self.setGLContext():
             return
 
         width, height = self.GetScaledSize()

@@ -11,17 +11,20 @@ classes.
 
 import logging
 
-import numpy     as np
-import OpenGL.GL as gl
+import numpy as np
 
-import fsl.transform.affine        as affine
-import fsl.data.utils              as dutils
-import fsleyes.gl                  as fslgl
-import fsleyes.gl.shaders          as shaders
-import fsleyes.gl.textures.texture as texture
+from   fsl.transform       import affine
+import fsl.data.utils          as dutils
+import fsleyes.gl              as fslgl
+from   fsleyes.gl          import shaders
+from   fsleyes.gl.textures import texture
+from   fsleyes.utils       import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class DepthTexture(texture.Texture):

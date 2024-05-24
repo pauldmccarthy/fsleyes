@@ -20,19 +20,19 @@ else
   rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
 
   source /test.venv/bin/activate
-  pip install --upgrade pip
+  pip install --upgrade pip setuptools wheel build
 fi
 
 PIPARGS="--retries 10 --timeout 30"
 
-# install fsleyes+dependencies
-pip install $PIPARGS ".[extra,test,style]"
-
 # Make sure we have latest (possibly development)
 # versions of the core dependencies
-pip install --pre $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
-pip install --pre $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
-pip install --pre $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
+pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
+pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
+pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
+
+# install fsleyes+dependencies
+pip install $PIPARGS ".[extra,test,style]"
 
 # print environment
 pip freeze

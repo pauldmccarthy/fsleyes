@@ -11,14 +11,17 @@ as an OpenGL texture.
 
 import logging
 
-import OpenGL.GL as gl
-import numpy     as np
+import numpy as np
 
-import fsleyes.colourmaps as fslcmaps
-from . import                texture
+import fsleyes.colourmaps      as fslcmaps
+from   fsleyes.gl.textures import texture
+from   fsleyes.utils       import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl = lazyimport('OpenGL.GL', f'{__name__}.gl')
 
 
 class LookupTableTexture(texture.Texture):

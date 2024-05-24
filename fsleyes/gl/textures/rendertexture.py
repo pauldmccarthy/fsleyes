@@ -18,19 +18,22 @@ other situations throughout FSLeyes. See also the
 import logging
 import contextlib
 
-import numpy                as np
-import OpenGL.GL            as gl
-import OpenGL.raw.GL._types as gltypes
+import numpy as np
 
-import fsl.transform.affine   as affine
-import fsleyes.gl             as fslgl
-import fsleyes.gl.extensions  as glexts
-import fsleyes.gl.routines    as glroutines
-import fsleyes.gl.shaders     as shaders
-from . import                    texture2d
+from   fsl.transform       import affine
+import fsleyes.gl              as fslgl
+import fsleyes.gl.extensions   as glexts
+import fsleyes.gl.routines     as glroutines
+from   fsleyes.gl          import shaders
+from   fsleyes.gl.textures import texture2d
+from   fsleyes.utils       import lazyimport
 
 
 log = logging.getLogger(__name__)
+
+
+gl      = lazyimport('OpenGL.GL',            f'{__name__}.gl')
+gltypes = lazyimport('OpenGL.raw.GL._types', f'{__name__}.gltypes')
 
 
 class RenderTexture(texture2d.Texture2D):
