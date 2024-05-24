@@ -55,8 +55,7 @@ class MyAuiFloatingFrame(auifm.AuiFloatingFrame):
 
         # disable FRAME_TOOL_WINDOW if
         # running over X11/SSH or in WSL
-        if fwidgets.inSSHSession() or fslplatform.wsl:
-            style &= ~wx.FRAME_TOOL_WINDOW
+        style &= ~wx.FRAME_TOOL_WINDOW
 
         kwargs['style'] = style
 
@@ -93,15 +92,15 @@ def _AuiDockingGuide_init(self, *args, **kwargs):
                  wx.FRAME_NO_TASKBAR  |
                  wx.NO_BORDER)
 
-    if fwidgets.inSSHSession() or fslplatform.wsl:
-        style &= ~wx.FRAME_TOOL_WINDOW
+    # Disable wx.FRAME_TOOL_WINDOW style
+    style &= ~wx.FRAME_TOOL_WINDOW
 
     kwargs['style'] = style
 
     _AuiDockingGuide_real_init(self, *args, **kwargs)
 
 
-if fwidgets.inSSHSession():
+if fwidgets.inSSHSession() or fslplatform.wsl:
     aui  .AuiFloatingFrame       = MyAuiFloatingFrame
     auifm.AuiFloatingFrame       = MyAuiFloatingFrame
     _AuiDockingGuide_real_init   = aui.AuiDockingGuide.__init__
