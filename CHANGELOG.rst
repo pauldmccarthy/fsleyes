@@ -11,6 +11,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.12.1 (Friday 24th May 2024)
+-----------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed some issues related to GL initialisation under Wayland (!437).
+* Resolved an issue with floating windows being frozen under WSL/Wayland
+  (!437).
+
+
 1.12.0 (Wednesday 8th May 2024)
 -------------------------------
 
