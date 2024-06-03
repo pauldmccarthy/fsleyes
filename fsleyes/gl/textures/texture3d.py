@@ -138,16 +138,6 @@ class Texture3D(texture.Texture):
                                    gl.GL_TEXTURE_WRAP_R,
                                    gl.GL_CLAMP_TO_EDGE)
 
-            # The macOS GL driver sometimes corrupts
-            # the texture data if we don't generate
-            # mipmaps. But generating mipmaps can be
-            # very slow, so we only enable it on macOS
-            if platform.system() == 'Darwin' and \
-               float(fslgl.GL_COMPATIBILITY) <= 2.1:
-                gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                                   gl.GL_GENERATE_MIPMAP,
-                                   gl.GL_TRUE)
-
             # create the texture according to
             # the format determined by the
             # determineTextureType method.
@@ -180,6 +170,18 @@ class Texture3D(texture.Texture):
                                baseFmt,
                                ttype,
                                data)
+
+            # The macOS GL driver sometimes corrupts
+            # the texture data if we don't generate
+            # mipmaps. But generating mipmaps can be
+            # very slow, so we only enable it on macOS
+            if platform.system() == 'Darwin':
+                if float(fslgl.GL_COMPATIBILITY) >= 3.0:
+                    gl.glGenerateMipmap(gl.GL_TEXTURE_3D)
+                else:
+                    gl.glTexParameteri(gl.GL_TEXTURE_3D,
+                                       gl.GL_GENERATE_MIPMAP,
+                                       gl.GL_TRUE)
 
 
     def doPatch(self, data, offset):
