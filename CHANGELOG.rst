@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.12.2 (Thursday 6th June 2024)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Work around a macOS issue where display of 4D images could be corrupted
+  (!439, !107).
+
+
 1.12.1 (Friday 24th May 2024)
 -----------------------------
 

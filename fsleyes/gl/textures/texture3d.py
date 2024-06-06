@@ -63,6 +63,12 @@ class Texture3D(texture.Texture):
         log.debug('Configuring 3D texture (id %s) for %s (data shape: %s)',
                   self.name, self.handle, self.shape)
 
+        # The macOS GL driver sometimes corrupts
+        # the texture data if we don't generate
+        # mipmaps. But generating mipmaps can be
+        # very slow, so we only enable it on macOS
+        mipmaps = platform.system() == 'Darwin'
+
         # First dimension for multi-
         # valued textures
         if self.nvals > 1: shape = data.shape[1:]
@@ -84,7 +90,6 @@ class Texture3D(texture.Texture):
         # will be set to False for some
         # reason.
         data    = dutils.makeWriteable(data)
-
         interp  = self.interp
         intFmt  = self.internalFormat
         baseFmt = self.baseFormat
@@ -138,12 +143,10 @@ class Texture3D(texture.Texture):
                                    gl.GL_TEXTURE_WRAP_R,
                                    gl.GL_CLAMP_TO_EDGE)
 
-            # The macOS GL driver sometimes corrupts
-            # the texture data if we don't generate
-            # mipmaps. But generating mipmaps can be
-            # very slow, so we only enable it on macOS
-            if platform.system() == 'Darwin' and \
-               float(fslgl.GL_COMPATIBILITY) <= 2.1:
+            # gl < 3.0 - set GL_GENERATE_MIPMAP, so
+            # that mip maps will be generated when
+            # texture data is assigned
+            if mipmaps and (float(fslgl.GL_COMPATIBILITY) < 3.0):
                 gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                    gl.GL_GENERATE_MIPMAP,
                                    gl.GL_TRUE)
@@ -180,6 +183,11 @@ class Texture3D(texture.Texture):
                                baseFmt,
                                ttype,
                                data)
+
+            # GL >= 3.0 - generate mipmaps after
+            # texture data has been assigned
+            if mipmaps and (float(fslgl.GL_COMPATIBILITY) >= 3.0):
+                gl.glGenerateMipmap(gl.GL_TEXTURE_3D)
 
 
     def doPatch(self, data, offset):
