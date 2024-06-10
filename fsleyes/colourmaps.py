@@ -941,6 +941,7 @@ def loadLookupTableFile(fname):
         struclut = np.genfromtxt(
             f,
             usecols=(0, 1, 2, 3),
+            comments='#',
             dtype={
                 'formats' : (int, float, float, float),
                 'names'   : ('label', 'r', 'g', 'b')})
@@ -961,6 +962,9 @@ def loadLookupTableFile(fname):
         f.seek(0)
         names = []
         for i, line in enumerate(f):
+            line = line.strip()
+            if line == '' or line.startswith('#'):
+                continue
             tkns = line.split(None, 4)
             if len(tkns) < 5: name = str(int(lut[i, 0]))
             else:             name = tkns[4].strip()
