@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.13.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with lookup table labels being read incorrectly from `.lut` files
+  which contain comments (!443).
+
+
 1.12.2 (Thursday 6th June 2024)
 -------------------------------
 
