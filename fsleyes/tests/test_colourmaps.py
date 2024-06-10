@@ -334,6 +334,14 @@ def test_loadLookupTableFile():
     7 0.5 0.6 0.7
     """).strip()
 
+    lutcomments = tw.dedent("""
+    # comments
+    1 0.0 0.5 1.0 label 1
+    # should be ignored
+    4 0.3 0.4 0.5 label 4
+    7 0.5 0.6 0.7 label 7
+    """).strip()
+
     cmap = tw.dedent("""
     0.0 0.5 1.0
     0.3 0.4 0.5
@@ -348,21 +356,25 @@ def test_loadLookupTableFile():
                         [3, 0.5, 0.6, 0.7]])
 
     with tempdir():
-        with open('lut.txt',       'wt') as f: f.write(lut)
-        with open('lutnoname.txt', 'wt') as f: f.write(lutnoname)
-        with open('cmap.txt',      'wt') as f: f.write(cmap)
+        with open('lut.txt',         'wt') as f: f.write(lut)
+        with open('lutnoname.txt',   'wt') as f: f.write(lutnoname)
+        with open('lutcomments.txt', 'wt') as f: f.write(lutcomments)
+        with open('cmap.txt',        'wt') as f: f.write(cmap)
 
-        gotlut       = fslcm.loadLookupTableFile('lut.txt')
-        gotlutnoname = fslcm.loadLookupTableFile('lutnoname.txt')
-        gotcmap      = fslcm.loadLookupTableFile('cmap.txt')
+        gotlut         = fslcm.loadLookupTableFile('lut.txt')
+        gotlutnoname   = fslcm.loadLookupTableFile('lutnoname.txt')
+        gotlutcomments = fslcm.loadLookupTableFile('lutcomments.txt')
+        gotcmap        = fslcm.loadLookupTableFile('cmap.txt')
 
-        assert np.all(np.isclose(gotlut[      0], exp))
-        assert np.all(np.isclose(gotlutnoname[0], exp))
-        assert np.all(np.isclose(gotcmap[     0], expcmap))
+        assert np.all(np.isclose(gotlut[        0], exp))
+        assert np.all(np.isclose(gotlutnoname[  0], exp))
+        assert np.all(np.isclose(gotlutcomments[0], exp))
+        assert np.all(np.isclose(gotcmap[       0], expcmap))
 
-        assert gotlut[      1] == ['label 1', 'label 4', 'label 7']
-        assert gotlutnoname[1] == ['1',       '4',       '7']
-        assert gotcmap[     1] == ['1',       '2',       '3']
+        assert gotlut[        1] == ['label 1', 'label 4', 'label 7']
+        assert gotlutnoname[  1] == ['1',       '4',       '7']
+        assert gotlutcomments[1] == ['label 1', 'label 4', 'label 7']
+        assert gotcmap[       1] == ['1',       '2',       '3']
 
 
 ###############
