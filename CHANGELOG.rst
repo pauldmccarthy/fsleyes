@@ -20,7 +20,7 @@ Fixed
 
 
 * Fixed an issue with lookup table labels being read incorrectly from `.lut` files
-  which contain comments (!442).
+  which contain comments (!443).
 
 
 1.12.2 (Thursday 6th June 2024)
