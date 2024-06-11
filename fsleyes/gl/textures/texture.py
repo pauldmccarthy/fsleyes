@@ -119,6 +119,14 @@ class TextureBase:
         self.__texture = None
 
 
+    def recreateHandle(self):
+        """Deletes and re-creates the texture handle. The texture will need
+        to be reconfigured after a call to this method.
+        """
+        gl.glDeleteTextures(self.__texture)
+        self.__texture = int(gl.glGenTextures(1))
+
+
     @property
     def name(self):
         """Returns the name of this texture. This is not the GL texture name,
