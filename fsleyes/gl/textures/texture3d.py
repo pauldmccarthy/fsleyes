@@ -9,8 +9,9 @@
 """
 
 
-import logging
-import platform
+import functools as ft
+import              logging
+import              platform
 
 import numpy as np
 
@@ -30,6 +31,26 @@ class Texture3D(texture.Texture):
     """The ``Texture3D`` class contains the logic required to create and
     manage a 3D texture.
     """
+
+    @staticmethod
+    @ft.cache
+    def _needRecreate():
+        """Returns ``True`` if the texture handle should be recreated
+        on every call to :meth:`doRefresh`, ``False`` otherwise.
+
+        For 3D textures of a certain size, and on Intel macs using an
+        integrated Intel GPU, the ``glTexImage3D`` function does not seem to
+        successfully populate texture data for existing textures. The first
+        call succeeds, but then subsequent calls (e.g. to refresh the texture
+        for a 4D image when the volume is changed) fail silently, leaving us
+        with a corrupted texture and display.
+
+        The only workaround I can come up with is to delete and recreate the
+        texture handle every time the texture is refreshed.
+        """
+
+        return platform.system() == 'Darwin' and \
+            'intel' in fslgl.GL_RENDERER.lower()
 
 
     def __init__(self, name, **kwargs):
@@ -91,6 +112,11 @@ class Texture3D(texture.Texture):
 
         if interp is None:
             interp = gl.GL_NEAREST
+
+        # Delete and recreate the texture
+        # handle on problematic platforms
+        if self._needRecreate():
+            self.recreateHandle()
 
         with self.bound():
 
