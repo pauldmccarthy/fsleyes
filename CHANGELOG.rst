@@ -11,6 +11,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.12.3 (Wednesday 12th June 2024)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with lookup table labels being read incorrectly from `.lut` files
+  which contain comments (!443).
+* More adjustments to avoid corrupt display of 4D images on macOS (!444).
+
+
 1.12.2 (Thursday 6th June 2024)
 -------------------------------
 

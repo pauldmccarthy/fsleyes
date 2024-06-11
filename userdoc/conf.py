@@ -39,6 +39,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.graphviz',
     'sphinx.ext.todo',
+    'sphinx_rtd_dark_mode',
 ]
 
 todo_include_todos = True

@@ -9,8 +9,9 @@
 """
 
 
-import logging
-import platform
+import functools as ft
+import              logging
+import              platform
 
 import numpy as np
 
@@ -30,6 +31,26 @@ class Texture3D(texture.Texture):
     """The ``Texture3D`` class contains the logic required to create and
     manage a 3D texture.
     """
+
+    @staticmethod
+    @ft.cache
+    def _needRecreate():
+        """Returns ``True`` if the texture handle should be recreated
+        on every call to :meth:`doRefresh`, ``False`` otherwise.
+
+        For 3D textures of a certain size, and on Intel macs using an
+        integrated Intel GPU, the ``glTexImage3D`` function does not seem to
+        successfully populate texture data for existing textures. The first
+        call succeeds, but then subsequent calls (e.g. to refresh the texture
+        for a 4D image when the volume is changed) fail silently, leaving us
+        with a corrupted texture and display.
+
+        The only workaround I can come up with is to delete and recreate the
+        texture handle every time the texture is refreshed.
+        """
+
+        return platform.system() == 'Darwin' and \
+            'intel' in fslgl.GL_RENDERER.lower()
 
 
     def __init__(self, name, **kwargs):
@@ -63,12 +84,6 @@ class Texture3D(texture.Texture):
         log.debug('Configuring 3D texture (id %s) for %s (data shape: %s)',
                   self.name, self.handle, self.shape)
 
-        # The macOS GL driver sometimes corrupts
-        # the texture data if we don't generate
-        # mipmaps. But generating mipmaps can be
-        # very slow, so we only enable it on macOS
-        mipmaps = platform.system() == 'Darwin'
-
         # First dimension for multi-
         # valued textures
         if self.nvals > 1: shape = data.shape[1:]
@@ -98,6 +113,11 @@ class Texture3D(texture.Texture):
         if interp is None:
             interp = gl.GL_NEAREST
 
+        # Delete and recreate the texture
+        # handle on problematic platforms
+        if self._needRecreate():
+            self.recreateHandle()
+
         with self.bound():
 
             # Enable storage of tightly packed data of any size (i.e.
@@ -105,6 +125,11 @@ class Texture3D(texture.Texture):
             gl.glPixelStorei(gl.GL_PACK_ALIGNMENT,   1)
             gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, 1)
 
+            # Disable mipmapping
+            gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_BASE_LEVEL, 0)
+            gl.glTexParameteri(gl.GL_TEXTURE_3D, gl.GL_TEXTURE_MAX_LEVEL,  0)
+
+            # Interpolation
             gl.glTexParameteri(gl.GL_TEXTURE_3D,
                                gl.GL_TEXTURE_MAG_FILTER,
                                interp)
@@ -143,28 +168,9 @@ class Texture3D(texture.Texture):
                                    gl.GL_TEXTURE_WRAP_R,
                                    gl.GL_CLAMP_TO_EDGE)
 
-            # gl < 3.0 - set GL_GENERATE_MIPMAP, so
-            # that mip maps will be generated when
-            # texture data is assigned
-            if mipmaps and (float(fslgl.GL_COMPATIBILITY) < 3.0):
-                gl.glTexParameteri(gl.GL_TEXTURE_3D,
-                                   gl.GL_GENERATE_MIPMAP,
-                                   gl.GL_TRUE)
-
             # create the texture according to
             # the format determined by the
             # determineTextureType method.
-            #
-            # note: The ancient Chromium driver (still
-            #       in use by VirtualBox) will improperly
-            #       create 3D textures without two calls
-            #       (to glTexImage3D and glTexSubImage3D).
-            #       If I specify the texture size and set
-            #       the data in a single call, it seems to
-            #       expect that the data or texture
-            #       dimensions always have even size - odd
-            #       sized images will be displayed
-            #       incorrectly.
             gl.glTexImage3D(gl.GL_TEXTURE_3D,
                             0,
                             intFmt,
@@ -174,20 +180,7 @@ class Texture3D(texture.Texture):
                             0,
                             baseFmt,
                             ttype,
-                            None)
-            gl.glTexSubImage3D(gl.GL_TEXTURE_3D,
-                               0, 0, 0, 0,
-                               shape[0],
-                               shape[1],
-                               shape[2],
-                               baseFmt,
-                               ttype,
-                               data)
-
-            # GL >= 3.0 - generate mipmaps after
-            # texture data has been assigned
-            if mipmaps and (float(fslgl.GL_COMPATIBILITY) >= 3.0):
-                gl.glGenerateMipmap(gl.GL_TEXTURE_3D)
+                            data)
 
 
     def doPatch(self, data, offset):
