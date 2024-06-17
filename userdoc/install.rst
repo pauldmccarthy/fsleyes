@@ -93,17 +93,6 @@ install FSLeyes into it like so::
 
     conda install -c conda-forge fsleyes
 
-.. note::
-
-    If you are using Linux and are using a X11 (as opposed to Wayland) desktop
-    environment, or you want to run FSLeyes on a remote server over SSH/X11,
-    you may need to install an older version of wxPython, for example::
-
-        conda create -c conda-forge -p path/to/fsleyes/environment fsleyes "wxpython=4.0.*"
-
-    Alternatively, you may need to use software-based rendering by setting the
-    ``LIBGL_ALWAYS_SOFTWARE=1`` environment variable.
-
 
 Install from PyPi (advanced)
 ----------------------------
