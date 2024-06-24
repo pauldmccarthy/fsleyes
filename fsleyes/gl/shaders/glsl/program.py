@@ -550,84 +550,84 @@ class GLSLShader:
 
 
     def _attribute_bool(self, val):
-        return np.array(val, dtype=np.bool, copy=False)
+        return np.asarray(val, dtype=np.bool)
 
 
     def _attribute_int(self, val):
-        return np.array(val, dtype=np.int32, copy=False)
+        return np.asarray(val, dtype=np.int32)
 
 
     def _attribute_float(self, val):
-        return np.array(val, dtype=np.float32, copy=False)
+        return np.asarray(val, dtype=np.float32)
 
 
     def _attribute_vec2(self, val):
-        return np.array(val, dtype=np.float32, copy=False).ravel('C')
+        return np.asarray(val, dtype=np.float32).ravel('C')
 
 
     def _attribute_vec3(self, val):
-        return np.array(val, dtype=np.float32, copy=False).ravel('C')
+        return np.asarray(val, dtype=np.float32).ravel('C')
 
 
     def _attribute_vec4(self, val):
-        return np.array(val, dtype=np.float32, copy=False).ravel('C')
+        return np.asarray(val, dtype=np.float32).ravel('C')
 
 
     def _uniform_bool(self, pos, val, size):
-        val = np.array(val, dtype=np.int32)
+        val = np.asarray(val, dtype=np.int32)
         gl.glUniform1iv(pos, size, val)
 
 
     def _uniform_int(self, pos, val, size):
-        val = np.array(val, dtype=np.int32)
+        val = np.asarray(val, dtype=np.int32)
         gl.glUniform1iv(pos, size, val)
 
 
     def _uniform_float(self, pos, val, size):
-        val = np.array(val, dtype=np.float32)
+        val = np.asarray(val, dtype=np.float32)
         gl.glUniform1fv(pos, size, val)
 
 
     def _uniform_vec2(self, pos, val, size):
-        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.float32).ravel('C')
         gl.glUniform2fv(pos, size, val)
 
 
     def _uniform_vec3(self, pos, val, size):
-        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.float32).ravel('C')
         gl.glUniform3fv(pos, size, val)
 
 
     def _uniform_vec4(self, pos, val, size):
-        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.float32).ravel('C')
         gl.glUniform4fv(pos, size, val)
 
 
     def _uniform_mat2(self, pos, val, size):
-        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.float32).ravel('C')
         gl.glUniformMatrix2fv(pos, size, True, val)
 
 
     def _uniform_mat3(self, pos, val, size):
-        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.float32).ravel('C')
         gl.glUniformMatrix3fv(pos, size, True, val)
 
 
     def _uniform_mat4(self, pos, val, size):
-        val = np.array(val, dtype=np.float32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.float32).ravel('C')
         gl.glUniformMatrix4fv(pos, 1, True, val)
 
 
     def _uniform_sampler1D(self, pos, val, size):
-        val = np.array(val, dtype=np.int32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.int32).ravel('C')
         gl.glUniform1iv(pos, size, val)
 
 
     def _uniform_sampler2D(self, pos, val, size):
-        val = np.array(val, dtype=np.int32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.int32).ravel('C')
         gl.glUniform1iv(pos, size, val)
 
 
     def _uniform_sampler3D(self, pos, val, size):
-        val = np.array(val, dtype=np.int32, copy=False).ravel('C')
+        val = np.asarray(val, dtype=np.int32).ravel('C')
         gl.glUniform1iv(pos, size, val)

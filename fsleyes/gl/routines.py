@@ -318,8 +318,8 @@ def ortho3D(lo, hi, width, height, zoom):
                  for each axis.
     """
 
-    lo = np.array(lo, copy=False)
-    hi = np.array(hi, copy=False)
+    lo = np.asarray(lo)
+    hi = np.asarray(hi)
 
     xmin, ymin = lo[:2]
     xmax, ymax = hi[:2]

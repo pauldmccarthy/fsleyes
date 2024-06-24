@@ -216,7 +216,7 @@ class Texture2D(texture.Texture):
         else:                 width, height = data.shape[1:]
 
         if data is not None:
-            data = np.array(data.ravel('F'), copy=False)
+            data = np.asarray(data.ravel('F'))
             data = dutils.makeWriteable(data)
 
         interp = self.interp
