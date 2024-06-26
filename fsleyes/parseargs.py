@@ -309,8 +309,11 @@ def _get_option_tuples(self, option_string):
 
     # Internal changes were made to
     # _get_option_tuples in 3.12.3
+    # and were backported to 3.11.9
     # https://github.com/python/cpython/pull/114180
-    py3123 = sys.version_info[:3] >= (3, 12, 3)
+    py3123  =               sys.version_info[:3] >= (3, 12, 3)
+    py3119  = (3, 11, 9) <= sys.version_info[:3] <  (3, 12, 0)
+    gh60346 = py3123 or py3119
 
     # option strings starting with two prefix characters are only
     # split at the '='
@@ -345,14 +348,14 @@ def _get_option_tuples(self, option_string):
             if option_string == short_option_prefix:
                 action = self._option_string_actions[option_string]
 
-                if py3123: tup = action, option_string, '', short_explicit_arg
-                else:      tup = action, option_string, short_explicit_arg
+                if gh60346: tup = action, option_string, '', short_explicit_arg
+                else:       tup = action, option_string, short_explicit_arg
                 result.append(tup)
             elif option_string == option_prefix:
                 action = self._option_string_actions[option_string]
 
-                if py3123: tup = action, option_string, None, None
-                else:      tup = action, option_string, explicit_arg
+                if gh60346: tup = action, option_string, None, None
+                else:       tup = action, option_string, explicit_arg
                 result.append(tup)
 
     # shouldn't ever get here
