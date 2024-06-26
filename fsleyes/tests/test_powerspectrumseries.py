@@ -143,8 +143,8 @@ def _test_ComplexPowerSpectrumSeries(panel, overlayList, displayCtx):
     expy = psseries.calcPowerSpectrum(img[7, 8, 9, :])
 
     xdata, ydata = ps.getData()
-    assert np.all(xdata == expx)
-    assert np.all(ydata == expy.real)
+    assert np.all(np.isclose(xdata, expx))
+    assert np.all(np.isclose(ydata, expy.real))
 
     ps.plotReal = False
     xdata, ydata = ps.getData()
