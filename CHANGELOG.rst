@@ -11,6 +11,16 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.12.4 (Wednesday 26th June 2024)
+---------------------------------
+
+
+Fixed
+^^^^^
+
+* Fixed some incompatibilities with the new `numpy` 2.0 release (!447).
+
+
 1.12.3 (Wednesday 12th June 2024)
 ---------------------------------
 

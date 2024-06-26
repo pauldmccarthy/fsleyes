@@ -440,7 +440,7 @@ class GLImageObject:
             if xform is not None:
                 verts = affine.transform(verts, xform)
 
-            verts = np.array(verts.ravel('C'), dtype=np.float32, copy=False)
+            verts = np.asarray(verts.ravel('C'), dtype=np.float32)
 
             # A consistent colour for
             # each clipping plane
