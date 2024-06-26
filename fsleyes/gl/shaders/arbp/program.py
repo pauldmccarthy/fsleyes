@@ -424,7 +424,7 @@ class ARBPShader:
             value = value.reshape(-1, 1)
 
         texUnit = self.__getAttrTexUnit(name)
-        value   = np.array(value, dtype=np.float32, copy=False)
+        value   = np.asarray(value, dtype=np.float32)
         size    = value.shape[1]
 
         log.debug('Setting vertex attribute %s [%s] = [%s * %s]',
@@ -470,7 +470,7 @@ class ARBPShader:
         if np.isscalar(value):
             value = [value]
 
-        value = np.array(value, copy=False)
+        value = np.asarray(value)
 
         # vector
         if len(value.shape) == 1:
@@ -485,7 +485,7 @@ class ARBPShader:
             padding = np.zeros((value.shape[0], 1))
             value   = np.hstack((value, padding))
 
-        value = np.array(value, dtype=np.float32, copy=False)
+        value = np.asarray(value, dtype=np.float32)
 
         if value.ndim > 2 or value.size < 4 or value.size % 4 != 0:
             raise ValueError('Invalid arbp parameter: {}'.format(value))

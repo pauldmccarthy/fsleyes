@@ -34,6 +34,9 @@ pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
 # install fsleyes+dependencies
 pip install $PIPARGS ".[extra,test,style]"
 
+# Run CI debugging commands
+${FSLEYES_CI_PRE_TEST_COMMAND}
+
 # print environment
 pip freeze
 

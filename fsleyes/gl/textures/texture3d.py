@@ -94,7 +94,7 @@ class Texture3D(texture.Texture):
         # data, as stored on the GPU, has its
         # first dimension as the fastest
         # changing.
-        data = np.array(data.ravel(order='F'), copy=False)
+        data = np.asarray(data.ravel(order='F'))
 
         # PyOpenGL needs the data array
         # to be writeable, as it uses
