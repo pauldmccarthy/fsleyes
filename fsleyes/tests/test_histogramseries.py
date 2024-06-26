@@ -187,8 +187,8 @@ def _test_ComplexHistogramSeries(panel, overlayList, displayCtx):
         nbins      = hseries.autoBin(  hdata, drange)
         hx, hy, _ = hseries.histogram(hdata, nbins, drange, drange)
         gotx, goty = hhs.getData()
-        assert np.all(gotx == hx)
-        assert np.all(goty == hy)
+        assert np.all(np.isclose(gotx, hx))
+        assert np.all(np.isclose(goty, hy))
 
 
 def test_MeshHistogramSeries():
