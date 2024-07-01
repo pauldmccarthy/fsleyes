@@ -263,6 +263,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             # (if it is an overlay)
             self.__xforms    = {}
             self.__dsOverlay = None
+            self.__displaySpaceChanged(refresh=False)
             self.__setupTransforms()
             self.__transformChanged()
             self.__volumeDimChanged()
@@ -375,13 +376,14 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         self.bounds[:] = [lo[0], hi[0], lo[1], hi[1], lo[2], hi[2]]
 
 
-    def __displaySpaceChanged(self, *a):
+    def __displaySpaceChanged(self, *a, **kwa):
         """Called when the :attr:`.DisplayContext.displaySpace` property
         changes.  Re-generates transformation matrices, and re-calculates
         the display :attr:`bounds` (via calls to :meth:`__setupTransforms` and
         :meth:`__transformChanged`).
         """
 
+        refresh      = kwa.pop('refresh', True)
         displaySpace = self.displayCtx.displaySpace
 
         if self.__dsOverlay is not None:
@@ -398,9 +400,10 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                                       self.__displaySpaceTransformChanged,
                                       topic='transform')
 
-        self.__setupTransforms()
-        if self.transform == 'reference':
-            self.__transformChanged()
+        if refresh:
+            self.__setupTransforms()
+            if self.transform == 'reference':
+                self.__transformChanged()
 
 
     def __displayXformChanged(self, *a):

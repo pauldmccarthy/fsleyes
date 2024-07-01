@@ -10,6 +10,18 @@
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
+1.13.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an alignment refresh issue when adjust the voxel->world transformatoin
+  of an image (e.g. via the *Nudge* panel, or when applying a FLIRT
+  transformation) (!451).
+
 
 1.12.4 (Wednesday 26th June 2024)
 ---------------------------------
@@ -17,6 +29,7 @@ chronological order.
 
 Fixed
 ^^^^^
+
 
 * Fixed some incompatibilities with the new `numpy` 2.0 release (!447).
 
