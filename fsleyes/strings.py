@@ -159,7 +159,7 @@ messages = TypeDict({
                                     'in this FEAT analysis',
     'ClusterPanel.badData'        : 'Cluster data could not be parsed - '
                                     'check your cluster_*.txt files.',
-    'ClusterPanel.loadingCluster' : 'Loading clusters for COPE{} ({}) ...',
+    'ClusterPanel.loadingCluster' : 'Loading clusters for {} ...',
 
     'MelodicClassificationPanel.disabled' :
     'Choose a melodic or other 4D image.',
@@ -700,7 +700,7 @@ labels = TypeDict({
     'MagnitudePowerSpectrumSeries' : 'magnitude',
     'PhasePowerSpectrumSeries'     : 'phase',
 
-    'ClusterPanel.clustName'     : 'Z statistics for COPE{} ({})',
+    'ClusterPanel.clustName'     : 'Z statistics for {}',
 
     'ClusterPanel.index'         : 'Cluster index',
     'ClusterPanel.nvoxels'       : 'Size (voxels)',
