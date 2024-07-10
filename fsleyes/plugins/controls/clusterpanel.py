@@ -11,6 +11,7 @@ panel for viewing cluster results from a FEAT analysis.
 import itertools                     as it
 import                                  logging
 import                                  wx
+import numpy                         as np
 
 import fsl.utils.idle                as idle
 import fsl.data.featimage            as featimage
@@ -39,11 +40,11 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
     The ``ClusterPanel`` contains controls which allow the user to:
 
-      - Select the COPE for which cluster results are displayed
+      - Select the COPE or f-test for which cluster results are displayed
 
-      - Add a Z statistic overlay for the currently displayed COPE
+      - Add a Z statistic overlay for the currently displayed COPE/f-test
 
-      - Add a cluster mask overlay for the currently displayed COPE
+      - Add a cluster mask overlay for the currently displayed COPE/f-test
 
       - Navigate to the Z maximum location, Z centre-of-gravity location,
         or COPE maximum location, for a specific cluster.
@@ -122,13 +123,15 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         # not be in the overlay list.
         self.__featImages = {}
 
-        # The clusterDAta dict is a mapping of
-        # { FEATImage : clusters} pairs, containing
+        # The clusterData dict is a mapping of {
+        # FEATImage : clusters} pairs, containing
         # information about the significant clusters
-        # for all COPEs from the feat analysis. The
-        # cluster information is loaded when
+        # for all COPEs/f-tests from the feat
+        # analysis.  The cluster information is
+        # loaded by the __loadClusterResults method
+        # when a FEAT image is loaded/selected, or
+        # when the user selects a contrast/f-test.
         self.__clusterData = {}
-
 
         # If more than one FEAT analysis is loaded,
         # the cluster panel will be reset when an
@@ -140,12 +143,12 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         # previous value.
         self.__selectedStats = {}
 
-        # A WidgetGrid is created for each
-        # contrast of a FEAT image, and cached
-        # in this dictionary. This is because
-        # it is quite expensive to create the
-        # grid widgets. This dictionary contains
-        # {FEATImage : [WidgetGrid]} mappings.
+        # A WidgetGrid is created for each contrast/
+        # f-test of a FEAT image, and cached in this
+        # dictionary. This is because it is quite
+        # expensive to create the widget grids. This
+        # dictionary contains {FEATImage :
+        # [WidgetGrid]} mappings.
         self.__clusterGrids = {}
 
         self.__addZStats   .SetLabel(strings.labels[self, 'addZStats'])
@@ -262,12 +265,12 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
         overlay   = self.__displayedOverlay
         featImage = self.__featImages[overlay]
-        contrast  = self.__statSelect.GetSelection()
+        testidx   = self.__statSelect.GetSelection()
 
         for fimg, grids in self.__clusterGrids.items():
             for i, grid in enumerate(grids):
                 if grid is not None:
-                    show = fimg is featImage and i == contrast
+                    show = fimg is featImage and i == testidx
                     self.__mainSizer.Show(grid, show)
 
         self.Layout()
@@ -276,13 +279,12 @@ class ClusterPanel(ctrlpanel.ControlPanel):
     def __statSelected(self, ev=None):
         """Called when a COPE is selected. Retrieves a cached
         :class:`.WidgetGrid`, or creates a new one (via the
-        :meth:`__genClusterGrid` method) which displays information
-        about the clusters associated with the currently selected contrast.
+        :meth:`__genClusterGrid` method) which displays information about the
+        clusters associated with the currently selected contrast or f-test.
         """
         overlay   = self.__displayedOverlay
         featImage = self.__featImages[overlay]
         idx       = self.__statSelect.GetSelection()
-        data      = self.__statSelect.GetClientData(idx)
 
         # save the selection so we can
         # restore it later on if needed
@@ -292,12 +294,14 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         self.Update()
 
         if featImage not in self.__clusterGrids:
-            self.__clusterGrids[featImage] = [None] * featImage.numContrasts()
+            cons   = [None] * featImage.numContrasts()
+            ftests = [None] * featImage.numFTests()
+            self.__clusterGrids[featImage] = cons + ftests
 
         grid = self.__clusterGrids[featImage][idx]
 
         if grid is None:
-            grid = self.__genClusterGrid(overlay, featImage, idx, data)
+            grid = self.__genClusterGrid(overlay, featImage, idx)
             self.__clusterGrids[featImage][idx] = grid
             self.__mainSizer.Add(grid, flag=wx.EXPAND, proportion=1)
 
@@ -314,8 +318,15 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
         overlay   = self.__displayedOverlay
         featImage = self.__featImages[overlay]
-        contrast  = self.__statSelect.GetSelection()
-        zstats    = featImage.getZStats(contrast)
+
+        # Get selected test, and convert
+        # to a contrast or f-test index
+        idx       = self.__statSelect.GetSelection()
+        ftest     = self.__clusterData[featImage][idx][1]
+        idx       = self.__clusterData[featImage][idx][0]
+
+        if ftest: zstats = featImage.getZFStats(idx)
+        else:     zstats = featImage.getZStats(idx)
 
         # Already in overlay list
         if self.overlayList.find(zstats.dataSource) is not None:
@@ -342,8 +353,15 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         """
         overlay   = self.__displayedOverlay
         featImage = self.__featImages[overlay]
-        contrast  = self.__statSelect.GetSelection()
-        mask      = featImage.getClusterMask(contrast)
+
+        # Get selected test, and convert
+        # to a contrast or f-test index
+        idx       = self.__statSelect.GetSelection()
+        ftest     = self.__clusterData[featImage][idx][1]
+        idx       = self.__clusterData[featImage][idx][0]
+
+        if ftest: mask = featImage.getFClusterMask(idx)
+        else:     mask = featImage.getClusterMask(idx)
 
         # Already in overlay list
         if self.overlayList.find(mask.dataSource) is not None:
@@ -353,7 +371,7 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         self.overlayList.append(mask, overlayType='label', outline=True)
 
 
-    def __genClusterGrid(self, overlay, featImage, contrast, clusters):
+    def __genClusterGrid(self, overlay, featImage, testidx):
         """Creates and returns a :class:`.WidgetGrid` which contains the given
         list of clusters, which are related to the given contrast.
 
@@ -370,11 +388,7 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         :arg featImage: The :class:`.FEATImage` to which the clusters are
                         related.
 
-        :arg contrast:  The (0-indexed) number of the contrast to which the
-                        clusters are related.
-
-        :arg clusters:  A sequence of objects, each representing one cluster.
-                        See the :meth:`.FEATImage.clusterResults` method.
+        :arg testidx:   The internal index identifying the contrast/f-test.
         """
 
         cols = {'index'         : 0,
@@ -388,18 +402,23 @@ class ClusterPanel(ctrlpanel.ControlPanel):
                 'copemaxcoords' : 8,
                 'copemean'      : 9}
 
-        grid    = widgetgrid.WidgetGrid(self)
-        conName = featImage.contrastNames()[contrast]
-        opts    = self.displayCtx.getOpts(overlay)
+        grid = widgetgrid.WidgetGrid(self)
+        opts = self.displayCtx.getOpts(overlay)
+
+        # We store contrast/f-test results in
+        # a single list, so need to look up the
+        # test type, and the actual contrast/
+        # f-test index used by the FEATImage
+        testName = self.__clusterData[featImage][testidx][2]
+        clusters = self.__clusterData[featImage][testidx][3]
 
         # We hide the grid and disable
-        # this panle while the grid is
+        # this panel while the grid is
         # being created.
         grid.Hide()
         self.Disable()
 
         grid.SetGridSize(len(clusters), 10)
-
         grid.ShowRowLabels(False)
         grid.ShowColLabels(True)
 
@@ -408,29 +427,36 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
         def makeCoordButton(coords):
 
-            label = wx.StaticText(grid, label='[{} {} {}]'.format(*coords))
-            btn   = wx.Button(grid,
-                              label='\u2192',
-                              style=wx.BU_EXACTFIT)
+            # Cluster results for f-tests don't
+            # have copemax info - the coordinates
+            # will all be nan
+            if np.isnan(coords[0]):
+                label = wx.StaticText(grid, label='[n/a]')
+                btn   = (1, 1)
+            else:
+                x, y, z = coords
+                label   = wx.StaticText(grid, label=f'[{x} {y} {z}]')
+                btn     = wx.Button(grid, label='\u2192', style=wx.BU_EXACTFIT)
+
+                def onClick(ev):
+                    dloc = opts.transformCoords([coords], 'voxel', 'display')
+                    self.displayCtx.location = dloc[0]
+
+                btn.Bind(wx.EVT_BUTTON, onClick)
 
             sizer = wx.BoxSizer(wx.HORIZONTAL)
             sizer.Add(label, flag=wx.EXPAND, proportion=1)
             sizer.Add(btn)
 
-            def onClick(ev):
-                dloc = opts.transformCoords([coords], 'voxel', 'display')[0]
-                self.displayCtx.location = dloc
-
-            btn.Bind(wx.EVT_BUTTON, onClick)
-
             return sizer
 
         # Creating all of the widgets could
-        # take a bit of time, so we'll
-        # do it asynchronously via idle.
-        # Display a message while doing so.
+        # take a bit of time, so we do it
+        # asynchronously via on the wx idle
+        # loop. Display a message while
+        # doing so.
         status.update(strings.messages[self, 'loadingCluster'].format(
-            contrast + 1, conName), timeout=None)
+            testName), timeout=None)
 
         def addCluster(i, clust):
 
@@ -447,19 +473,16 @@ class ClusterPanel(ctrlpanel.ControlPanel):
                                           clust.copemaxy,
                                           clust.copemaxz))
 
-            def fmt(v):
-                return '{}'.format(v)
-
-            grid.SetText(  i, cols['index'],         fmt(clust.index))
-            grid.SetText(  i, cols['nvoxels'],       fmt(clust.nvoxels))
-            grid.SetText(  i, cols['p'],             fmt(clust.p))
-            grid.SetText(  i, cols['logp'],          fmt(clust.logp))
-            grid.SetText(  i, cols['zmax'],          fmt(clust.zmax))
+            grid.SetText(  i, cols['index'],         f'{clust.index}')
+            grid.SetText(  i, cols['nvoxels'],       f'{clust.nvoxels}')
+            grid.SetText(  i, cols['p'],             f'{clust.p}')
+            grid.SetText(  i, cols['logp'],          f'{clust.logp}')
+            grid.SetText(  i, cols['zmax'],          f'{clust.zmax}')
             grid.SetWidget(i, cols['zmaxcoords'],    zmaxbtn)
             grid.SetWidget(i, cols['zcogcoords'],    zcogbtn)
-            grid.SetText(  i, cols['copemax'],       fmt(clust.copemax))
+            grid.SetText(  i, cols['copemax'],       f'{clust.copemax}')
             grid.SetWidget(i, cols['copemaxcoords'], copemaxbtn)
-            grid.SetText(  i, cols['copemean'],      fmt(clust.copemean))
+            grid.SetText(  i, cols['copemean'],      f'{clust.copemean}')
 
         # Refresh the grid widget when all
         # clusters have been added.
@@ -534,16 +557,27 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
         overlay   = self.__displayedOverlay
         featImage = self.__featImages[overlay]
-        contrast  = self.__statSelect.GetSelection()
+        idx       = self.__statSelect.GetSelection()
 
         # No cluster results
-        if contrast < 0:
+        if idx < 0:
             self.__addZStats   .Enable(False)
             self.__addClustMask.Enable(False)
             return
 
-        zstat     = featImage.getZStats(     contrast)
-        clustMask = featImage.getClusterMask(contrast)
+        # Convert from our list of test results
+        # to the actual contrast / f-test index.
+        # (we store all contrast/f-test results
+        # in a single list)
+        ftest = self.__clusterData[featImage][idx][1]
+        idx   = self.__clusterData[featImage][idx][0]
+
+        if ftest:
+            zstat     = featImage.getZFStats(     idx)
+            clustMask = featImage.getFClusterMask(idx)
+        else:
+            zstat     = featImage.getZStats(     idx)
+            clustMask = featImage.getClusterMask(idx)
 
         dss = [ovl.dataSource for ovl in self.overlayList]
 
@@ -588,21 +622,20 @@ class ClusterPanel(ctrlpanel.ControlPanel):
             return
 
         # Otherwise we have a new analysis to display.
-        # Get the contrast and cluster information
+        # Get the contrast/f-test cluster information
         # for the new FEAT analysis.
-        conNames, clusts = self.__loadClusterResults(featImage)
+        results = self.__loadClusterResults(featImage)
 
         # No cluster results exist for any contrast
-        if clusts is None or len(clusts) == 0:
+        if results is None or len(results) == 0:
             self.__disable(strings.messages[self, 'noClusters'])
             return
 
         # Populate the stat selection combo box
         self.__statSelect.Clear()
-        for contrast, clusterList in clusts.items():
-            name = conNames[contrast]
-            name = strings.labels[self, 'clustName'].format(contrast + 1, name)
-            self.__statSelect.Append(name, clusterList)
+        for result in results:
+            name = strings.labels[self, 'clustName'].format(result[2])
+            self.__statSelect.Append(name)
 
         # Show the FEAT analysis name
         self.__overlayName.SetLabel(featImage.name)
@@ -679,31 +712,47 @@ class ClusterPanel(ctrlpanel.ControlPanel):
 
 
     def __loadClusterResults(self, featImage):
-        """Loads cluster results for all contrasts from the FEAT analysis for
-        ``featImage``.  Returns a list of contrast names, and a dict of
-        ``{contrast : clusters}`` results (see
-        :meth:`FEATImage.clusterResults`).
+        """Loads cluster results for all contrasts and f-tests from the FEAT
+        analysis for ``featImage``.  Returns a list of tuples, with each
+        tuple containing:
+          - The test index, starting from 0, relative to the total number of
+            contrasts/f-tests. Contrasts and f-tests are indexed separately.
+          - A boolean indicating whether the test is a contrast or an f-test
+          - The test name
+          - A list of cluster results (see
+            :meth:`.featanalysis.loadClusterResults`). This will be ``None``
+            if the results could not be loaded for some reason.
         """
 
         if featImage in self.__clusterData:
             return self.__clusterData[featImage]
 
-        # Get the contrast and cluster
-        # information for the FEAT analysis.
-        numCons  = featImage.numContrasts()
-        conNames = featImage.contrastNames()
+        ncons   = featImage.numContrasts()
+        nftests = featImage.numFTests()
+        results = []
 
-        try:
-            clusts = [(c, featImage.clusterResults(c)) for c in range(numCons)]
-            clusts = {con : clu for (con, clu) in clusts if clu is not None}
+        for i in range(ncons + nftests):
 
-        # Error parsing the cluster data
-        except Exception as e:
-            log.warning('Error parsing cluster data for %s: %s',
-                        featImage.name, e, exc_info=True)
-            clusts   = None
-            conNames = None
+            ftest = i >= ncons
 
-        self.__clusterData[featImage] = conNames, clusts
+            if ftest:
+                i    = i - ncons
+                name =  f'F-test {i + 1}'
+            else:
+                name = featImage.contrastNames()[i]
+                name = f'COPE{i + 1} ({name})'
 
-        return conNames, clusts
+            try:
+                clusters = featImage.clusterResults(i, ftest=ftest)
+
+            # Error parsing the cluster data
+            except Exception as e:
+                log.warning('Error parsing cluster data for %s (test %i %s): '
+                            '%s', featImage.name, i, ftest, e, exc_info=True)
+                clusters = None
+
+            results.append((i, ftest, name, clusters))
+
+        self.__clusterData[featImage] = results
+
+        return results
