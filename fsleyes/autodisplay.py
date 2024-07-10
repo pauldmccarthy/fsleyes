@@ -128,17 +128,17 @@ def _statImageDisplay(overlay,
 
     # P-value image ?
     if any([token in basename for token in pTokens]):
-        opts.displayRange  = [0.95, 1.0]
-        opts.clippingRange = [0.95, 1.0]
+        opts.displayRange      = [0.95, 1.0]
+        opts.clippingRange.xlo =  0.95
 
     # T or Z stat image?
     elif any([token in basename for token in statTokens]) and \
        'rendered' not in basename:
 
-        maxVal               = overlay.dataRange[1]
-        opts.useNegativeCmap = True
-        opts.clippingRange   = [zthres, maxVal]
-        opts.displayRange    = [zthres, min((7.5, maxVal))]
+        maxVal                 = overlay.dataRange[1]
+        opts.useNegativeCmap   = True
+        opts.clippingRange.xlo =  zthres
+        opts.displayRange      = [zthres, min((7.5, maxVal))]
 
     # F stat image?
     elif any([token in basename for token in fStatTokens]):
@@ -169,11 +169,11 @@ def _peImageDisplay(overlay, overlayList, displayCtx):
     """
     opts = displayCtx.getOpts(overlay)
 
-    opts.cmap            = 'Red-Yellow'
-    opts.negativeCmap    = 'Blue-LightBlue'
-    opts.useNegativeCmap = True
-    opts.displayRange    = [1.0, 100.0]
-    opts.clippingRange   = [1.0, overlay.dataRange[1]]
+    opts.cmap              = 'Red-Yellow'
+    opts.negativeCmap      = 'Blue-LightBlue'
+    opts.useNegativeCmap   = True
+    opts.displayRange      = [1.0, 100.0]
+    opts.clippingRange.xlo =  1.0
 
 
 def _FEATImageDisplay(overlay, overlayList, displayCtx):

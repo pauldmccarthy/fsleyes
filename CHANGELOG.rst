@@ -10,8 +10,17 @@
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
+
 1.13.0 (Under development)
 --------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Updated the FEAT cluster panel to allow browsing of F-test results
+  (previously, only COPE results were displayed) (!452).
 
 
 Fixed

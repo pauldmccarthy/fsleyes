@@ -696,6 +696,12 @@ def simtext(sim, target, text, enter=True):
     realYield()
 
 
+def simselect(sim, target, text):
+    target.SetFocus()
+    sim.Select(text)
+    realYield()
+
+
 def random_image(filename, shape=(20, 20, 20)):
     data = np.random.random(shape).astype(np.float32)
     img  = fslimage.Image(data)
