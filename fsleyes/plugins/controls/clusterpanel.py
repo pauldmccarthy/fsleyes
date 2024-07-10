@@ -219,6 +219,30 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         ctrlpanel.ControlPanel.destroy(self)
 
 
+    @property
+    def statSelect(self):
+        """Return a reference to the ``wx.Choice`` widget used to select
+        the current contrast/f-test.
+        """
+        return self.__statSelect
+
+
+    @property
+    def addZStats(self):
+        """Return a reference to the ``wx.Button`` widget used to add
+        the Z-statistic image for the current test to the overlay list.
+        """
+        return self.__addZStats
+
+
+    @property
+    def addClustMask(self):
+        """Return a reference to the ``wx.Button`` widget used to add
+        the cluster mask image for the current test to the overlay list.
+        """
+        return self.__addClustMask
+
+
     def __calcMinSize(self):
         """Figures out the minimum size that this ``ClusterPanel`` should
         have. Called by :meth:`__init__`.
