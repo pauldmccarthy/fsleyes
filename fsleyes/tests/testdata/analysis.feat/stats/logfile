@@ -1,0 +1,3 @@
+/Users/paulmc/fsl_builds/fsl-5_0_9/bin/film_gls --in=filtered_func_data --rn=stats --pd=design.mat --thr=1000.0 --sa --ms=5 --con=design.con 
+---------------------------------------------
+
