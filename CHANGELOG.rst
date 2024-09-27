@@ -27,6 +27,9 @@ Fixed
 ^^^^^
 
 
+* Fixed an issue with command-line argument parsing when the
+  ``--linkLowRanges`` / ``-ll`` and/or ``--linkHighRanges`` / ``-lh`` options
+  are used (!453).
 * Fixed an alignment refresh issue when adjust the voxel->world transformatoin
   of an image (e.g. via the *Nudge* panel, or when applying a FLIRT
   transformation) (!451).
