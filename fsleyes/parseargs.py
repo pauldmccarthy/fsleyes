@@ -924,8 +924,8 @@ ARGUMENTS = td.TypeDict({
     'ColourMapOpts.invert'              : ('i',   'invert',              False),
     'ColourMapOpts.gamma'               : ('g',   'gamma',               True),
     'ColourMapOpts.logScale'            : ('ls',  'logScale',            False),
-    'ColourMapOpts.linkLowRanges'       : ('ll',  'unlinkLowRanges',     True),
-    'ColourMapOpts.linkHighRanges'      : ('lh',  'linkHighRanges',      True),
+    'ColourMapOpts.linkLowRanges'       : ('ll',  'unlinkLowRanges',     False),
+    'ColourMapOpts.linkHighRanges'      : ('lh',  'linkHighRanges',      False),
     'ColourMapOpts.modulateAlpha'       : ('ma',  'modulateAlpha',       False),
     'ColourMapOpts.invertModulateAlpha' : ('ima', 'invertModulateAlpha', False),
 
