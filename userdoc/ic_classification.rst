@@ -292,7 +292,11 @@ The file format comprises three sections:
     comma).
 
   - ``True`` if the component has been classified as a *bad* component [*]_,
-    ``False`` otherwise.
+    ``False`` otherwise (may or may not be present).
+
+  - A numeric value between 0 and 1 indicating the probability of the
+    component representing signal, as determined by an automated IC
+    classifier such as FIX (may or may not be present).
 
 - The last line of the file contains the indices (starting from 1) of all
   *bad* components. These indices are separated with commas, and contained
@@ -317,5 +321,5 @@ This is also valid::
        Melview.  These files *can* be used with FIX, however.
 
 
-.. [*] A *bad* component is defined as any component which does not have a a
+.. [*] A *bad* component is defined as any component which does not have a
        label of ``Signal`` or ``Unknown``.
