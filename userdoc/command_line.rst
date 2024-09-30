@@ -369,13 +369,10 @@ Set slice range (``-zr 0 0.5``). This is also specified as proportions between
   fsleyes -slightbox -zx Z -ss 0.1 -zr 0.5  1    -std1mm
   fsleyes -slightbox -zx Z -ss 0.1 -zr 0.25 0.75 -std1mm
 
-Set the number of rows (``-nr 10``) and number of columns (``-nc 10``), and
-the slice range. FSLeyes will always display the number of requested columns,
-but may adjust the number of rows to ensure that all slices within the slice
-range are displayed::
+If you add the `--asVoxels` / `-av` option, you can specify the slice spacing
+and Z range as voxel coordinates, e.g.::
 
-  fsleyes -slightbox -zx Z -nr 10 -nc 10 -zr 0.3 0.7 -std1mm
-
+  fsleyes -slightbox -av -zx Z -ss 2 -zr 0 91  -std1mm
 
 
 .. _command_line_offscreen_rendering:

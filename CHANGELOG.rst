@@ -11,12 +11,37 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.12.5 (Monday 30th September 2024)
+-----------------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Updated the FEAT cluster panel to allow browsing of F-test results
+  (previously, only COPE results were displayed) (!452).
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with command-line argument parsing when the
+  ``--linkLowRanges`` / ``-ll`` and/or ``--linkHighRanges`` / ``-lh`` options
+  are used (!453).
+* Fixed an alignment refresh issue when adjust the voxel->world transformatoin
+  of an image (e.g. via the *Nudge* panel, or when applying a FLIRT
+  transformation) (!451).
+
+
 1.12.4 (Wednesday 26th June 2024)
 ---------------------------------
 
 
 Fixed
 ^^^^^
+
 
 * Fixed some incompatibilities with the new `numpy` 2.0 release (!447).
 
