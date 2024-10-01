@@ -67,6 +67,9 @@ FILTERS = [
     r'libGL error',
     r'wx.NewId',
     r'CCS for 3D textures is disabled',
+    r'atk-bridge: get_device_events_reply: unknown signature',
+    r'MESA: error: ZINK: failed to choose pdev',
+    r'glx: failed to create drisw screen',
 ]
 
 
