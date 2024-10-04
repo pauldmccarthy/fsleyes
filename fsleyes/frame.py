@@ -1495,6 +1495,7 @@ class FSLeyesFrame(wx.Frame):
         # get the built-in app menu
         elif haveAppMenu:
             fsleyesMenu = menuBar.OSXGetAppleMenu()
+            fsleyesMenu.SetTitle('FSLeyes')
 
         # On OSX/wxPython, we fudge
         # things a bit - see below.

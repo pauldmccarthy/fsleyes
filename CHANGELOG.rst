@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.12.6 (Friday 4th October 2024)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed the top-level application menu title on macOS (!457).
+
+
 1.12.5 (Monday 30th September 2024)
 -----------------------------------
 
