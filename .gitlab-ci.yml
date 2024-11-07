@@ -122,8 +122,6 @@ variables:
     - docker:dind
   when: manual
   allow_failure: true
-  only:
-    - main@fsl/fsleyes/fsleyes
 
   script:
     - mkdir -p $HOME/.docker/
@@ -164,6 +162,12 @@ build-docker-image-fsleyes-py312-wxpy4-gtk3:
   extends: .build-docker-image
   variables:
     BUILDDIR: .docker/fsleyes-py312-wxpy4-gtk3
+
+
+build-docker-image-fsleyes-py313-wxpy4-gtk3:
+  extends: .build-docker-image
+  variables:
+    BUILDDIR: .docker/fsleyes-py313-wxpy4-gtk3
 
 
 ############
