@@ -1230,7 +1230,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         for ovl in self.__overlayList:
 
-            display = self.__displays[ovl]
+            display = self.getDisplay(ovl)
             opts    = display.opts
             lo      = opts.bounds.getLo()
             hi      = opts.bounds.getHi()
