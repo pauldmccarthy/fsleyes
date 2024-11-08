@@ -310,6 +310,25 @@ class OverlayList(props.HasProperties):
         """
         self.insert(len(self), item, **initProps)
 
+    def replace(self, iterable, **initProps):
+        """Replace the contents of the overlay list.
+
+        Any initial :class:`.Display`/:class:`.DisplayOpts` property values
+        may be passed in as keyword arguments, where the argument name is the
+        property name, and the argument value is a dict of
+        ``{overlay : value}`` mappings.
+        """
+
+        with props.suppress(self, 'overlays', notify=True):
+
+            self.overlays[:] = iterable
+
+            for propName, overlayProps in initProps.items():
+                for overlay, val in overlayProps.items():
+                    oprops           = self.__initProps.get(overlay, {})
+                    oprops[propName] = val
+                    self.__initProps[overlay] = oprops
+
     def extend(self, iterable, **initProps):
         """Add new overlays to the overlay list.
 
