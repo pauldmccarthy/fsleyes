@@ -156,10 +156,9 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                 return strings.choices['DisplayContext.displaySpace'][opt]
 
         def _onDisplaySpace(newDS):
-            if newDS != displayCtx.displaySpace:
-                if isinstance(newDS, fslimage.Nifti):
-                    newDS = 'ref'
-                displayCtx.defaultDisplaySpace = newDS
+            if isinstance(newDS, fslimage.Nifti):
+                newDS = 'ref'
+            displayCtx.defaultDisplaySpace = newDS
 
         displayCtxProps = collections.OrderedDict((
             ('displaySpace',
