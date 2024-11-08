@@ -243,13 +243,6 @@ test:macos:
       - failures/
 
 
-test:3.9:
-  stage: test
-  image: pauldmccarthy/fsleyes-py39-wxpy4-gtk3
-  <<: *test_template
-  <<: *test_rules_upstream
-
-
 test:3.10:
   stage: test
   image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
@@ -267,6 +260,13 @@ test:3.11:
 test:3.12:
   stage: test
   image: pauldmccarthy/fsleyes-py312-wxpy4-gtk3
+  <<: *test_template
+  <<: *test_rules_upstream
+
+
+test:3.13:
+  stage: test
+  image: pauldmccarthy/fsleyes-py313-wxpy4-gtk3
   <<: *test_template
   <<: *test_rules_upstream
 
