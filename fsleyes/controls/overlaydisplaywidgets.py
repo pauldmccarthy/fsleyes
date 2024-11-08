@@ -82,7 +82,11 @@ def getWidgetSpecs(target, displayCtx, threedee=False):
     if sdicts is None:
         return {}
 
-    return functools.reduce(_merge_dicts, sdicts)
+    # TypeDict.get sorts fromfrom sub-class (first) to
+    # base-class (last). As we want sub-class settings
+    # to have priority, we merge the dicts in recerse
+    # order.
+    return functools.reduce(_merge_dicts, reversed(sdicts))
 
 
 def get3DWidgetSpecs(target, displayCtx):
@@ -93,7 +97,7 @@ def get3DWidgetSpecs(target, displayCtx):
     if sdicts is None:
         return {}
 
-    return functools.reduce(_merge_dicts, sdicts)
+    return functools.reduce(_merge_dicts, reversed(sdicts))
 
 
 def _getThing(target, prefix, thingDict, *args, **kwargs):
