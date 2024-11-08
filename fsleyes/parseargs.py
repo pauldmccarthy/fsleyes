@@ -1353,6 +1353,8 @@ HELP = td.TypeDict({
     'LineVectorOpts.unitLength'   : 'Do not scale lines to unit length',
     'LineVectorOpts.lengthScale'  : 'Scale line length by this '
                                     'percentage (10-500, default: 100)',
+    'LineVectorOpts.modulateMode' : 'Modulate vector \'brightness\' (default), '
+                                   '\'alpha\', or \'lineLength\'.',
     'RGBVectorOpts.interpolation' : 'Interpolation',
     'RGBVectorOpts.unitLength'    : 'Scale vectors to unit length.',
 

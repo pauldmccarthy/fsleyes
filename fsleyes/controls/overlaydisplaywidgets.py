@@ -659,11 +659,16 @@ def _initWidgetSpec_RGBVectorOpts(displayCtx, threedee):
 
 def _initWidgetSpec_LineVectorOpts(displayCtx, threedee):
     return {
-        'directed'    : props.Widget('directed'),
-        'unitLength'  : props.Widget('unitLength'),
-        'orientFlip'  : props.Widget('orientFlip'),
-        'lineWidth'   : props.Widget('lineWidth',   showLimits=False),
-        'lengthScale' : props.Widget('lengthScale', showLimits=False),
+        'directed'     : props.Widget('directed'),
+        'unitLength'   : props.Widget('unitLength'),
+        'orientFlip'   : props.Widget('orientFlip'),
+        'lineWidth'    : props.Widget('lineWidth',   showLimits=False),
+        'lengthScale'  : props.Widget('lengthScale', showLimits=False),
+        'modulateMode' : props.Widget(
+            'modulateMode',
+            labels=strings.choices['LineVectorOpts.modulateMode'],
+            dependencies=['colourImage', 'modulateImage'],
+            enabledWhen=lambda o, ci, mi: ci is None and mi is not None),
     }
 
 

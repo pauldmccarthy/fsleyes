@@ -1385,11 +1385,14 @@ choices = TypeDict({
     'VectorOpts.colourRange.min'   : 'Min.',
     'VectorOpts.colourRange.max'   : 'Max.',
 
-    'VectorOpts.suppressMode' : {'white'       : 'White',
-                                 'black'       : 'Black',
-                                 'transparent' : 'Transparent'},
-    'VectorOpts.modulateMode' : {'brightness'  : 'Brightness',
-                                 'alpha'       : 'Transparency'},
+    'VectorOpts.suppressMode' :     {'white'       : 'White',
+                                     'black'       : 'Black',
+                                     'transparent' : 'Transparent'},
+    'VectorOpts.modulateMode'     : {'brightness'  : 'Brightness',
+                                     'alpha'       : 'Transparency'},
+    'LineVectorOpts.modulateMode' : {'brightness'  : 'Brightness',
+                                     'alpha'       : 'Transparency',
+                                     'lineLength'  : 'Line length'},
 
     'MeshOpts.refImage.none'  : 'No reference image',
 
