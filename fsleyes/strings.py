@@ -1238,9 +1238,9 @@ properties = TypeDict({
     'VectorOpts.colourRange'     : 'Colour by range',
     'VectorOpts.modulateMode'    : 'Modulation mode',
     'VectorOpts.orientFlip'      : 'L/R orientation flip',
+    'VectorOpts.normaliseColour' : 'Normalise RGB brightness',
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
-    'RGBVectorOpts.unitLength'    : 'Scale vectors to unit length',
 
     'LineVectorOpts.directed'    : 'Interpret vectors as directed',
     'LineVectorOpts.lineWidth'   : 'Line width',

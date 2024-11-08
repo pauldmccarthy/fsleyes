@@ -206,7 +206,8 @@ def _initPropertyList_MaskOpts(threedee):
 
 
 def _initPropertyList_NiftiVectorOpts(threedee):
-    return ['colourImage',
+    return ['normaliseColour',
+            'colourImage',
             'modulateImage',
             'clipImage',
             'cmap',
@@ -224,8 +225,7 @@ def _initPropertyList_NiftiVectorOpts(threedee):
 
 
 def _initPropertyList_RGBVectorOpts(threedee):
-    return ['interpolation',
-            'unitLength']
+    return ['interpolation']
 
 
 def _initPropertyList_LineVectorOpts(threedee):
@@ -649,6 +649,7 @@ def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
             dependencies=['colourImage'],
             labels=strings.choices['VectorOpts.suppressMode'],
             enabledWhen=lambda o, ci: ci is None),
+        'normaliseColour' : props.Widget('normaliseColour'),
     }
 
 

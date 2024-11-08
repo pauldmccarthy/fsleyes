@@ -57,6 +57,13 @@ class VectorOpts:
     """How vector direction colours should be suppressed. """
 
 
+    normaliseColour = props.Boolean(default=False)
+    """If ``True``, the vector values are normalised to uniform brightness.
+    If ``False`` (the default), the vector XYZ values are used directly
+    as RGB values.
+    """
+
+
     def getVectorColours(self):
         """Prepares the colours that represent each direction.
 
@@ -410,13 +417,19 @@ class RGBVectorOpts(NiftiVectorOpts):
 
 
     unitLength = props.Boolean(default=False)
-    """If ``True``, the vector data is scaled so it has length 1. """
+    """Alias for :attr:`VectorOpts.normaliseColour`. Not used internally.
+    Normalise RGB values so they have uniform brightness.
+    """
 
 
     def __init__(self, *args, **kwargs):
         """Create a ``RGBVectorOpts`` instance. All arguments are passed
         through  to the :class:`VectorOpts` constructor.
         """
+
+        # unitLength is an alias for normaliseColour,
+        # kept for compatibility.
+        self.bindProps('unitLength', self, 'normaliseColour')
 
         # We need GL >= 2.1 for
         # spline interpolation
