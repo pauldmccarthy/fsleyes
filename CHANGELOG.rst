@@ -12,6 +12,21 @@ chronological order.
 
 
 
+1.13.0 (Under development)
+--------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with the zoom level changing when adding new overlays.
+  As part of this change, the logic controlling the display space has
+  been adjusted so that, when the current reference image is removed,
+  the display space will be changed to another loaded image instead of
+  being reset to ``"world"`` (!460).
+
+
 1.12.6 (Friday 4th October 2024)
 --------------------------------
 
