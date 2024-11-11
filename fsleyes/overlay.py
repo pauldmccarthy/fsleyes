@@ -310,6 +310,25 @@ class OverlayList(props.HasProperties):
         """
         self.insert(len(self), item, **initProps)
 
+    def replace(self, iterable, **initProps):
+        """Replace the contents of the overlay list.
+
+        Any initial :class:`.Display`/:class:`.DisplayOpts` property values
+        may be passed in as keyword arguments, where the argument name is the
+        property name, and the argument value is a dict of
+        ``{overlay : value}`` mappings.
+        """
+
+        with props.suppress(self, 'overlays', notify=True):
+
+            self.overlays[:] = iterable
+
+            for propName, overlayProps in initProps.items():
+                for overlay, val in overlayProps.items():
+                    oprops           = self.__initProps.get(overlay, {})
+                    oprops[propName] = val
+                    self.__initProps[overlay] = oprops
+
     def extend(self, iterable, **initProps):
         """Add new overlays to the overlay list.
 
@@ -418,22 +437,25 @@ def findMeshReferenceImage(overlayList, overlay):
     """
 
     searchfuncs = {
-        fslvtk.VTKMesh       : [findVTKReferenceImage],
-        fslfs.FreesurferMesh : [findFreeSurferReferenceImage],
-        fslgifti.GiftiMesh   : [findFreeSurferReferenceImage],
-        fslmesh.Mesh         : [findAnyReferenceImage]
+        fslvtk.VTKMesh       : findVTKReferenceImage,
+        fslfs.FreesurferMesh : findFreeSurferReferenceImage,
+        fslgifti.GiftiMesh   : findFreeSurferReferenceImage,
+        fslmesh.Mesh         : findAnyReferenceImage
     }
 
-    for otype, funcs in searchfuncs.items():
+    errors = []
+    for otype, func in searchfuncs.items():
         if issubclass(type(overlay), otype):
-            for func in funcs:
-                try:
-                    refimage = func(overlayList, overlay)
-                    if refimage is not None:
-                        return refimage
-                except Exception as e:
-                    log.warning('Error identifying reference image '
-                                'for mesh %s: %s', overlay, e)
+            try:
+                refimage = func(overlayList, overlay)
+                if refimage is not None:
+                    return refimage
+            except Exception as e:
+                errors.append(e)
+    if len(errors) > 0:
+        allerrors = '; '.join(str(e) for e in errors)
+        log.info('Error[s] identifying reference image '
+                 'for mesh %s: %s', overlay, allerrors)
 
     return None
 

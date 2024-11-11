@@ -835,13 +835,20 @@ class OverlayManager:
         over to the new ones.
 
         All existing overlays which were previously added are removed.
+
+        :arg new:      Dict of ``{fileid : file}`` mappings, containing the
+                       files to load.
+
+        :arg old:      Dict of ``{fileid : overlay}`` mappings, containing the
+                       existing overlays which will be replaced with the new
+                       ones.
         """
 
         overlayList = self.__overlayList
         displayCtx  = self.__displayCtx
 
         # Drop old overlays that
-        # are being (re-)addd
+        # are being (re-)added
         old = collections.OrderedDict(
             [(fid, ovl) for fid, ovl in old.items()
              if ovl not in new.values()])
@@ -895,21 +902,21 @@ class OverlayManager:
             for group in displayCtx.overlayGroups:
                 group.removeOverlay(ovl)
 
+        newOverlayList = list(overlayList)
+        for i, ovl in enumerate(overlayList):
+            if ovl.name in new and ovl in old:
+                newOverlayList[i] = new[ovl.name]
+        newOverlayList = [o for o in newOverlayList if o not in old]
+        newOverlayList.extend([o for o in new.values() if o not in newOverlayList])
+
         # Insert the new overlays into the list.
-        overlayList.extend(new.values(), **propVals)
+        dspace = displayCtx.displaySpace
+        overlayList.replace(newOverlayList, **propVals)
 
         # preserve the display space if
         # it was set to a filegroup image
-        dspace = displayCtx.displaySpace
         if dspace in old and dspace.name in new:
             displayCtx.displaySpace = new[dspace.name]
-
-        # Remove all of the
-        # old filetree overlays
-        idxs           = range(len(overlayList))
-        idxs           = [i for i in idxs if overlayList[i] not in old]
-        overlayList[:] = [overlayList[i] for i in idxs]
-
 
 
 REPLACE = td.TypeDict({

@@ -150,15 +150,21 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                                        showLimits=False))))
 
         def _displaySpaceOptionName(opt):
-
             if isinstance(opt, fslimage.Nifti):
                 return opt.name
             else:
                 return strings.choices['DisplayContext.displaySpace'][opt]
 
+        def _onDisplaySpace(newDS):
+            if isinstance(newDS, fslimage.Nifti):
+                newDS = 'ref'
+            displayCtx.defaultDisplaySpace = newDS
+
         displayCtxProps = collections.OrderedDict((
             ('displaySpace',
-             props.Widget('displaySpace', labels=_displaySpaceOptionName)),
+             props.Widget('displaySpace',
+                          labels=_displaySpaceOptionName,
+                          onUser=_onDisplaySpace)),
             ('radioOrientation', props.Widget('radioOrientation'))))
 
         orthoOptsProps = collections.OrderedDict((

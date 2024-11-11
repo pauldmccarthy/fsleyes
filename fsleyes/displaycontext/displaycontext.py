@@ -364,12 +364,11 @@ class DisplayContext(props.SyncableHasProperties):
 
         # If this is the first child DC, we
         # need to initialise the display
-        # space and location. If there is
-        # already a child DC, then we have
-        # (probably) inherited initial
-        # settings.
+        # location. If there is already a
+        # child DC, then we have (probably)
+        # inherited initial settings.
         if self.__child:
-            self.__initDS = (len(parent.getChildren()) - 1) == 0
+            self.__initDisplay = (len(parent.getChildren()) - 1) == 0
 
 
         # While the DisplayContext may refer to
@@ -893,48 +892,24 @@ class DisplayContext(props.SyncableHasProperties):
         # property is valid
         self.__syncOverlayOrder()
 
-        # If the overlay list was empty,
-        # and is now non-empty, we need
-        # to initialise the display space
-        # and the display location
-        initDS        = self.__initDS                      and \
-                        np.all(np.isclose(self.bounds, 0)) and \
-                        len(self.__overlayList) > 0
-        self.__initDS = len(self.__overlayList) == 0
-
-        # Initialise the display space. We
-        # have to do this before updating
-        # image transforms, and updating
-        # the display bounds
-        if initDS:
-
-            displaySpace = 'world'
-
-            if self.defaultDisplaySpace == 'ref':
-                for overlay in self.__overlayList:
-                    if isinstance(overlay, fslimage.Nifti):
-                        displaySpace = overlay
-                        break
-
-            with props.skip(self, 'displaySpace', self.__name):
-                self.displaySpace = displaySpace
-
         # Initialise the transform property
         # of any Image overlays which have
-        # just been added to the list,
-        oldList = self.__overlayList.getLastValue('overlays')[:]
-        for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Nifti) and \
-               (overlay not in oldList):
-                self.__setTransform(overlay)
+        # just been added to the list, and
+        # ensure that the display bounds
+        # are up to date - displaySpaceChanged
+        # performs both of these steps.
+        self.__displaySpaceChanged()
 
-        # Ensure that the bounds
-        # property is accurate
-        self.__updateBounds()
+        # If the overlay list was empty,
+        # and is now non-empty, we need
+        # to initialise the display location
+        initDisplay        = self.__initDisplay and \
+                             len(self.__overlayList) > 0
+        self.__initDisplay = len(self.__overlayList) == 0
 
         # Initialise the display location to
         # the centre of the display bounds
-        if initDS:
+        if initDisplay:
             b = self.bounds
             self.location.xyz = [
                 b.xlo + b.xlen / 2.0,
@@ -953,15 +928,36 @@ class DisplayContext(props.SyncableHasProperties):
         """
 
         choiceProp = self.getProp('displaySpace')
-        choices    = []
-
-        for overlay in self.__overlayList:
-            if isinstance(overlay, fslimage.Nifti):
-                choices.append(overlay)
+        ovlList    = self.__overlayList
+        choices    = [o for o in ovlList if isinstance(o, fslimage.Nifti)]
 
         choices.extend(('world', 'scaledVoxel', 'fslview'))
 
-        choiceProp.setChoices(choices, instance=self)
+        # If the current displaySpace setting is no
+        # longer valid (e.g. image has been removed),
+        # update the displaySpace to a sensible default
+        oldVal  = self.displaySpace
+        newVal  = None
+        default = self.defaultDisplaySpace
+
+        # oldVal not in choices means that
+        # it was a reference image which has
+        # been removed
+        if default != 'ref':
+            newVal = default
+        elif oldVal not in ovlList:
+            for c in choices:
+                if isinstance(c, fslimage.Nifti):
+                    newVal = c
+                    break
+
+        # This method is called from overlayListChanged,
+        # which will invoke the displaySpaceChanged
+        # listener manually. The parent displaycontext
+        # doesn't register a listener, hence ignoreInvalid
+        with props.skip(self, 'displaySpace', self.__name,
+                        ignoreInvalid=True):
+            choiceProp.setChoices(choices, instance=self, newChoice=newVal)
 
 
     def __renameOverlays(self):
@@ -1234,7 +1230,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         for ovl in self.__overlayList:
 
-            display = self.__displays[ovl]
+            display = self.getDisplay(ovl)
             opts    = display.opts
             lo      = opts.bounds.getLo()
             hi      = opts.bounds.getHi()

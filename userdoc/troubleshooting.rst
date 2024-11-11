@@ -32,7 +32,7 @@ This means that FSLeyes has been unable to locate the directory in which FSL
 is installed, and may mean that your FSL environment is not correctly
 configured. If you see this warning, you can tell FSLeyes where FSL is located
 by clicking on the **Locate $FSLDIR** button, and selecting the FSL
-installation directory (typically ``/usr/local/fsl/``).  Alternately, you can
+installation directory (typically ``~/fsl/``).  Alternately, you can
 click **Skip** to ignore the warning- you can still use FSLeyes, however some
 features (e.g. atlases) will not be available.
 
