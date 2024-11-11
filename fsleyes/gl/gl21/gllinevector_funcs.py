@@ -64,6 +64,7 @@ def init(self):
     # the display<->voxel transformation
     # matrices whenever the transform
     # changes.
+    self.opts.addListener('unitLength',  name, update, weak=False)
     self.opts.addListener('orientFlip',  name, update, weak=False)
     self.opts.addListener('directed',    name, update, weak=False)
     self.opts.addListener('lengthScale', name, update, weak=False)
@@ -78,6 +79,7 @@ def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
     if self.opts is not None:
+        self.opts.removeListener('unitLength',  self.name)
         self.opts.removeListener('orientFlip',  self.name)
         self.opts.removeListener('directed',    self.name)
         self.opts.removeListener('lengthScale', self.name)
@@ -138,6 +140,7 @@ def updateShaderState(self):
         changed |= shader.set('directed',        directed)
         changed |= shader.set('lengthScale',     lengthScale)
         changed |= shader.set('xFlip',           xFlip)
+        changed |= shader.set('unitLength',      opts.unitLength)
 
     return changed
 

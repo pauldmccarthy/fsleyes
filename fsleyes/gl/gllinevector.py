@@ -71,55 +71,18 @@ class GLLineVector(glvector.GLVector):
         if isinstance(image, dtifit.DTIFitTensor): vecImage = image.V1()
         else:                                      vecImage = image
 
-        def prefilter(data):
-            # Scale to unit length if required.
-            if not self.opts.unitLength:
-                return data
-
-            data = np.copy(data)
-
-            with np.errstate(invalid='ignore'):
-
-                # Vector images stored as RGB24 data
-                # type are assumed to map from [0, 255]
-                # to [-1, 1], so cannot be normalised
-                if vecImage.nvals > 1:
-                    return data
-
-                # calculate lengths
-                x    = data[0, ...]
-                y    = data[1, ...]
-                z    = data[2, ...]
-                lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-
-                # scale lengths to 1
-                data[0, ...] = x / lens
-                data[1, ...] = y / lens
-                data[2, ...] = z / lens
-
-            return data
-
-        def prefilterRange(dmin, dmax):
-
-            if self.opts.unitLength:
-                return -1, 1
-            else:
-                return dmin, dmax
-
         glvector.GLVector.__init__(self,
                                    image,
                                    overlayList,
                                    displayCtx,
                                    threedee,
-                                   prefilter=prefilter,
-                                   prefilterRange=prefilterRange,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.gllinevector_funcs.init(
                                        self))
 
-        self.opts.addListener('lineWidth',  self.name, self.notify)
-        self.opts.addListener('unitLength', self.name,
-                              self.__unitLengthChanged)
+        self.opts.addListener('lineWidth',       self.name, self.notify)
+        self.opts.addListener('normaliseColour', self.name,
+                              self.asyncUpdateShaderState)
 
 
     def destroy(self):
@@ -128,8 +91,8 @@ class GLLineVector(glvector.GLVector):
         instance, calls the OpenGL version-specific ``destroy``
         function, and calls the :meth:`.GLVector.destroy` method.
         """
-        self.opts.removeListener('lineWidth',  self.name)
-        self.opts.removeListener('unitLength', self.name)
+        self.opts.removeListener('lineWidth',       self.name)
+        self.opts.removeListener('normaliseColour', self.name)
         fslgl.gllinevector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -208,14 +171,6 @@ class GLLineVector(glvector.GLVector):
         """
         glvector.GLVector.postDraw(self)
         fslgl.gllinevector_funcs.postDraw(self)
-
-
-    def __unitLengthChanged(self, *a):
-        """Called when the :attr:`.LineVectorOptsunitLength` property
-        changes. Refreshes the vector image texture data.
-        """
-        self.imageTexture.refresh()
-        self.updateShaderState()
 
 
 class GLLineVertices:

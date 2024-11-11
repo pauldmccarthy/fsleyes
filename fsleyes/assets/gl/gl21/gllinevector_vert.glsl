@@ -66,6 +66,11 @@ uniform bool xFlip;
 uniform bool directed;
 
 /*
+ * Normalise vectors to unit length (prior to lengthScale).
+ */
+uniform bool unitLength;
+
+/*
  * Scale vector lengths by this amount.
  */
 uniform float lengthScale;
@@ -148,6 +153,9 @@ void main(void) {
    * the rectangle corners (so the rectangle
    * corners are 90 degrees).
    */
+  if (unitLength) {
+    vector = normalize(vector);
+  }
   vertex = vector * lengthScale;
   vector = vector - (camera * dot(vector, camera));
   offset = normalize(cameraRotation * vector) * lineWidth / 2;
