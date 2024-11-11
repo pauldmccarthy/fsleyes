@@ -84,16 +84,13 @@ def updateShaderState(self):
 
     clipping = [clipLow, clipHigh, -1, -1]
 
-    if opts.normaliseColour: clipping[2] =  1
-    else:                    clipping[2] = -1
-
     if np.isclose(modHigh, modLow):
         mod = [0,  0,  0, 0]
     else:
         mod = [modLow,  modHigh, 1.0 / (modHigh - modLow), modMode]
 
     # Inputs which are required by both the
-    # glvolume and glvetor fragment shaders
+    # glvolume and glvector fragment shaders
     self.shader.setFragParam('clipping', clipping)
 
     clipCoordXform   = self.getAuxTextureXform('clip')
@@ -129,6 +126,9 @@ def updateShaderState(self):
             voxValXform = self.imageTexture.voxValXform
 
         voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
+
+        if opts.normaliseColour: voxValXform[2] =  1
+        else:                    voxValXform[2] = -1
 
         self.shader.setFragParam('voxValXform', voxValXform)
         self.shader.setFragParam('mod',         mod)

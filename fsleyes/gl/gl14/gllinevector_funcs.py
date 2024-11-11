@@ -128,14 +128,12 @@ def updateShaderState(self):
     :func:`.gl21.glvector_funcs.updateFragmentShaderState` function.
     """
 
-    image = self.vectorImage
-
-    glvector_funcs.updateShaderState(self)
-
+    image    = self.vectorImage
     shape    = list(image.shape[:3])
     invShape = [1.0 / s for s in shape] + [0]
 
     with self.shader.loaded():
+        glvector_funcs.updateShaderState(self)
         self.shader.setVertParam('invImageShape', invShape)
 
     return True

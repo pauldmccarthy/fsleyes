@@ -111,7 +111,7 @@ class GLRGBVector(glvector.GLVector):
                               self.__interpChanged)
         self.opts.addListener('normaliseColour',
                               self.name,
-                              self.__normaliseColourChanged)
+                              self.asyncUpdateShaderState)
 
 
     def destroy(self):
@@ -165,12 +165,6 @@ class GLRGBVector(glvector.GLVector):
         self.clipTexture    .set(interp=interp)
         self.colourTexture  .set(interp=interp)
         self.asyncUpdateShaderState(alwaysNotify=True)
-
-
-    def __normaliseColourChanged(self, *a):
-        """Called when :attr:`.RGBVectorOpts.unitLength` changes.
-        """
-        self.asyncUpdateShaderState()
 
 
     def compileShaders(self):

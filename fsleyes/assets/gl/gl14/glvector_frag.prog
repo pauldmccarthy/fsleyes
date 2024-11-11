@@ -21,7 +21,9 @@
 #   voxValXform - Vector with x component defining a scale, and y
 #                 component defining an offset, with which image texture
 #                 values can be transformed into the range [0, 1], for use
-#                 as a colour map texture coordinate.
+#                 as a colour map texture coordinate. The (z) component
+#                 contains +1 if the vector magnitude should be
+#                 normalised to unit length, or -1 otherwise.
 #
 #   cmapXform   - Transformation matrix which transforms the vector
 #                 image voxel values from their data values
@@ -30,9 +32,7 @@
 #
 #   clipping    - Clipping thresholds. The (x) component contains
 #                 the low clipping threshold, and the (y) component
-#                 contains the high threshold. The (z) component
-#                 contains +1 if the vector magnitude should be
-#                 normalised to unit length, or -1 otherwise.
+#                 contains the high threshold.
 #
 #   mod         - Modulation range. The (x) component contains
 #                 the low modulation value, the (y) component
@@ -188,10 +188,10 @@ ABS voxValue, voxValue;
 # Normalise the vector magnitude to unit
 # length if normaliseColour is enabled.
 # Using fragColour as a temporary
-DP3 fragColour, voxValue, voxValue;
-RSQ fragColour, fragColour.x;
+DP3 fragColour.x, voxValue, voxValue;
+RSQ fragColour.x, fragColour.x;
 MUL fragColour, fragColour.x, voxValue;
-CMP voxValue, clipping.z, voxValue, fragColour;
+CMP voxValue, voxValXform.z, voxValue, fragColour;
 
 # Cumulatively combine the rgb
 # channels of those three colours.
