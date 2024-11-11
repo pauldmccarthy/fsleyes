@@ -132,6 +132,9 @@ def updateShaderState(self):
         fac          = (image.pixdim[:3] / min(image.pixdim[:3]))
         lengthScale /= fac
 
+    modLength = (opts.modulateMode == 'lineLength' and
+                 opts.modulateImage is not None)
+
     with shader.loaded():
         changed  = glvector_funcs.updateShaderState(self)
         changed |= shader.set('vectorTexture',   4)
@@ -141,6 +144,7 @@ def updateShaderState(self):
         changed |= shader.set('lengthScale',     lengthScale)
         changed |= shader.set('xFlip',           xFlip)
         changed |= shader.set('unitLength',      opts.unitLength)
+        changed |= shader.set('modulateLength',  modLength)
 
     return changed
 
