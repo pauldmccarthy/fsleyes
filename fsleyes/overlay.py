@@ -437,22 +437,25 @@ def findMeshReferenceImage(overlayList, overlay):
     """
 
     searchfuncs = {
-        fslvtk.VTKMesh       : [findVTKReferenceImage],
-        fslfs.FreesurferMesh : [findFreeSurferReferenceImage],
-        fslgifti.GiftiMesh   : [findFreeSurferReferenceImage],
-        fslmesh.Mesh         : [findAnyReferenceImage]
+        fslvtk.VTKMesh       : findVTKReferenceImage,
+        fslfs.FreesurferMesh : findFreeSurferReferenceImage,
+        fslgifti.GiftiMesh   : findFreeSurferReferenceImage,
+        fslmesh.Mesh         : findAnyReferenceImage
     }
 
-    for otype, funcs in searchfuncs.items():
+    errors = []
+    for otype, func in searchfuncs.items():
         if issubclass(type(overlay), otype):
-            for func in funcs:
-                try:
-                    refimage = func(overlayList, overlay)
-                    if refimage is not None:
-                        return refimage
-                except Exception as e:
-                    log.warning('Error identifying reference image '
-                                'for mesh %s: %s', overlay, e)
+            try:
+                refimage = func(overlayList, overlay)
+                if refimage is not None:
+                    return refimage
+            except Exception as e:
+                errors.append(e)
+    if len(errors) > 0:
+        allerrors = '; '.join(str(e) for e in errors)
+        log.info('Error[s] identifying reference image '
+                 'for mesh %s: %s', overlay, allerrors)
 
     return None
 
