@@ -87,6 +87,12 @@ def _test_projectimagetosurface(panel, overlayList, displayCtx):
     dlg.called = False
     overlayList.append(image_none)
     displayCtx.selectOverlay(mesh)
+
+    mopts                   = displayCtx.getOpts(mesh)
+    mopts.coordSpace        = 'pixdim-flip'
+    mopts.refImage          = None
+    displayCtx.displaySpace = 'world'
+
     with mock.patch('wx.MessageDialog', dlg):
         act()
     assert dlg.called
@@ -96,9 +102,9 @@ def _test_projectimagetosurface(panel, overlayList, displayCtx):
     overlayList.extend([image_all, image_some])
     displayCtx.selectOverlay(mesh)
 
-    mopts            = displayCtx.getOpts(mesh)
-    mopts.coordSpace = 'affine'
-    mopts.refImage   = image_all
+    mopts.coordSpace        = 'affine'
+    mopts.refImage          = image_all
+    displayCtx.displaySpace = 'world'
 
     class MockChoiceDlg:
         def __init__(self):
