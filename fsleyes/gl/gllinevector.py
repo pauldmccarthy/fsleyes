@@ -275,13 +275,11 @@ class GLLineVertices:
         data  = image.data
         shape = image.shape
 
-        # Pull out the xyz components of the
-        # vectors, and calculate vector lengths.
-
         # The image may either
         # have shape (X, Y, Z, 3)
         if image.nvals == 1:
             vertices = np.array(data, dtype=np.float32)
+
         # Or (we assume) a RGB
         # structured array
         else:
@@ -291,18 +289,21 @@ class GLLineVertices:
             vertices[..., 1] = (data['G'].astype(np.float32) / 127.5) - 1
             vertices[..., 2] = (data['B'].astype(np.float32) / 127.5) - 1
 
-        x    = vertices[..., 0]
-        y    = vertices[..., 1]
-        z    = vertices[..., 2]
-        lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-
         # Flip vectors about the x axis if necessary
         if opts.orientFlip:
-            x = -x
+            vertices[..., 0] = -vertices[..., 0]
 
+        # Normalise vectors to unit length if necesssary
         if opts.unitLength:
 
-            # scale the vector lengths to 0.5
+            # Pull out the xyz components of the
+            # vectors, and calculate vector lengths.
+            x    = vertices[..., 0]
+            y    = vertices[..., 1]
+            z    = vertices[..., 2]
+            lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+
+            # scale the vector lengths to 0.5.
             with np.errstate(invalid='ignore'):
                 vertices[..., 0] = 0.5 * x / lens
                 vertices[..., 1] = 0.5 * y / lens
@@ -313,7 +314,8 @@ class GLLineVertices:
             # within real world space. We're assuming
             # here that the vectors are defined in
             # mm (e.g. the FSL coordinate system).
-            vertices /= (image.pixdim[:3] / min(image.pixdim[:3]))
+            pixdim    = np.abs(image.pixdim[:3])
+            vertices /= (pixdim / np.min(pixdim))
 
         # Scale the vectors by the length scaling factor
         vertices *= opts.lengthScale / 100.0
