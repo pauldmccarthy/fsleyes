@@ -13,6 +13,7 @@ for all other FSLeyes texture types. See also the :class:`.Texture2D` and
 import              logging
 import              contextlib
 import functools as ft
+import              threading
 
 import numpy as np
 
@@ -117,6 +118,14 @@ class TextureBase:
 
         gl.glDeleteTextures(self.__texture)
         self.__texture = None
+
+
+    @property
+    def destroyed(self):
+        """Returns ``True`` if this Texture has been destroyed, ``False``
+        otherwise.
+        """
+        return self.__texture is None
 
 
     def recreateHandle(self):
@@ -585,6 +594,12 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         self.__shape        = None
         self.__preparedData = None
 
+        # Synchronisation lock used to
+        # prevent the data reference
+        # from being cleared while a
+        # data prep task is enqueued
+        self.__dataLock     = threading.RLock()
+
         # The data is refreshed on
         # every call to set or refresh
         # These attributes are set by
@@ -621,15 +636,16 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
     def destroy(self):
         """Must be called when this ``Texture`` is no longer needed.
         """
-        TextureBase.destroy(self)
 
-        if self.__taskThread is not None:
-            self.__taskThread.stop()
+        with self.dataLock:
+            TextureBase.destroy(self)
 
-        self.__taskThread   = None
-        self.__data         = None
-        self.__preparedData = None
+            if self.__taskThread is not None:
+                self.__taskThread.stop()
 
+            self.__taskThread   = None
+            self.__data         = None
+            self.__preparedData = None
 
 
     def ready(self):
@@ -637,6 +653,16 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         ``False`` otherwise.
         """
         return self.__ready
+
+
+    @property
+    def dataLock(self):
+        """Return a ``threading.RLock`` that is used to limit concurrent
+        access to the data. This is just used to ensure that an enqueued
+        data processing task (which takes place off the main thread) will
+        not proceed if the texture is destroyed after it has been enqeued.
+        """
+        return self.__dataLock
 
 
     @property
@@ -895,24 +921,36 @@ class Texture(notifier.Notifier, TextureBase, TextureSettingsMixin):
         # thread using the idle module.
         def genData():
 
-            # Another genData function is
-            # already queued - don't run.
-            # The TaskThreadVeto error
-            # will stop the TaskThread from
-            # calling configTexture as well.
-            if self.__taskThread is not None and \
-               self.__taskThread.isQueued(self.__taskName):
-                raise idle.TaskThreadVeto()
+            with self.dataLock:
 
-            self.__determineTextureType()
+                # The texture may be destroyed
+                # after this call was scheduled
+                if self.destroyed:
+                    return
 
-            if refreshData:
-                self.__prepareTextureData()
+                # Another genData function is
+                # already queued - don't run.
+                # The TaskThreadVeto error
+                # will stop the TaskThread from
+                # calling configTexture as well.
+                if self.__taskThread is not None and \
+                   self.__taskThread.isQueued(self.__taskName):
+                    raise idle.TaskThreadVeto()
+
+                self.__determineTextureType()
+
+                if refreshData:
+                    self.__prepareTextureData()
 
         # Once genData is finished, we pass the
         # result (see __prepareTextureData) to
         # the sub-class doRefresh method.
         def doRefresh():
+
+            # The texture may be destroyed
+            # after this call was scheduled
+            if self.destroyed:
+                return
 
             self.doRefresh()
 
