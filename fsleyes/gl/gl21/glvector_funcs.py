@@ -55,6 +55,7 @@ def updateShaderState(self, useSpline=False):
     opts              = self.opts
     shader            = self.shader
     imageShape        = self.vectorImage.shape[:3]
+    normaliseColour   = opts.normaliseColour
     modLow,  modHigh  = self.getModulateRange()
     clipLow, clipHigh = self.getClippingRange()
 
@@ -116,6 +117,7 @@ def updateShaderState(self, useSpline=False):
         changed |= shader.set('xColour',         colours[0])
         changed |= shader.set('yColour',         colours[1])
         changed |= shader.set('zColour',         colours[2])
+        changed |= shader.set('normaliseColour', normaliseColour)
         changed |= shader.set('colourXform',     colourXform)
         changed |= shader.set('voxValXform',     voxValXform)
         changed |= shader.set('imageShape',      imageShape)

@@ -30,7 +30,9 @@
 #
 #   clipping    - Clipping thresholds. The (x) component contains
 #                 the low clipping threshold, and the (y) component
-#                 contains the high threshold.
+#                 contains the high threshold. The (z) component
+#                 contains +1 if the vector magnitude should be
+#                 normalised to unit length, or -1 otherwise.
 #
 #   mod         - Modulation range. The (x) component contains
 #                 the low modulation value, the (y) component
@@ -182,6 +184,14 @@ KIL clipResult.y;
 # and take the absolue value
 MAD voxValue, voxValue, voxValXform.x, voxValXform.y;
 ABS voxValue, voxValue;
+
+# Normalise the vector magnitude to unit
+# length if normaliseColour is enabled.
+# Using fragColour as a temporary
+DP3 fragColour, voxValue, voxValue;
+RSQ fragColour, fragColour.x;
+MUL fragColour, fragColour.x, voxValue;
+CMP voxValue, clipping.z, voxValue, fragColour;
 
 # Cumulatively combine the rgb
 # channels of those three colours.

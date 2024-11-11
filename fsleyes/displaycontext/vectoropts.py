@@ -417,8 +417,8 @@ class RGBVectorOpts(NiftiVectorOpts):
 
 
     unitLength = props.Boolean(default=False)
-    """Alias for :attr:`VectorOpts.normaliseColour`. Not used internally.
-    Normalise RGB values so they have uniform brightness.
+    """Alias for :attr:`VectorOpts.normaliseColour`. Not used internally,
+    kept for compatibility.
     """
 
 

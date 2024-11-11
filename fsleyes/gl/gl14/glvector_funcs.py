@@ -84,6 +84,9 @@ def updateShaderState(self):
 
     clipping = [clipLow, clipHigh, -1, -1]
 
+    if opts.normaliseColour: clipping[2] =  1
+    else:                    clipping[2] = -1
+
     if np.isclose(modHigh, modLow):
         mod = [0,  0,  0, 0]
     else:
