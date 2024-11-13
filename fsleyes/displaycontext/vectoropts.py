@@ -381,7 +381,7 @@ class LineVectorOpts(NiftiVectorOpts):
 
     Modulate the brightness, transparency, or line length by the modulation
     image.  When set to ``'lineLength'``, this is applied after the
-    :attr:`unitLength` and :attr:`lengthScale` properties.
+    :attr:`unitLength` and before the :attr:`lengthScale` properties.
     """
 
 
