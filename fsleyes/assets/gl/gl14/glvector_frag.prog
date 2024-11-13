@@ -39,8 +39,8 @@
 #                 the high modulation value, the (z) component
 #                 contains a scaling factor equal to
 #                 1 / (modHigh - modLow), and the (w) component
-#                 contains -0.5 to modulate brightness, or +0.5 to
-#                 modulate transparency.
+#                 contains -1 to modulate brightness, +1 to
+#                 modulate transparency, or 0 to disable modulation.
 #
 #   xColour     - Colour corresponding to the X vector direction.
 #
@@ -221,10 +221,19 @@ ADD modValue.x, modValue.x, mod.x;
 MUL modValue.x, modValue.x, mod.z;
 MUL fragColour, fragColour, modValue.x;
 
+# Store the modulated colour in fragColour.
 CMP fragColour.rgb, mod.w, fragColour, voxValue;
 CMP fragColour.a,   mod.w, voxValue.a, fragColour.a;
 
+# Now voxValue contains the unmodulated
+# colour and fragColour contains the modulated
+# colour. If mod.w is equal to 0, we use the
+# unmodulated colour. We use modValue here as a
+# temporary.
+ABS modValue.x, mod.w;
+MUL modValue.x, modValue.x, -1;
+
 # Colour the pixel!
-MOV result.color, fragColour;
+CMP result.color, modValue.x, fragColour, voxValue;
 
 END

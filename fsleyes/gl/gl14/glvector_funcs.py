@@ -79,8 +79,10 @@ def updateShaderState(self):
     useVolumeFragShader = opts.colourImage is not None
     modLow,  modHigh    = self.getModulateRange()
     clipLow, clipHigh   = self.getClippingRange()
-    modMode             = {'brightness' : -0.5,
-                           'alpha'      :  0.5}[opts.modulateMode]
+
+    if   opts.modulateMode == 'brightness': modMode = -1
+    elif opts.modulateMode == 'alpha':      modMode =  1
+    else:                                   modMode =  0
 
     clipping = [clipLow, clipHigh, -1, -1]
 

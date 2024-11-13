@@ -15,6 +15,7 @@ when running in OpenGL 1.4. See the :mod:`.gl14.gllinevector_funcs` and
 import logging
 
 import numpy                as np
+import scipy.ndimage        as ndimage
 import fsl.data.dtifit      as dtifit
 import fsl.transform.affine as affine
 import fsleyes.gl           as fslgl
@@ -249,12 +250,20 @@ class GLLineVertices:
         evaluates to ``False``, the vertices need to be refreshed (via a
         call to :meth:`refresh`).
         """
-        opts = glvec.opts
-        return (hash(opts.transform)  ^
-                hash(opts.orientFlip) ^
-                hash(opts.directed)   ^
-                hash(opts.unitLength) ^
-                hash(opts.lengthScale))
+        opts    = glvec.opts
+        hashval = (hash(opts.transform)                    ^
+                   hash(opts.orientFlip)                   ^
+                   hash(opts.directed)                     ^
+                   hash(opts.unitLength)                   ^
+                   hash(opts.modulateMode == 'lineLength') ^
+                   hash(opts.lengthScale))
+
+        if opts.modulateMode == 'lineLength':
+            hashval = (hashval                      ^
+                       hash(opts.modulateRange.xlo) ^
+                       hash(opts.modulateRange.xhi))
+
+        return hashval
 
 
     def refresh(self, glvec):
@@ -272,6 +281,7 @@ class GLLineVertices:
 
         opts  = glvec.opts
         image = glvec.vectorImage
+        dctx  = glvec.displayCtx
         data  = image.data
         shape = image.shape
 
@@ -316,6 +326,35 @@ class GLLineVertices:
             # mm (e.g. the FSL coordinate system).
             pixdim    = np.abs(image.pixdim[:3])
             vertices /= (pixdim / np.min(pixdim))
+
+        # Modulate vector line length
+        if (opts.modulateMode == 'lineLength' and
+            opts.modulateImage is not None):
+
+            # Get modulate image data
+            modImage = opts.modulateImage
+            modLow   = opts.modulateRange.xlo
+            modHigh  = opts.modulateRange.xhi
+            modOpts  = dctx.getOpts(modImage)
+            modSlice = modOpts.index()
+            modData  = modImage[modSlice]
+
+            # Generate voxel coordinates in the image
+            # space and transform them into modulate
+            # image voxel coordinates
+            img2mod = affine.concat(modOpts.getTransform('display', 'voxel'),
+                                    opts   .getTransform('voxel', 'display'))
+            voxels  = glroutines.generateCoordinates(*shape[:3])
+            voxels  = affine.transform(voxels, img2mod)
+
+            # Sample from the modulate image
+            modData = ndimage.map_coordinates(modData, voxels.T, order=1)
+            modData = modData.reshape(shape[:3])
+            modData = (modData + modLow) / (modHigh - modLow)
+
+            vertices[..., 0] *= modData
+            vertices[..., 1] *= modData
+            vertices[..., 2] *= modData
 
         # Scale the vectors by the length scaling factor
         vertices *= opts.lengthScale / 100.0
