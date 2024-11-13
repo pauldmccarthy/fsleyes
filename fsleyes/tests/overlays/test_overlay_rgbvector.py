@@ -60,5 +60,5 @@ def test_overlay_rgbvector_nofloattextures():
     texdata.canUseFloatTextures.invalidate()
     with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
                     return_value=(False, None, None)):
-        run_cli_tests('test_overlay_rgbvector_nofloattextures',
+        run_cli_tests('test_overlay_rgbvector',
                       cli_tests, extras=extras)
