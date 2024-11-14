@@ -88,10 +88,17 @@ uniform float modHigh;
  */
 uniform bool useSpline;
 
+
+/*
+ * Normalise vector magnitude to uniform brightness:
+ */
+uniform bool normaliseColour;
+
 /*
  * Modulation mode:
- *   - 0 == modulate brightness by mod image
- *   - 1 == modulate alpha by mod image
+ *   - -1 == No modulation
+ *   -  0 == modulate brightness by mod image
+ *   -  1 == modulate alpha by mod image
  */
 uniform int modulateMode;
 
@@ -204,6 +211,15 @@ void main(void) {
   voxValue *= voxValXform[0].x;
   voxValue += voxValXform[3].x;
   voxValue  = abs(voxValue);
+
+  /*
+   * Normalise vector to unit length
+   * so that every voxel has the same
+   * brightness
+   */
+  if (normaliseColour) {
+    voxValue = normalize(voxValue);
+  }
 
   /* Combine the xyz component colours,
    * modulating them by the vector values.

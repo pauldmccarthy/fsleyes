@@ -12,8 +12,23 @@ chronological order.
 
 
 
-1.13.0 (Under development)
---------------------------
+1.13.0 (Thursday 14th November 2024)
+------------------------------------
+
+
+Added
+^^^^^
+
+* The length of line vectors can now be modulated by another image. This
+  is achieved by setting the *Modulation mode* to *Line length*, and on
+  the command-line via ``--modulateMode lineLength`` (!461).
+* The colour/brightness and line vector length can now be normalised
+  independently for line vector and RGB vector overlays. Colour and vector
+  magnitude were previously both normalised by the *Scale vectors to unit
+  length* option - this option now normalises vector magnitude/length, and
+  the new *Normalise RGB brightness* option normalises the vector colours
+  to uniform brightness. This option is available on the command-line via the
+  ``--normaliseColour`` / ``-nr`` flag (!461).
 
 
 Fixed
@@ -25,6 +40,11 @@ Fixed
   been adjusted so that, when the current reference image is removed,
   the display space will be changed to another loaded image instead of
   being reset to ``"world"`` (!460).
+* Fixed an issue which could cause occasional (harmless) errors to
+  be emitted, where a texture object was being destroyed before its
+  data was (asynchronously) generated (!461).
+* Fixed an issue where changing some line vector settings would have no
+  effect. This was only occurring under OpenGL 1.4 (!461).
 
 
 1.12.6 (Friday 4th October 2024)

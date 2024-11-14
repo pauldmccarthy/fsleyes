@@ -82,7 +82,11 @@ def getWidgetSpecs(target, displayCtx, threedee=False):
     if sdicts is None:
         return {}
 
-    return functools.reduce(_merge_dicts, sdicts)
+    # TypeDict.get sorts fromfrom sub-class (first) to
+    # base-class (last). As we want sub-class settings
+    # to have priority, we merge the dicts in recerse
+    # order.
+    return functools.reduce(_merge_dicts, reversed(sdicts))
 
 
 def get3DWidgetSpecs(target, displayCtx):
@@ -93,7 +97,7 @@ def get3DWidgetSpecs(target, displayCtx):
     if sdicts is None:
         return {}
 
-    return functools.reduce(_merge_dicts, sdicts)
+    return functools.reduce(_merge_dicts, reversed(sdicts))
 
 
 def _getThing(target, prefix, thingDict, *args, **kwargs):
@@ -202,7 +206,8 @@ def _initPropertyList_MaskOpts(threedee):
 
 
 def _initPropertyList_NiftiVectorOpts(threedee):
-    return ['colourImage',
+    return ['normaliseColour',
+            'colourImage',
             'modulateImage',
             'clipImage',
             'cmap',
@@ -220,8 +225,7 @@ def _initPropertyList_NiftiVectorOpts(threedee):
 
 
 def _initPropertyList_RGBVectorOpts(threedee):
-    return ['interpolation',
-            'unitLength']
+    return ['interpolation']
 
 
 def _initPropertyList_LineVectorOpts(threedee):
@@ -645,6 +649,7 @@ def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
             dependencies=['colourImage'],
             labels=strings.choices['VectorOpts.suppressMode'],
             enabledWhen=lambda o, ci: ci is None),
+        'normaliseColour' : props.Widget('normaliseColour'),
     }
 
 
@@ -659,11 +664,16 @@ def _initWidgetSpec_RGBVectorOpts(displayCtx, threedee):
 
 def _initWidgetSpec_LineVectorOpts(displayCtx, threedee):
     return {
-        'directed'    : props.Widget('directed'),
-        'unitLength'  : props.Widget('unitLength'),
-        'orientFlip'  : props.Widget('orientFlip'),
-        'lineWidth'   : props.Widget('lineWidth',   showLimits=False),
-        'lengthScale' : props.Widget('lengthScale', showLimits=False),
+        'directed'     : props.Widget('directed'),
+        'unitLength'   : props.Widget('unitLength'),
+        'orientFlip'   : props.Widget('orientFlip'),
+        'lineWidth'    : props.Widget('lineWidth',   showLimits=False),
+        'lengthScale'  : props.Widget('lengthScale', showLimits=False),
+        'modulateMode' : props.Widget(
+            'modulateMode',
+            labels=strings.choices['LineVectorOpts.modulateMode'],
+            dependencies=['colourImage', 'modulateImage'],
+            enabledWhen=lambda o, ci, mi: ci is None and mi is not None),
     }
 
 

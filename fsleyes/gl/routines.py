@@ -1641,3 +1641,21 @@ def lineAsPolygon(vertices,
         vertices[4::6] = end   + offset
         vertices[5::6] = start + offset
         return vertices
+
+
+def generateCoordinates(xend, yend, zend, xstart=0, ystart=0,zstart=0):
+    """Creates a (N, 3) array containing XYZ coordinates for every voxel
+    in a volume of size (xend-xstart, yend-ystart, zend-zstart).
+    """
+    xs           = np.arange(xstart, xend)
+    ys           = np.arange(ystart, yend)
+    zs           = np.arange(zstart, zend)
+    ys, zs, xs   = np.meshgrid(ys, zs, xs)
+    ys           = ys.flatten()
+    zs           = zs.flatten()
+    xs           = xs.flatten()
+    coords       = np.zeros((xs.shape[0], 3))
+    coords[:, 0] = xs
+    coords[:, 1] = ys
+    coords[:, 2] = zs
+    return coords

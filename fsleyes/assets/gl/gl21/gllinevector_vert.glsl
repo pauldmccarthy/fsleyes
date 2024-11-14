@@ -12,6 +12,11 @@
 uniform sampler3D vectorTexture;
 
 /*
+ * Image that may be used to modulate line length.
+ */
+uniform sampler3D modulateTexture;
+
+/*
  * Transformations between voxel and
  * display coordinate systems, incorporating
  * the model view projection transform.
@@ -35,6 +40,16 @@ uniform mat3 cameraRotation;
 uniform mat4 colourCoordXform;
 uniform mat4 clipCoordXform;
 uniform mat4 modCoordXform;
+
+/*
+ * Modulate the vector length by values in the
+ * modulate image texture. modLow and modHigh
+ * contain scaling values for converting from
+ * the texture value to the original data range
+ */
+uniform bool  modulateLength;
+uniform float modLow;
+uniform float modHigh;
 
 /*
  * Transformation matrix which transforms the
@@ -64,6 +79,11 @@ uniform bool xFlip;
  * outwards.
  */
 uniform bool directed;
+
+/*
+ * Normalise vectors to unit length (prior to lengthScale).
+ */
+uniform bool unitLength;
 
 /*
  * Scale vector lengths by this amount.
@@ -96,11 +116,12 @@ varying vec4 fragColourFactor;
 
 void main(void) {
 
-  vec3 texCoord;
-  vec3 vector;
-  vec3 vertex;
-  vec3 offset;
-  vec3 voxCoord;
+  vec3  texCoord;
+  vec3  vector;
+  vec3  vertex;
+  vec3  offset;
+  vec3  voxCoord;
+  float modValue;
 
   /*
    * Normalise the voxel coordinates to [0.0, 1.0],
@@ -112,10 +133,21 @@ void main(void) {
   voxCoord = voxel;
   texCoord = (voxCoord + 0.5) / imageShape;
 
+  fragVoxCoord     = voxCoord;
+  fragVecTexCoord  = texCoord;
+  fragTexCoord     = (colourCoordXform * vec4(texCoord, 1)).xyz;
+  fragClipTexCoord = (clipCoordXform   * vec4(texCoord, 1)).xyz;
+  fragModTexCoord  = (modCoordXform    * vec4(texCoord, 1)).xyz;
+
   /*
    * Retrieve the vector values for this voxel
    */
   vector = texture3D(vectorTexture, texCoord).xyz;
+
+  if (modulateLength) {
+    modValue = texture3D(modulateTexture, fragModTexCoord).x;
+    modValue = (modValue + modLow) / (modHigh - modLow);
+  }
 
   /*
    * Transform the vector values  from their
@@ -148,6 +180,14 @@ void main(void) {
    * the rectangle corners (so the rectangle
    * corners are 90 degrees).
    */
+  if (unitLength) {
+    vector = normalize(vector);
+  }
+
+  if (modulateLength) {
+    vector = vector * modValue;
+  }
+
   vertex = vector * lengthScale;
   vector = vector - (camera * dot(vector, camera));
   offset = normalize(cameraRotation * vector) * lineWidth / 2;
@@ -180,10 +220,5 @@ void main(void) {
    */
   gl_Position = voxToDisplayMat * vec4(voxCoord + vertex, 1);
 
-  fragVoxCoord     = voxCoord;
-  fragVecTexCoord  = texCoord;
-  fragTexCoord     = (colourCoordXform * vec4(texCoord, 1)).xyz;
-  fragClipTexCoord = (clipCoordXform   * vec4(texCoord, 1)).xyz;
-  fragModTexCoord  = (modCoordXform    * vec4(texCoord, 1)).xyz;
   fragColourFactor = vec4(1, 1, 1, 1);
 }

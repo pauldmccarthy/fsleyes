@@ -46,6 +46,16 @@ dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 0.5)}} -ot linevector
 dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 0.5)}} -ot linevector -nu
 dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 2.0)}} -ot linevector
 dti/dti_FA.nii.gz {{mul('dti/dti_V1.nii.gz', 2.0)}} -ot linevector -nu
+
+# modulate line length
+
+dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -mo dti_FA -mm lineLength
+dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -mo dti_FA -mm lineLength
+dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -mo dti_FA -mm lineLength -nu
+dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -mo dti_FA -mm lineLength -nu -ls 500
+dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -mo dti_FA -mm lineLength     -ls 500
+dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -mo dti_FA -mm lineLength -mr 0 0.5
+dti/dti_FA.nii.gz dti/dti_V1.nii.gz -ot linevector -mo dti_FA -mm lineLength -mr 0.5 1
 """
 
 extras = {
@@ -66,6 +76,6 @@ def test_overlay_linevector_nofloattextures():
     texdata.canUseFloatTextures.invalidate()
     with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
                     return_value=(False, None, None)):
-        run_cli_tests('test_overlay_linevector_nofloattextures',
+        run_cli_tests('test_overlay_linevector',
                       cli_tests,
                       extras=extras)

@@ -65,11 +65,13 @@ def init(self):
 
     name = '{}_vertices'.format(self.name)
 
-    opts.addListener('transform',   name, vertexUpdate, weak=False)
-    opts.addListener('directed',    name, vertexUpdate, weak=False)
-    opts.addListener('unitLength',  name, vertexUpdate, weak=False)
-    opts.addListener('lengthScale', name, vertexUpdate, weak=False)
-    opts.addListener('orientFlip',  name, vertexUpdate, weak=False)
+    opts.addListener('transform',     name, vertexUpdate, weak=False)
+    opts.addListener('directed',      name, vertexUpdate, weak=False)
+    opts.addListener('unitLength',    name, vertexUpdate, weak=False)
+    opts.addListener('lengthScale',   name, vertexUpdate, weak=False)
+    opts.addListener('orientFlip',    name, vertexUpdate, weak=False)
+    opts.addListener('modulateMode',  name, vertexUpdate, weak=False)
+    opts.addListener('modulateRange', name, vertexUpdate, weak=False)
 
 
 def destroy(self):
@@ -82,11 +84,13 @@ def destroy(self):
 
     name = '{}_vertices'.format(self.name)
 
-    self.opts.removeListener('transform',   name)
-    self.opts.removeListener('directed',    name)
-    self.opts.removeListener('unitLength',  name)
-    self.opts.removeListener('lengthScale', name)
-    self.opts.removeListener('orientFlip',  name)
+    self.opts.removeListener('transform',     name)
+    self.opts.removeListener('directed',      name)
+    self.opts.removeListener('unitLength',    name)
+    self.opts.removeListener('lengthScale',   name)
+    self.opts.removeListener('orientFlip',    name)
+    self.opts.removeListener('modulateMode',  name)
+    self.opts.removeListener('modulateRange', name)
 
     glresources.delete(self._vertexResourceName)
 
@@ -128,14 +132,12 @@ def updateShaderState(self):
     :func:`.gl21.glvector_funcs.updateFragmentShaderState` function.
     """
 
-    image = self.vectorImage
-
-    glvector_funcs.updateShaderState(self)
-
+    image    = self.vectorImage
     shape    = list(image.shape[:3])
     invShape = [1.0 / s for s in shape] + [0]
 
     with self.shader.loaded():
+        glvector_funcs.updateShaderState(self)
         self.shader.setVertParam('invImageShape', invShape)
 
     return True

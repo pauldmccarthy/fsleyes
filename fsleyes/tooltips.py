@@ -306,6 +306,11 @@ properties = TypeDict({
     'VectorOpts.orientFlip'       : 'If checked, direction orientations '
                                     'within each voxel are flipped about '
                                     'the x axis.',
+    'VectorOpts.normaliseColour'  : 'If checked, the data is scaled so that '
+                                    'it is displayed with uniform brightness.'
+                                    'If disabled, the vector XYZ values are '
+                                    'used directly as RGB values.',
+
     'LineVectorOpts.lineWidth'    : 'The width of each vector line, in '
                                     'display pixels.',
     'LineVectorOpts.directed'     : 'If unchecked, the vector data is assumed '
@@ -325,12 +330,13 @@ properties = TypeDict({
     'LineVectorOpts.lengthScale'  : 'Scale the vector line length by this '
                                     'scaling factor (expressed as a '
                                     'percentage).',
+    'LineVectorOpts.modulateMode' : 'Either the brightness, transparency, or '
+                                    'line length of vector voxels can be '
+                                    'modulated by the modulation image.',
     'RGBVectorOpts.interpolation' : 'Interpolate the vector data for display '
                                     'purposes. You can choose none '
                                     '(equivalent to nearest-neighbour), '
                                     'linear, or spline interpolation.',
-    'RGBVectorOpts.unitLength'    : 'If checked, the data is scaled so that '
-                                    'each vector has length 1.',
 
 
     'MeshOpts.colour' :

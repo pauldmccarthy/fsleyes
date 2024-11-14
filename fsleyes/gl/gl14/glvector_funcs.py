@@ -79,8 +79,10 @@ def updateShaderState(self):
     useVolumeFragShader = opts.colourImage is not None
     modLow,  modHigh    = self.getModulateRange()
     clipLow, clipHigh   = self.getClippingRange()
-    modMode             = {'brightness' : -0.5,
-                           'alpha'      :  0.5}[opts.modulateMode]
+
+    if   opts.modulateMode == 'brightness': modMode = -1
+    elif opts.modulateMode == 'alpha':      modMode =  1
+    else:                                   modMode =  0
 
     clipping = [clipLow, clipHigh, -1, -1]
 
@@ -90,7 +92,7 @@ def updateShaderState(self):
         mod = [modLow,  modHigh, 1.0 / (modHigh - modLow), modMode]
 
     # Inputs which are required by both the
-    # glvolume and glvetor fragment shaders
+    # glvolume and glvector fragment shaders
     self.shader.setFragParam('clipping', clipping)
 
     clipCoordXform   = self.getAuxTextureXform('clip')
@@ -126,6 +128,9 @@ def updateShaderState(self):
             voxValXform = self.imageTexture.voxValXform
 
         voxValXform = [voxValXform[0, 0], voxValXform[0, 3], 0, 0]
+
+        if opts.normaliseColour: voxValXform[2] =  1
+        else:                    voxValXform[2] = -1
 
         self.shader.setFragParam('voxValXform', voxValXform)
         self.shader.setFragParam('mod',         mod)

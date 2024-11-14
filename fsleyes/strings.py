@@ -1238,9 +1238,9 @@ properties = TypeDict({
     'VectorOpts.colourRange'     : 'Colour by range',
     'VectorOpts.modulateMode'    : 'Modulation mode',
     'VectorOpts.orientFlip'      : 'L/R orientation flip',
+    'VectorOpts.normaliseColour' : 'Normalise RGB brightness',
 
     'RGBVectorOpts.interpolation' : 'Interpolation',
-    'RGBVectorOpts.unitLength'    : 'Scale vectors to unit length',
 
     'LineVectorOpts.directed'    : 'Interpret vectors as directed',
     'LineVectorOpts.lineWidth'   : 'Line width',
@@ -1385,11 +1385,14 @@ choices = TypeDict({
     'VectorOpts.colourRange.min'   : 'Min.',
     'VectorOpts.colourRange.max'   : 'Max.',
 
-    'VectorOpts.suppressMode' : {'white'       : 'White',
-                                 'black'       : 'Black',
-                                 'transparent' : 'Transparent'},
-    'VectorOpts.modulateMode' : {'brightness'  : 'Brightness',
-                                 'alpha'       : 'Transparency'},
+    'VectorOpts.suppressMode' :     {'white'       : 'White',
+                                     'black'       : 'Black',
+                                     'transparent' : 'Transparent'},
+    'VectorOpts.modulateMode'     : {'brightness'  : 'Brightness',
+                                     'alpha'       : 'Transparency'},
+    'LineVectorOpts.modulateMode' : {'brightness'  : 'Brightness',
+                                     'alpha'       : 'Transparency',
+                                     'lineLength'  : 'Line length'},
 
     'MeshOpts.refImage.none'  : 'No reference image',
 

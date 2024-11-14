@@ -64,6 +64,7 @@ def init(self):
     # the display<->voxel transformation
     # matrices whenever the transform
     # changes.
+    self.opts.addListener('unitLength',  name, update, weak=False)
     self.opts.addListener('orientFlip',  name, update, weak=False)
     self.opts.addListener('directed',    name, update, weak=False)
     self.opts.addListener('lengthScale', name, update, weak=False)
@@ -78,6 +79,7 @@ def destroy(self):
     """Deletes the vertex/fragment shaders. """
 
     if self.opts is not None:
+        self.opts.removeListener('unitLength',  self.name)
         self.opts.removeListener('orientFlip',  self.name)
         self.opts.removeListener('directed',    self.name)
         self.opts.removeListener('lengthScale', self.name)
@@ -130,6 +132,9 @@ def updateShaderState(self):
         fac          = (image.pixdim[:3] / min(image.pixdim[:3]))
         lengthScale /= fac
 
+    modLength = (opts.modulateMode == 'lineLength' and
+                 opts.modulateImage is not None)
+
     with shader.loaded():
         changed  = glvector_funcs.updateShaderState(self)
         changed |= shader.set('vectorTexture',   4)
@@ -138,6 +143,8 @@ def updateShaderState(self):
         changed |= shader.set('directed',        directed)
         changed |= shader.set('lengthScale',     lengthScale)
         changed |= shader.set('xFlip',           xFlip)
+        changed |= shader.set('unitLength',      opts.unitLength)
+        changed |= shader.set('modulateLength',  modLength)
 
     return changed
 

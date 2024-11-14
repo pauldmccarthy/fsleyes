@@ -15,6 +15,7 @@ when running in OpenGL 1.4. See the :mod:`.gl14.gllinevector_funcs` and
 import logging
 
 import numpy                as np
+import scipy.ndimage        as ndimage
 import fsl.data.dtifit      as dtifit
 import fsl.transform.affine as affine
 import fsleyes.gl           as fslgl
@@ -71,55 +72,18 @@ class GLLineVector(glvector.GLVector):
         if isinstance(image, dtifit.DTIFitTensor): vecImage = image.V1()
         else:                                      vecImage = image
 
-        def prefilter(data):
-            # Scale to unit length if required.
-            if not self.opts.unitLength:
-                return data
-
-            data = np.copy(data)
-
-            with np.errstate(invalid='ignore'):
-
-                # Vector images stored as RGB24 data
-                # type are assumed to map from [0, 255]
-                # to [-1, 1], so cannot be normalised
-                if vecImage.nvals > 1:
-                    return data
-
-                # calculate lengths
-                x    = data[0, ...]
-                y    = data[1, ...]
-                z    = data[2, ...]
-                lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-
-                # scale lengths to 1
-                data[0, ...] = x / lens
-                data[1, ...] = y / lens
-                data[2, ...] = z / lens
-
-            return data
-
-        def prefilterRange(dmin, dmax):
-
-            if self.opts.unitLength:
-                return -1, 1
-            else:
-                return dmin, dmax
-
         glvector.GLVector.__init__(self,
                                    image,
                                    overlayList,
                                    displayCtx,
                                    threedee,
-                                   prefilter=prefilter,
-                                   prefilterRange=prefilterRange,
                                    vectorImage=vecImage,
                                    init=lambda: fslgl.gllinevector_funcs.init(
                                        self))
 
-        self.opts.addListener('lineWidth',  self.name, self.notify)
-        self.opts.addListener('unitLength', self.name,
-                              self.__unitLengthChanged)
+        self.opts.addListener('lineWidth',       self.name, self.notify)
+        self.opts.addListener('normaliseColour', self.name,
+                              self.asyncUpdateShaderState)
 
 
     def destroy(self):
@@ -128,8 +92,8 @@ class GLLineVector(glvector.GLVector):
         instance, calls the OpenGL version-specific ``destroy``
         function, and calls the :meth:`.GLVector.destroy` method.
         """
-        self.opts.removeListener('lineWidth',  self.name)
-        self.opts.removeListener('unitLength', self.name)
+        self.opts.removeListener('lineWidth',       self.name)
+        self.opts.removeListener('normaliseColour', self.name)
         fslgl.gllinevector_funcs.destroy(self)
         glvector.GLVector.destroy(self)
 
@@ -210,14 +174,6 @@ class GLLineVector(glvector.GLVector):
         fslgl.gllinevector_funcs.postDraw(self)
 
 
-    def __unitLengthChanged(self, *a):
-        """Called when the :attr:`.LineVectorOptsunitLength` property
-        changes. Refreshes the vector image texture data.
-        """
-        self.imageTexture.refresh()
-        self.updateShaderState()
-
-
 class GLLineVertices:
     """The ``GLLineVertices`` class is used when rendering a
     :class:`GLLineVector` with OpenGL 1.4. It contains logic to generate
@@ -294,12 +250,20 @@ class GLLineVertices:
         evaluates to ``False``, the vertices need to be refreshed (via a
         call to :meth:`refresh`).
         """
-        opts = glvec.opts
-        return (hash(opts.transform)  ^
-                hash(opts.orientFlip) ^
-                hash(opts.directed)   ^
-                hash(opts.unitLength) ^
-                hash(opts.lengthScale))
+        opts    = glvec.opts
+        hashval = (hash(opts.transform)                    ^
+                   hash(opts.orientFlip)                   ^
+                   hash(opts.directed)                     ^
+                   hash(opts.unitLength)                   ^
+                   hash(opts.modulateMode == 'lineLength') ^
+                   hash(opts.lengthScale))
+
+        if opts.modulateMode == 'lineLength':
+            hashval = (hashval                      ^
+                       hash(opts.modulateRange.xlo) ^
+                       hash(opts.modulateRange.xhi))
+
+        return hashval
 
 
     def refresh(self, glvec):
@@ -317,16 +281,15 @@ class GLLineVertices:
 
         opts  = glvec.opts
         image = glvec.vectorImage
+        dctx  = glvec.displayCtx
         data  = image.data
         shape = image.shape
-
-        # Pull out the xyz components of the
-        # vectors, and calculate vector lengths.
 
         # The image may either
         # have shape (X, Y, Z, 3)
         if image.nvals == 1:
             vertices = np.array(data, dtype=np.float32)
+
         # Or (we assume) a RGB
         # structured array
         else:
@@ -336,18 +299,21 @@ class GLLineVertices:
             vertices[..., 1] = (data['G'].astype(np.float32) / 127.5) - 1
             vertices[..., 2] = (data['B'].astype(np.float32) / 127.5) - 1
 
-        x    = vertices[..., 0]
-        y    = vertices[..., 1]
-        z    = vertices[..., 2]
-        lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
-
         # Flip vectors about the x axis if necessary
         if opts.orientFlip:
-            x = -x
+            vertices[..., 0] = -vertices[..., 0]
 
+        # Normalise vectors to unit length if necesssary
         if opts.unitLength:
 
-            # scale the vector lengths to 0.5
+            # Pull out the xyz components of the
+            # vectors, and calculate vector lengths.
+            x    = vertices[..., 0]
+            y    = vertices[..., 1]
+            z    = vertices[..., 2]
+            lens = np.sqrt(x ** 2 + y ** 2 + z ** 2)
+
+            # scale the vector lengths to 0.5.
             with np.errstate(invalid='ignore'):
                 vertices[..., 0] = 0.5 * x / lens
                 vertices[..., 1] = 0.5 * y / lens
@@ -358,7 +324,37 @@ class GLLineVertices:
             # within real world space. We're assuming
             # here that the vectors are defined in
             # mm (e.g. the FSL coordinate system).
-            vertices /= (image.pixdim[:3] / min(image.pixdim[:3]))
+            pixdim    = np.abs(image.pixdim[:3])
+            vertices /= (pixdim / np.min(pixdim))
+
+        # Modulate vector line length
+        if (opts.modulateMode == 'lineLength' and
+            opts.modulateImage is not None):
+
+            # Get modulate image data
+            modImage = opts.modulateImage
+            modLow   = opts.modulateRange.xlo
+            modHigh  = opts.modulateRange.xhi
+            modOpts  = dctx.getOpts(modImage)
+            modSlice = modOpts.index()
+            modData  = modImage[modSlice]
+
+            # Generate voxel coordinates in the image
+            # space and transform them into modulate
+            # image voxel coordinates
+            img2mod = affine.concat(modOpts.getTransform('display', 'voxel'),
+                                    opts   .getTransform('voxel', 'display'))
+            voxels  = glroutines.generateCoordinates(*shape[:3])
+            voxels  = affine.transform(voxels, img2mod)
+
+            # Sample from the modulate image
+            modData = ndimage.map_coordinates(modData, voxels.T, order=1)
+            modData = modData.reshape(shape[:3], order='F')
+            modData = (modData + modLow) / (modHigh - modLow)
+
+            vertices[..., 0] *= modData
+            vertices[..., 1] *= modData
+            vertices[..., 2] *= modData
 
         # Scale the vectors by the length scaling factor
         vertices *= opts.lengthScale / 100.0
