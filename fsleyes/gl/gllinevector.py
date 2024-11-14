@@ -349,7 +349,7 @@ class GLLineVertices:
 
             # Sample from the modulate image
             modData = ndimage.map_coordinates(modData, voxels.T, order=1)
-            modData = modData.reshape(shape[:3])
+            modData = modData.reshape(shape[:3], order='F')
             modData = (modData + modLow) / (modHigh - modLow)
 
             vertices[..., 0] *= modData
