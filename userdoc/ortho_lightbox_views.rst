@@ -244,7 +244,7 @@ Lightbox view settings
 
 
 The :ref:`view settings panel <ortho_lightbox_views_view_settings>` for a
-lightbox view contains the same settings that are available on the ligthbox
+lightbox view contains the same settings that are available on the lightbox
 toolbar, along with some additional settings.
 
 
