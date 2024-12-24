@@ -95,7 +95,7 @@ Shortcut                            Action
 =================================== =====================================
 
 
-Ortho, ligthbox, and 3D views
+Ortho, lightbox, and 3D views
 -----------------------------
 
 

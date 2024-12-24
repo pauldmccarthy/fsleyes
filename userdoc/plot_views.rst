@@ -47,7 +47,7 @@ capable of displaying various :ref:`FEAT analysis <feat_mode>` outputs, and
 pages for more details.
 
 
-When you are viewing a 4D NIFTI image in an :ref:`orthographic or ligthbox
+When you are viewing a 4D NIFTI image in an :ref:`orthographic or lightbox
 view <ortho_lightbox_views>`, the time series view will update as you change
 the display location, to show the time series from the voxel (or voxels, if
 you have more than one 4D image loaded) at the current location. Clicking, or
