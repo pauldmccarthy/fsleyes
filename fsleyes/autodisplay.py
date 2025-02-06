@@ -135,10 +135,19 @@ def _statImageDisplay(overlay,
     elif any([token in basename for token in statTokens]) and \
        'rendered' not in basename:
 
-        maxVal                 = overlay.dataRange[1]
-        opts.useNegativeCmap   = True
-        opts.clippingRange.xlo =  zthres
-        opts.displayRange      = [zthres, min((7.5, maxVal))]
+        maxVal               = overlay.dataRange[1]
+        opts.useNegativeCmap = True
+
+        if 'thresh' in basename:
+            opts.clippingRange.xlo =  zthres
+            opts.displayRange      = [zthres, min((7.5, maxVal))]
+        # modulate alpha by intensity for regular stat images
+        else:
+            opts.linkLowRanges     = False
+            opts.clippingRange.xlo = 0
+            opts.modulateAlpha     = True
+            opts.modulateRange     = [0, zthres]
+            opts.displayRange      = [zthres, min((7.5, maxVal))]
 
     # F stat image?
     elif any([token in basename for token in fStatTokens]):
