@@ -6,9 +6,10 @@ set -e
 # as it is not possible to use opengl hw
 # accelerated GL on headless macOS
 if [[ "$MACOS_OVERLAY_TEST" == "1" ]]; then
-  export FSLDIR=~/fsl/fsl-6.0.5/
-  ~/miniconda3/bin/conda create -y -c conda-forge -p ./test.env python=3.10 zstd mesalib wget libiconv
-  source ~/miniconda3/bin/activate ./test.env
+  export FSLDIR=~/fsl/fsl-for-fsleyes-tests/
+  eval "$(~/micromamba/bin/micromamba shell hook --shell $(basename ${SHELL}))"
+  micromamba create -y -c conda-forge -p ./test.env python=3.11 zstd mesalib wget libiconv
+  micromamba activate ./test.env
   pip install --upgrade pip
 else
 
@@ -23,7 +24,10 @@ else
   pip install --upgrade pip setuptools wheel build
 fi
 
-PIPARGS="--retries 10 --timeout 30"
+PIPARGS=" --retries 10 "
+PIPARGS+="--timeout 30 "
+PIPARGS+="--trusted-host files.pythonhosted.org "
+PIPARGS+="--trusted-host pypi.org "
 
 # Make sure we have latest (possibly development)
 # versions of the core dependencies
