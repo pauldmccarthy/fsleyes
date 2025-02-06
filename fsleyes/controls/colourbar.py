@@ -161,16 +161,20 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             opts    = self.__opts
             display = self.__display
 
-            opts   .remove('displayRange',     name)
-            opts   .remove('cmap',             name)
-            opts   .remove('negativeCmap',     name)
-            opts   .remove('useNegativeCmap',  name)
-            opts   .remove('invert',           name)
-            opts   .remove('gamma',            name)
-            opts   .remove('logScale',         name)
-            opts   .remove('cmapResolution',   name)
-            opts   .remove('interpolateCmaps', name)
-            display.remove('name',             name)
+            opts   .remove('displayRange',        name)
+            opts   .remove('cmap',                name)
+            opts   .remove('negativeCmap',        name)
+            opts   .remove('useNegativeCmap',     name)
+            opts   .remove('invert',              name)
+            opts   .remove('gamma',               name)
+            opts   .remove('logScale',            name)
+            opts   .remove('cmapResolution',      name)
+            opts   .remove('interpolateCmaps',    name)
+            opts   .remove('modulateAlpha',       name)
+            opts   .remove('invertModulateAlpha', name)
+            opts   .remove('modulateRange',       name)
+            display.remove('name',                name)
+            display.remove('alpha',               name)
 
         except fsldc.InvalidOverlayError:
             pass
@@ -202,16 +206,20 @@ class ColourBar(props.HasProperties, notifier.Notifier):
         name  = self.name
         clear = self.__clearColourBar
 
-        opts   .listen('displayRange',     name, clear)
-        opts   .listen('cmap',             name, clear)
-        opts   .listen('negativeCmap',     name, clear)
-        opts   .listen('useNegativeCmap',  name, clear)
-        opts   .listen('invert',           name, clear)
-        opts   .listen('cmapResolution',   name, clear)
-        opts   .listen('interpolateCmaps', name, clear)
-        opts   .listen('gamma',            name, clear)
-        opts   .listen('logScale',         name, clear)
-        display.listen('name',             name, clear)
+        opts   .listen('displayRange',        name, clear)
+        opts   .listen('cmap',                name, clear)
+        opts   .listen('negativeCmap',        name, clear)
+        opts   .listen('useNegativeCmap',     name, clear)
+        opts   .listen('invert',              name, clear)
+        opts   .listen('cmapResolution',      name, clear)
+        opts   .listen('interpolateCmaps',    name, clear)
+        opts   .listen('gamma',               name, clear)
+        opts   .listen('logScale',            name, clear)
+        opts   .listen('modulateAlpha',       name, clear)
+        opts   .listen('invertModulateAlpha', name, clear)
+        opts   .listen('modulateRange',       name, clear)
+        display.listen('name',                name, clear)
+        display.listen('alpha',               name, clear)
 
         return True
 
@@ -250,7 +258,11 @@ class ColourBar(props.HasProperties, notifier.Notifier):
         gamma          = opts.realGamma(opts.gamma)
         logScale       = opts.logScale
         invert         = opts.invert
+        modAlpha       = opts.modulateAlpha
+        invModAlpha    = opts.invertModulateAlpha
+        mmin, mmax     = opts.modulateRange.x
         dmin, dmax     = opts.displayRange.x
+        alpha          = display.alpha / 100
         label          = display.name
 
         if self.orientation == 'horizontal':
@@ -309,12 +321,17 @@ class ColourBar(props.HasProperties, notifier.Notifier):
             scale=scale,
             orientation=self.orientation,
             labelside=labelSide,
+            alpha=alpha,
             textColour=self.textColour,
             fontsize=self.fontSize,
             bgColour=self.bgColour,
             cmapResolution=cmapResolution,
             interp=interp,
-            logScaleRange=logScale)
+            logScaleRange=logScale,
+            modAlpha=modAlpha,
+            invModAlpha=invModAlpha,
+            displayRange=(dmin, dmax),
+            modRange=(mmin, mmax))
 
         self.__size      = (w, h, scale)
         self.__colourBar = bitmap
