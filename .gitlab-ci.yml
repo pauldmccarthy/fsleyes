@@ -133,20 +133,20 @@ variables:
     - docker push "${IMAGE}:${TAG}"
     - docker push "${IMAGE}:latest"
 
-build-docker-image-fsleyes-py37-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/fsleyes-py37-wxpy4-gtk3
+# build-docker-image-fsleyes-py37-wxpy4-gtk3:
+#   extends: .build-docker-image
+#   variables:
+#     BUILDDIR: .docker/fsleyes-py37-wxpy4-gtk3
 
-build-docker-image-fsleyes-py38-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/fsleyes-py38-wxpy4-gtk3
+# build-docker-image-fsleyes-py38-wxpy4-gtk3:
+#   extends: .build-docker-image
+#   variables:
+#     BUILDDIR: .docker/fsleyes-py38-wxpy4-gtk3
 
-build-docker-image-fsleyes-py39-wxpy4-gtk3:
-  extends: .build-docker-image
-  variables:
-    BUILDDIR: .docker/fsleyes-py39-wxpy4-gtk3
+# build-docker-image-fsleyes-py39-wxpy4-gtk3:
+#   extends: .build-docker-image
+#   variables:
+#     BUILDDIR: .docker/fsleyes-py39-wxpy4-gtk3
 
 build-docker-image-fsleyes-py310-wxpy4-gtk3:
   extends: .build-docker-image
@@ -273,7 +273,7 @@ test:3.13:
 
 test:build-pypi-dist:
   stage: test
-  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py311-wxpy4-gtk3
   <<: *test_rules
 
   tags:
@@ -291,7 +291,7 @@ test:build-pypi-dist:
 
 style:
   stage: style
-  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py311-wxpy4-gtk3
   <<: *test_template
   variables:
     TEST_STYLE: "true"
@@ -309,7 +309,7 @@ pages:
     - docker
 
   stage: doc
-  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py311-wxpy4-gtk3
 
   script:
     - bash ./.ci/build_userdoc.sh
@@ -329,7 +329,7 @@ build-pypi-dist:
   <<: *only_releases
 
   stage: build
-  image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
+  image: pauldmccarthy/fsleyes-py311-wxpy4-gtk3
 
   tags:
     - docker
@@ -359,7 +359,7 @@ deploy-pypi:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.10
+  image: python:3.11
 
   tags:
     - docker
@@ -376,7 +376,7 @@ deploy-zenodo:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.10
+  image: python:3.11
 
   tags:
     - docker

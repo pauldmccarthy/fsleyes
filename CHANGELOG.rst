@@ -12,6 +12,20 @@ chronological order.
 
 
 
+1.14.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+* Alpha modulation settings (e.g. _Modulate alpha by intensity_) are now
+  applied to the colour bar if it is displayed (!464).
+* The ``--autoDisplay`` / ``-ad`` command-line option will now enable
+  alpha-modulation on FEAT statistic images (e.g. ``stats/zstat1.nii.gz``
+  etc) (!464).
+
+
 1.13.0 (Thursday 14th November 2024)
 ------------------------------------
 

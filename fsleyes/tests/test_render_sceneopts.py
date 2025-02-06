@@ -50,6 +50,10 @@ cli_tests = """
 -cb {{zero_centre('3d.nii.gz')}} -cm hot -cmr 4
 -cb {{zero_centre('3d.nii.gz')}} -cm hot -cmr 4 -inc
 
+# colour bar + alpha modulation (not for 3d, as
+# alpha-mod is not available for volume+3d)
+-cb {{zero_centre('3d.nii.gz')}} -cm red-yellow -un -nc blue-lightblue -ll -ma -dr 0 4000 -mr 0 2000  # [skip3d]
+
 # cmap has res 5
 # default res is 256
 -cb 3d.nii.gz -cm {{gen_cmap()}}
@@ -125,6 +129,7 @@ def test_render_sceneopts_lightbox():
 def test_render_sceneopts_3d():
     tests = [t.strip() for t in cli_tests.split('\n')]
     tests = [t for t in tests if (t != '') and (t[0] != '#')]
+    tests = [t for t in tests if ('[skip3d]' not in t)]
     tests = '\n'.join(['-dl {}'.format(t) for t in tests])
 
     run_cli_tests('test_render_sceneopts_3d',
