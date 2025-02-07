@@ -28,7 +28,6 @@ import threading
 
 FILTERS = [
     r'ApplePersistenceIgnoreState',
-    (r'DeprecationWarning', 2),
     (r'Gtk-CRITICAL', 2),
     (r'Gtk-WARNING', 2),
     r'Adding duplicate image handler',
@@ -70,6 +69,8 @@ FILTERS = [
     r'atk-bridge: get_device_events_reply: unknown signature',
     r'MESA: error: ZINK: failed to choose pdev',
     r'glx: failed to create drisw screen',
+    (r'Jupyter is migrating its paths to use standard platformdirs', 6),
+    (r'DeprecationWarning', 2),
 ]
 
 
