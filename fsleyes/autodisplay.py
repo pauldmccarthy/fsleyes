@@ -224,4 +224,6 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
                   'overlay list: {}'.format(meanFile))
 
         meanImg = fslimage.Image(meanFile)
-        overlayList.insert(idx, meanImg)
+
+        with displayCtx.preserveSelection():
+            overlayList.insert(idx, meanImg)

@@ -2986,10 +2986,17 @@ def applyOverlayArgs(args,
         # or whatever was specified by
         # the --selectedOverlay option
         selovl = args.selectedOverlay
+
         if selovl is None or selovl < 0 or selovl >= len(overlayList):
-            displayCtx.selectedOverlay = len(overlayList) - 1
-        else:
-            displayCtx.selectedOverlay = selovl
+            selovl = len(overlayList) - 1
+
+        # Apply the selection to all display
+        # contexts, as the selectedOverlay is
+        # not necessarily synchronised across
+        # them.
+        displayCtxs = [displayCtx] + displayCtx.getChildren()
+        for dctx in displayCtxs:
+            dctx.selectedOverlay = selovl
 
         # call the caller's onLoad
         # callback if provided
