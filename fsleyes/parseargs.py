@@ -2994,8 +2994,10 @@ def applyOverlayArgs(args,
         # contexts, as the selectedOverlay is
         # not necessarily synchronised across
         # them.
-        displayCtxs = [displayCtx] + displayCtx.getChildren()
-        for dctx in displayCtxs:
+        dctxs = [displayCtx]
+        if displayCtx.getChildren() is not None:
+            dctxs += displayCtx.getChildren()
+        for dctx in dctxs:
             dctx.selectedOverlay = selovl
 
         # call the caller's onLoad
