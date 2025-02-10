@@ -12,8 +12,8 @@ chronological order.
 
 
 
-1.14.0 (Under development)
---------------------------
+1.14.0 (Tuesday 11th February 2025)
+-----------------------------------
 
 
 Changed
@@ -24,6 +24,14 @@ Changed
 * The ``--autoDisplay`` / ``-ad`` command-line option will now enable
   alpha-modulation on FEAT statistic images (e.g. ``stats/zstat1.nii.gz``
   etc) (!464).
+
+
+Fixed
+^^^^^
+
+* The `melodic_IC` file should now be selected by default when using Melodic
+  mode in conjunction with ``--autoDisplay`` (e.g. ``fsleyes -smelodic -ad
+  ..``) (!465).
 
 
 1.13.0 (Thursday 14th November 2024)

@@ -506,6 +506,7 @@ class FSLeyesFrame(wx.Frame):
             self.__overlayList,
             parent=self.__displayCtx,
             displayType=panelCls.displayType(),
+            selectedOverlay=self.__displayCtx.selectedOverlay,
             **kwargs)
 
         panel = panelCls(self.__mainPanel, self.__overlayList, childDC, self)

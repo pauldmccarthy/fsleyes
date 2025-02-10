@@ -287,6 +287,20 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
+    preserveSelectedOverlay = props.Boolean(default=False)
+    """Whether or not to preserve the currently selected overlay when the
+    :class:`.OverlayList` changes.
+
+    As the :attr:`selectedOverlay` is an integer index, changes to the
+    :class:`.OverlayList` may change the overlay to which it refers. If this
+    property is ``True``, the selected overlay is preserved on
+    :class:`.OverlayList` changes.
+
+    This property is not to be used externally - use the
+    :meth:`preserveSelection` method instead.
+    """
+
+
     def __init__(self,
                  overlayList,
                  parent=None,
@@ -334,6 +348,7 @@ class DisplayContext(props.SyncableHasProperties):
                          'bounds'])
         nounbind.extend(['overlayGroups',
                          'groupOverlays',
+                         'preserveSelectedOverlay',
                          'autoDisplay',
                          'loadInMemory'])
 
@@ -346,7 +361,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         self.__overlayList = overlayList
         self.__displayType = displayType
-        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__name        = f'{self.__class__.__name__}_{id(self)}'
         self.__child       = parent is not None
 
         # When the first overlay(s) is/are
@@ -644,6 +659,25 @@ class DisplayContext(props.SyncableHasProperties):
         return self.__overlayList[self.selectedOverlay]
 
 
+    @contextlib.contextmanager
+    def preserveSelection(self):
+        """Context manager to be used while changing the :class:`.OverlayList`.
+        Preserves the currently selected overlay if possible.
+        Note that this is applied to *all* ``DisplayContext`` instances,
+        not just the one on which this method is called.
+        """
+
+        # Guard against re-entrancy
+        needChange = not self.preserveSelectedOverlay
+        try:
+            if needChange:
+                self.preserveSelectedOverlay = True
+            yield
+        finally:
+            if needChange:
+                self.preserveSelectedOverlay = False
+
+
     def getOverlayOrder(self, overlay):
         """Returns the order in which the given overlay (or an index into
         the :class:`.OverlayList` list) should be displayed
@@ -880,6 +914,7 @@ class DisplayContext(props.SyncableHasProperties):
         # than len(overlayList)-1. selectedOverlay
         # is always synchronised, so we only
         # need to do this on the parent DC.
+        oldSelIdx = self.selectedOverlay
         nOverlays = len(self.__overlayList)
         if nOverlays > 0:
             self.setAttribute('selectedOverlay',
@@ -887,6 +922,14 @@ class DisplayContext(props.SyncableHasProperties):
                               nOverlays - 1)
         else:
             self.setAttribute('selectedOverlay', 'maxval', 0)
+
+        # Preserve the selected overlay if needed
+        if self.preserveSelectedOverlay:
+            oldList = self.__overlayList.overlays.getLast()
+            if oldSelIdx < len(oldList):
+                selOvl = oldList[oldSelIdx]
+                if selOvl in self.__overlayList:
+                    self.selectOverlay(selOvl)
 
         # Ensure that the overlayOrder
         # property is valid

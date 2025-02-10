@@ -161,12 +161,12 @@ def applyCommandLineArgs(overlayList,
 
     parser = argparse.ArgumentParser(add_help=False)
 
-    try:
-        real_stdout = sys.stdout
-        real_stderr = sys.stderr
-        sys.stdout  = stdout
-        sys.stderr  = stderr
+    real_stdout = sys.stdout
+    real_stderr = sys.stderr
+    sys.stdout  = stdout
+    sys.stderr  = stderr
 
+    try:
         with chdir(baseDir):
             namespace = parseargs.parseArgs(parser, argv, 'fsleyes')
 

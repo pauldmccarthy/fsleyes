@@ -221,7 +221,9 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
     if meanFile not in existing:
 
         log.debug('Inserting mean melodic image into '
-                  'overlay list: {}'.format(meanFile))
+                  'overlay list: %s', meanFile)
 
         meanImg = fslimage.Image(meanFile)
-        overlayList.insert(idx, meanImg)
+
+        with displayCtx.preserveSelection():
+            overlayList.insert(idx, meanImg)
