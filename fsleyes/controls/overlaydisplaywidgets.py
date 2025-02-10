@@ -346,30 +346,35 @@ def _initPropertyList_VolumeRGBOpts(threedee):
 
 
 def _initPropertyList_TractogramOpts(threedee):
-    return ['lineWidth',
-            'resolution',
-            'subsample',
-            'custom_colourMode',
-            'clipMode',
-            'custom_cmap',
-            'cmapResolution',
-            'gamma',
-            'logScale',
-            'interpolateCmaps',
-            'invert',
-            'invertClipping',
-            'custom_linkRanges',
-            'custom_modulateAlpha',
-            'displayRange',
-            'clippingRange',
-            'modulateRange',
-            'xColour',
-            'yColour',
-            'zColour',
-            'suppressX',
-            'suppressY',
-            'suppressZ',
-            'suppressMode']
+    plist = ['lineWidth',
+             'resolution',
+             'subsample']
+
+    if not threedee:
+        plist.append('pseudo3D')
+
+    plist += ['custom_colourMode',
+              'clipMode',
+              'custom_cmap',
+              'cmapResolution',
+              'gamma',
+              'logScale',
+              'interpolateCmaps',
+              'invert',
+              'invertClipping',
+              'custom_linkRanges',
+              'custom_modulateAlpha',
+              'displayRange',
+              'clippingRange',
+              'modulateRange',
+              'xColour',
+              'yColour',
+              'zColour',
+              'suppressX',
+              'suppressY',
+              'suppressZ',
+              'suppressMode']
+    return plist
 
 
 def _initWidgetSpec_Display(displayCtx, threedee):
@@ -989,6 +994,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'lineWidth'         : props.Widget('lineWidth',    **sliderOpts),
         'resolution'        : props.Widget('resolution',   **sliderOpts),
         'subsample'         : props.Widget('subsample',    **sliderOpts),
+        'pseudo3D'          : props.Widget('pseudo3D'),
 
         # We override the ColourMapOpts definitions
         # for custom enabledWhen behaviour.

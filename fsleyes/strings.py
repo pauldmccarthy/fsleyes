@@ -1307,6 +1307,7 @@ properties = TypeDict({
     'TractogramOpts.lineWidth'         : 'Width',
     'TractogramOpts.resolution'        : 'Resolution',
     'TractogramOpts.subsample'         : 'Sub-sample',
+    'TractogramOpts.pseudo3D'          : 'Pseudo-3D',
 })
 
 

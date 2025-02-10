@@ -71,6 +71,14 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
+    pseudo3D = props.Boolean(default=False)
+    """When drawing to a 2D canvas (e.g. an :class:`.OrthoPanel`), this
+    property controls whether the tractogram is drawn as a 2D cross-section of
+    individual vertices, or as pseudo-3D streamlines overlaid on top of the
+    2D canvas.
+    """
+
+
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``TractogramOpts`` instance. """
 

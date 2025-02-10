@@ -433,6 +433,8 @@ class GLSLShader:
 
         if divisor is not None:
             self.attDivisors[name] = divisor
+        else:
+            self.attDivisors.pop(name, None)
 
         self.hasValue[name] = True
 

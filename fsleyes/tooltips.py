@@ -454,6 +454,8 @@ properties = TypeDict({
     'TractogramOpts.subsample' :
     'Draw a randomly selected subset of streamlines. This setting is useful '
     'when viewing very large tractograms.',
+    'TractogramOpts.pseudo3D' :
+    'Draw the full 3D tractogram overlaid on the 2D display.',
 
     # MIPOpts
     'MIPOpts.window'  :
