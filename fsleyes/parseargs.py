@@ -670,6 +670,7 @@ OPTIONS = td.TypeDict({
                            'lineWidth',
                            'resolution',
                            'subsample',
+                           'pseudo3D',
                            'linkLowRanges',
                            'linkHighRanges',
                            'useNegativeCmap',
@@ -1032,11 +1033,12 @@ ARGUMENTS = td.TypeDict({
 
     'ComplexOpts.component' : ('co', 'component', True),
 
-    'TractogramOpts.colourBy'       : ('co', 'colourBy',   True),
-    'TractogramOpts.clipBy'         : ('cl', 'clipBy',     True),
-    'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',  True),
-    'TractogramOpts.resolution'     : ('r',  'resolution', True),
-    'TractogramOpts.subsample'      : ('s',  'subsample',  True),
+    'TractogramOpts.colourBy'   : ('co', 'colourBy',   True),
+    'TractogramOpts.clipBy'     : ('cl', 'clipBy',     True),
+    'TractogramOpts.lineWidth'  : ('lw', 'lineWidth',  True),
+    'TractogramOpts.resolution' : ('r',  'resolution', True),
+    'TractogramOpts.subsample'  : ('s',  'subsample',  True),
+    'TractogramOpts.pseudo3D'   : ('p',  'pseudo3D',   False),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1461,6 +1463,8 @@ HELP = td.TypeDict({
     'Streamline resolution/quality',
     'TractogramOpts.subsample' :
     'Draw a randomly selected subsample of streamlines.',
+    'TractogramOpts.pseudo3D' :
+    '2D only. Draw the full 3D tractogram, overlaid on the 2D scene.',
  })
 """This dictionary defines the help text for all command line options."""
 
