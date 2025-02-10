@@ -104,6 +104,10 @@ def draw2D(self, canvas, mvp):
         shader.draw(gl.GL_POINTS, 0,  len(self.vertices))
 
 
+def drawPseudo3D(self, canvas, mvp):
+    """Called by :class:`.GLTractogram.drawPseudo3D`. """
+
+
 def draw3D(self, canvas, xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
 

@@ -660,6 +660,23 @@ class GLTractogram(globject.GLObject):
         :func:`.gl21.gltractogram_funcs.drawPseudo3D` or
         :func:`.gl33.gltractogram_funcs.drawPseudo3D`.
         """
+        if xform is None:
+            xform = np.eye(4)
+
+        opts = self.opts
+        zax  = axes[2]
+
+        projmat = np.array(canvas.projectionMatrix)
+        if zax == 1:
+            projmat[2, 2] *= -1
+
+        viewmat  = canvas.viewMatrix
+        wld2disp = opts.displayTransform
+        mvp      = affine.concat(projmat, viewmat, xform, wld2disp)
+
+        fslgl.gltractogram_funcs.drawPseudo3D(self, canvas, mvp)
+
+
     def draw3D(self, *args, **kwargs):
         """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
         :func:`.gl33.gltractogram_funcs.draw3D`.
