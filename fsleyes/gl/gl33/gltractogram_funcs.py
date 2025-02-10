@@ -58,33 +58,34 @@ def compileShaders(self):
         'vertexData'  : vdatafsrc,
         'imageData'   : idatafsrc,
     }
+    geomSources = {
+        'line'  : linegsrc,
+        'point' : pointgsrc,
+        'tube'  : tubegsrc
+    }
 
     colourModes = ['orientation', 'vertexData', 'imageData']
     clipModes   = ['none',        'vertexData', 'imageData']
     dims        = ['2D', '3D']
+    geoms       = ['line', 'tube', 'point']
 
     # Share the "in vec3 vertex"
     # buffer across all shaders
     kwa = {'resourceName' : f'GLTractogram_{id(self)}',
            'shared'       : ['vertex']}
 
-    if self.threedee: geomsrcs = [linegsrc, tubegsrc]
-    else:             geomsrcs = [pointgsrc]
-
-    for dim, colourMode, clipMode in it.product(dims, colourModes, clipModes):
+    for dim, geom, colourMode, clipMode in it.product(
+            dims, geoms, colourModes, clipModes):
 
         fsrc  = colourSources[colourMode]
+        gsrc  = geomSources[geom]
         const = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
             'lighting'   : dim == '3D'
         }
-
-        progs = []
-        for gsrc in geomsrcs:
-            progs.append(shaders.GLSLShader(vsrc, fsrc, gsrc, const, **kwa))
-
-        self.shaders[dim][colourMode][clipMode].extend(progs)
+        prog = shaders.GLSLShader(vsrc, fsrc, gsrc, const, **kwa)
+        self.shaders[dim][colourMode][clipMode][geom] = prog
 
 
 def draw2D(self, canvas, mvp):
@@ -92,7 +93,7 @@ def draw2D(self, canvas, mvp):
     opts       = self.opts
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    shader     = self.shaders['2D'][colourMode][clipMode][0]
+    shader     = self.shaders['2D'][colourMode][clipMode]['point']
     scales     = self.normalisedLineWidth(canvas, mvp, False)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -106,9 +107,16 @@ def draw2D(self, canvas, mvp):
 
 def drawPseudo3D(self, canvas, mvp):
     """Called by :class:`.GLTractogram.drawPseudo3D`. """
+    draw3D(self, canvas, mvp, True, [0, 0, 0], threedee=False)
 
 
-def draw3D(self, canvas, xform=None):
+def draw3D(self,
+           canvas,
+           mvp,
+           lighting,
+           lightPos,
+           threedee=True,
+           xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
 
     opts       = self.opts
@@ -116,11 +124,8 @@ def draw3D(self, canvas, xform=None):
     display    = self.display
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    mvp        = canvas.mvpMatrix
-    lighting   = canvas.opts.light
-    lightPos   = affine.transform(canvas.lightPos, mvp)
     nstrms     = ovl.nstreamlines
-    lineWidth  = self.normalisedLineWidth(canvas, mvp, True)
+    lineWidth  = self.normalisedLineWidth(canvas, mvp, threedee)
     offsets    = self.offsets
     counts     = self.counts
     nstrms     = len(offsets)
@@ -128,8 +133,8 @@ def draw3D(self, canvas, xform=None):
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if geom == 'line': shader = self.shaders['3D'][colourMode][clipMode][0]
-    else:              shader = self.shaders['3D'][colourMode][clipMode][1]
+    if geom == 'line': shader = self.shaders['3D'][colourMode][clipMode]['line']
+    else:              shader = self.shaders['3D'][colourMode][clipMode]['tube']
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)

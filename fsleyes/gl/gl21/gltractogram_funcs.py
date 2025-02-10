@@ -52,7 +52,7 @@ def compileShaders(self):
         }
         shader = shaders.GLSLShader(vsrc, fsrc, constants=consts, **kwa)
 
-        self.shaders[dim][colourMode][clipMode].append(shader)
+        self.shaders[dim][colourMode][clipMode]['geom'] = shader
 
 
 def draw2D(self, canvas, mvp):
@@ -62,7 +62,7 @@ def draw2D(self, canvas, mvp):
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
     res        = max((opts.resolution, 3))
-    shader     = self.shaders['2D'][colourMode][clipMode][0]
+    shader     = self.shaders['2D'][colourMode][clipMode]['geom']
 
     # each vertex is drawn as a circle,
     # using instanced rendering.
@@ -83,41 +83,23 @@ def draw2D(self, canvas, mvp):
 
 def drawPseudo3D(self, canvas, mvp):
     """Called by :class:`.GLTractogram.drawPseudo3D`. """
-    opts       = self.opts
-    display    = self.display
-    colourMode = opts.effectiveColourMode
-    clipMode   = opts.effectiveClipMode
-    lineWidth  = opts.lineWidth
-    offsets    = self.offsets
-    counts     = self.counts
-    nstrms     = len(offsets)
-    shader     = self.shaders['3D'][colourMode][clipMode][0]
-
-    with shader.loaded(), shader.loadedAtts():
-        shader.set('MVP', mvp)
-        # we don't implement proper line width in
-        # gl21 - we would need to use instanced
-        # rendering to draw each line segment as a
-        # rectangle (see gl33.gltractogram_funcs.draw3D)
-        gl.glLineWidth(lineWidth)
-        if display.alpha < 100 or opts.modulateAlpha:
-            gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
-        with glroutines.enabled(gl.GL_DEPTH_TEST):
-            gl.glMultiDrawArrays(gl.GL_LINE_STRIP, offsets, counts, nstrms)
+    draw3D(self, canvas, mvp)
 
 
-def draw3D(self, canvas, xform=None):
+def draw3D(self,
+           canvas,
+           mvp,
+           xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
     opts       = self.opts
     display    = self.display
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    mvp        = canvas.mvpMatrix
     lineWidth  = opts.lineWidth
     offsets    = self.offsets
     counts     = self.counts
     nstrms     = len(offsets)
-    shader     = self.shaders['3D'][colourMode][clipMode][0]
+    shader     = self.shaders['3D'][colourMode][clipMode]['geom']
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)

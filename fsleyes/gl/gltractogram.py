@@ -47,15 +47,21 @@ class GLTractogram(globject.GLObject):
         #                   data used for colouring
         #  - 'vertexData' - clipping by a separate vertex data set
         #  - 'imageData'  - clipping by a separate image data set
+        #
+        # Each leaf node is a dict of {<geometry> : GLSLShader}
+        # mappings for different geometry shaders. The GL21
+        # implementation does not use geometry, and hence will
+        # only contains one entry, whereas the GL33 implementation
+        # uses geometry shaders for different rendering applications.
         self.shaders = {
             '2D' : {
-                'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
-                'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
-                'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}},
+                'orientation' : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'vertexData'  : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'imageData'   : {'none' : {}, 'vertexData' : {}, 'imageData' : {}}},
             '3D' : {
-                'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
-                'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
-                'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}}
+                'orientation' : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'vertexData'  : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'imageData'   : {'none' : {}, 'vertexData' : {}, 'imageData' : {}}}
         }
 
         # Scale alpha exponentially in the
@@ -221,7 +227,7 @@ class GLTractogram(globject.GLObject):
         shaders = [self.shaders[d] for d in dims]
         shaders = it.chain(*[[s[m] for m in colourModes] for s in shaders])
         shaders = it.chain(*[[s[m] for m in clipModes]   for s in shaders])
-        return it.chain(*shaders)
+        return it.chain(*[s.values() for s in shaders])
 
 
     @property
@@ -657,7 +663,7 @@ class GLTractogram(globject.GLObject):
     def drawPseudo3D(self, canvas, zpos, axes, xform=None):
         """Draws a 3D rendering of the tractogram onto a 2D canvas.
 
-        :func:`.gl21.gltractogram_funcs.drawPseudo3D` or
+        Calls :func:`.gl21.gltractogram_funcs.drawPseudo3D` or
         :func:`.gl33.gltractogram_funcs.drawPseudo3D`.
         """
         if xform is None:
@@ -677,11 +683,16 @@ class GLTractogram(globject.GLObject):
         fslgl.gltractogram_funcs.drawPseudo3D(self, canvas, mvp)
 
 
-    def draw3D(self, *args, **kwargs):
+    def draw3D(self, canvas, xform=None):
         """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
         :func:`.gl33.gltractogram_funcs.draw3D`.
         """
-        fslgl.gltractogram_funcs.draw3D(self, *args, **kwargs)
+        mvp      = canvas.mvpMatrix
+        lighting = canvas.opts.light
+        lightPos = affine.transform(canvas.lightPos, mvp)
+
+        fslgl.gltractogram_funcs.draw3D(
+            self, canvas, mvp, lighting, lightPos, xform=xform)
 
 
     def postDraw(self):
