@@ -671,6 +671,9 @@ OPTIONS = td.TypeDict({
                            'resolution',
                            'subsample',
                            'pseudo3D',
+                           'xclipdir',
+                           'yclipdir',
+                           'zclipdir',
                            'linkLowRanges',
                            'linkHighRanges',
                            'useNegativeCmap',
@@ -1033,12 +1036,16 @@ ARGUMENTS = td.TypeDict({
 
     'ComplexOpts.component' : ('co', 'component', True),
 
-    'TractogramOpts.colourBy'   : ('co', 'colourBy',   True),
-    'TractogramOpts.clipBy'     : ('cl', 'clipBy',     True),
-    'TractogramOpts.lineWidth'  : ('lw', 'lineWidth',  True),
-    'TractogramOpts.resolution' : ('r',  'resolution', True),
-    'TractogramOpts.subsample'  : ('s',  'subsample',  True),
-    'TractogramOpts.pseudo3D'   : ('p',  'pseudo3D',   False),
+    'TractogramOpts.colourBy'   : ('co',  'colourBy',   True),
+    'TractogramOpts.clipBy'     : ('cl',  'clipBy',     True),
+    'TractogramOpts.lineWidth'  : ('lw',  'lineWidth',  True),
+    'TractogramOpts.resolution' : ('r',   'resolution', True),
+    'TractogramOpts.subsample'  : ('s',   'subsample',  True),
+    'TractogramOpts.pseudo3D'   : ('p',   'pseudo3D',   False),
+    'TractogramOpts.xclipdir'   : ('xcl', 'xclipdir',   True),
+    'TractogramOpts.yclipdir'   : ('ycl', 'yclipdir',   True),
+    'TractogramOpts.zclipdir'   : ('zcl', 'zclipdir',   True),
+
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1465,6 +1472,15 @@ HELP = td.TypeDict({
     'Draw a randomly selected subsample of streamlines.',
     'TractogramOpts.pseudo3D' :
     '2D only. Draw the full 3D tractogram, overlaid on the 2D scene.',
+    'TractogramOpts.xclipdir' :
+    '2D only. Direction in which to clip (hide) areas below/above the current '
+    'X location.',
+    'TractogramOpts.yclipdir' :
+    '2D only. Direction in which to clip (hide) areas below/above the current '
+    'Y location.',
+    'TractogramOpts.zclipdir' :
+    '2D only. Direction in which to clip (hide) areas below/above the current '
+    'Z location.',
  })
 """This dictionary defines the help text for all command line options."""
 

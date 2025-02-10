@@ -1308,6 +1308,10 @@ properties = TypeDict({
     'TractogramOpts.resolution'        : 'Resolution',
     'TractogramOpts.subsample'         : 'Sub-sample',
     'TractogramOpts.pseudo3D'          : 'Pseudo-3D',
+    'TractogramOpts.custom_zclipping'  : 'Depth clipping',
+    'TractogramOpts.xclipdir'          : 'X clip direction',
+    'TractogramOpts.yclipdir'          : 'Y clip direction',
+    'TractogramOpts.zclipdir'          : 'Z clip direction',
 })
 
 
@@ -1431,6 +1435,9 @@ choices = TypeDict({
                                 'phase' : 'Phase'},
 
     'TractogramOpts.colourMode' : {'orientation' : 'Orientation'},
+    'TractogramOpts.clipdir'    : {'low'  : 'Low',
+                                   'high' : 'High',
+                                   'none' : 'None'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',

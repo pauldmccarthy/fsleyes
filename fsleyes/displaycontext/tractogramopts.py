@@ -79,6 +79,22 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
+    xclipdir = props.Choice(('low', 'high', 'none'))
+    """Clipping direction along the X axis when :attr:`pseudo3D` is active.
+    This property controls whether areas of the tractogram which are below
+    (``'low'``) or above (``'high'``) the current location on the depth axis
+    are clipped.
+    """
+
+
+    yclipdir = props.Choice(('low', 'high', 'none'))
+    """Clipping direction along the X axis when :attr:`pseudo3D` is active. """
+
+
+    zclipdir = props.Choice(('low', 'high', 'none'))
+    """Clipping direction along the Z axis when :attr:`pseudo3D` is active. """
+
+
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``TractogramOpts`` instance. """
 

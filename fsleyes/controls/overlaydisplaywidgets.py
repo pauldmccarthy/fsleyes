@@ -352,6 +352,7 @@ def _initPropertyList_TractogramOpts(threedee):
 
     if not threedee:
         plist.append('pseudo3D')
+        plist.append('custom_zclipping')
 
     plist += ['custom_colourMode',
               'clipMode',
@@ -974,11 +975,16 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         else:
             return op.basename(data)
 
-    cmapOpts   = dict(dependencies=['colourMode'],
-                      enabledWhen=lambda o, cm: cm != 'orientation')
-    orientOpts = dict(dependencies=['colourMode'],
-                      enabledWhen=lambda o, cm: cm == 'orientation')
-    sliderOpts = dict(spin=True, slider=True, showLimits=False)
+    cmapOpts    = dict(dependencies=['colourMode'],
+                       enabledWhen=lambda o, cm: cm != 'orientation')
+    orientOpts  = dict(dependencies=['colourMode'],
+                       enabledWhen=lambda o, cm: cm == 'orientation')
+    sliderOpts  = dict(spin=True, slider=True, showLimits=False)
+    zclipOpts   = dict(dependencies=['pseudo3D'],
+                       enabledWhen=lambda o, p: p)
+    clipdirOpts = dict(dependencies=['pseudo3D'],
+                       enabledWhen=lambda o, p: p,
+                       labels=strings.choices['TractogramOpts.clipdir'])
 
     return {
         'colourMode'        : props.Widget('colourMode', labels=cmodeName),
@@ -995,6 +1001,10 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'resolution'        : props.Widget('resolution',   **sliderOpts),
         'subsample'         : props.Widget('subsample',    **sliderOpts),
         'pseudo3D'          : props.Widget('pseudo3D'),
+        'xclipdir'          : props.Widget('xclipdir',     **clipdirOpts),
+        'yclipdir'          : props.Widget('yclipdir',     **clipdirOpts),
+        'zclipdir'          : props.Widget('zclipdir',     **clipdirOpts),
+        'custom_zclipping'  : _TractogramOpts_zclippingWidget,
 
         # We override the ColourMapOpts definitions
         # for custom enabledWhen behaviour.
@@ -1387,6 +1397,42 @@ def _MeshOpts_LutWidget(
     sizer.Add(lut,    flag=wx.EXPAND, proportion=1)
 
     return sizer, [enable, lut]
+
+
+def _TractogramOpts_zclippingWidget(
+        target,
+        parent,
+        panel,
+        overlayList,
+        displayCtx,
+        threedee):
+    """Builds a panel containing widgets for changing the
+    :attr:`.TractogramOpts.xclipdir` and related properties.
+    """
+
+    xclipdir  = getWidgetSpecs(target, displayCtx, threedee)['xclipdir']
+    yclipdir  = getWidgetSpecs(target, displayCtx, threedee)['yclipdir']
+    zclipdir  = getWidgetSpecs(target, displayCtx, threedee)['zclipdir']
+
+    xclipdir  = props.buildGUI(parent, target, xclipdir)
+    yclipdir  = props.buildGUI(parent, target, yclipdir)
+    zclipdir  = props.buildGUI(parent, target, zclipdir)
+
+    xcliplbl  = wx.StaticText(parent, label='X')
+    ycliplbl  = wx.StaticText(parent, label='Y')
+    zcliplbl  = wx.StaticText(parent, label='Z')
+
+    sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+    sizer.Add(xcliplbl,  flag=wx.EXPAND)
+    sizer.Add(xclipdir,  flag=wx.EXPAND, proportion=1)
+    sizer.Add(ycliplbl,  flag=wx.EXPAND)
+    sizer.Add(yclipdir,  flag=wx.EXPAND, proportion=1)
+    sizer.Add(zcliplbl,  flag=wx.EXPAND)
+    sizer.Add(zclipdir,  flag=wx.EXPAND, proportion=1)
+
+    return sizer, [xclipdir, yclipdir, zclipdir]
+
 
 
 def _TractogramOpts_colourModeWidget(

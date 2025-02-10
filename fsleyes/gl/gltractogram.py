@@ -148,6 +148,9 @@ class GLTractogram(globject.GLObject):
         opts   .listen('invertModulateAlpha', name, shader,  weak=False)
         opts   .listen('modulateRange',       name, shader,  weak=False)
         opts   .listen('pseudo3D',            name, data,    weak=False)
+        opts   .listen('xclipdir',            name, refresh, weak=False)
+        opts   .listen('yclipdir',            name, refresh, weak=False)
+        opts   .listen('zclipdir',            name, refresh, weak=False)
         display.listen('alpha',               name, cmaps,   weak=False)
 
 
@@ -184,6 +187,9 @@ class GLTractogram(globject.GLObject):
         opts   .remove('invertModulateAlpha', name)
         opts   .remove('modulateRange',       name)
         opts   .remove('pseudo3D',            name)
+        opts   .remove('xclipdir',            name)
+        opts   .remove('yclipdir',            name)
+        opts   .remove('zclipdir',            name)
         display.remove('alpha',               name)
 
 
@@ -669,10 +675,35 @@ class GLTractogram(globject.GLObject):
         if xform is None:
             xform = np.eye(4)
 
-        opts = self.opts
-        zax  = axes[2]
+        dctx  = self.displayCtx
+        opts  = self.opts
+        zax   = axes[2]
 
         projmat = np.array(canvas.projectionMatrix)
+
+        if   zax == 0: clipdir = opts.xclipdir
+        elif zax == 1: clipdir = opts.yclipdir
+        elif zax == 2: clipdir = opts.zclipdir
+
+        if clipdir != 'none':
+
+            if   zax == 0: zmin, zmax = dctx.bounds.x
+            elif zax == 1: zmin, zmax = dctx.bounds.y
+            elif zax == 2: zmin, zmax = dctx.bounds.z
+
+            if clipdir == 'low': zlo, zhi = zpos, zmax
+            else:                zlo, zhi = zmin, zpos
+
+            zlo, zhi = sorted((zlo, zhi))
+
+            # Guard against div-by-0
+            if zhi == zlo:
+                zhi = zlo + 0.0000001
+
+            projmat[2, 2] = 2 / (zhi - zlo)
+            projmat[2, 3] = -(zhi + zlo) / (zhi - zlo)
+
+        # See comment within draw2D
         if zax == 1:
             projmat[2, 2] *= -1
 
