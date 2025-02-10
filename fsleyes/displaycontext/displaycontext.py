@@ -287,7 +287,7 @@ class DisplayContext(props.SyncableHasProperties):
     """
 
 
-    _preserveSelectedOverlay = props.Boolean(default=False)
+    preserveSelectedOverlay = props.Boolean(default=False)
     """Whether or not to preserve the currently selected overlay when the
     :class:`.OverlayList` changes.
 
@@ -348,7 +348,7 @@ class DisplayContext(props.SyncableHasProperties):
                          'bounds'])
         nounbind.extend(['overlayGroups',
                          'groupOverlays',
-                         '_preserveSelectedOverlay'
+                         'preserveSelectedOverlay',
                          'autoDisplay',
                          'loadInMemory'])
 
@@ -361,7 +361,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         self.__overlayList = overlayList
         self.__displayType = displayType
-        self.__name        = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__name        = f'{self.__class__.__name__}_{id(self)}'
         self.__child       = parent is not None
 
         # When the first overlay(s) is/are
@@ -668,14 +668,14 @@ class DisplayContext(props.SyncableHasProperties):
         """
 
         # Guard against re-entrancy
-        needChange = not self._preserveSelectedOverlay
+        needChange = not self.preserveSelectedOverlay
         try:
             if needChange:
-                self._preserveSelectedOverlay = True
+                self.preserveSelectedOverlay = True
             yield
         finally:
             if needChange:
-                self._preserveSelectedOverlay = False
+                self.preserveSelectedOverlay = False
 
 
     def getOverlayOrder(self, overlay):
@@ -924,7 +924,7 @@ class DisplayContext(props.SyncableHasProperties):
             self.setAttribute('selectedOverlay', 'maxval', 0)
 
         # Preserve the selected overlay if needed
-        if self._preserveSelectedOverlay:
+        if self.preserveSelectedOverlay:
             oldList = self.__overlayList.overlays.getLast()
             if oldSelIdx < len(oldList):
                 selOvl = oldList[oldSelIdx]
