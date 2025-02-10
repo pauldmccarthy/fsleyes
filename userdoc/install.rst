@@ -34,7 +34,7 @@ FSL 6.0.7 or newer
 If you have FSL 6.0.7 or newer, you can update to the latest version of FSLeyes
 by running the following command::
 
-    update_fsl_package -u fsleyes
+    update_fsl_package fsleyes
 
 
 FSL 6.0.6 or newer
@@ -100,26 +100,44 @@ Install from PyPi (advanced)
 
 .. warning:: This is an advanced option, recommended only if you are
              comfortable working with Python environments, and installing
-             packages using your OS package manager. The commands below are
+             packages using your OS package manager. The steps below are
              **suggestions** - you will probably need to adapt them to suit
              your OS and environment.
 
 
 FSLeyes is available on `PyPi <https://pypi.org/project/fsleyes/>`_, and
-should work with Python 3.7 and newer. The best way to install FSLeyes from
-PyPi is to create an isolated python environment with a `virtual environment
-<https://docs.python.org/3/library/venv.html>`_, and install FSLeyes
-into it. To get started::
+should work with Python 3.8 and newer. The best way to install FSLeyes from
+PyPi is to create an isolated `virtual environment
+<https://docs.python.org/3/library/venv.html>`_, and install FSLeyes into it.
 
-    python -m venv fsleyes-virtualenv
-    . fsleyes-virtualenv/bin/activate
+
+.. note:: As an alternative to creating and managing your virtual environments
+          by hand, there are many tools which can be used to manage Python
+          environments, including `pixi <https://pixi.sh/latest/>`_, `uv
+          <https://docs.astral.sh/uv/>`_, `hatch <https://hatch.pypa.io/>`_,
+          and `poetry <https://python-poetry.org/>`_ to name a few.
 
 
 macOS users
 ^^^^^^^^^^^
 
-Once you have activated your virtual environment, you should be able to
-install FSLeyes like so::
+Before installing FSLeyes, you first need to install Python. On macOS, you can
+do this in a number of ways, including:
+
+ - Using an official Python installer from https://www.python.org/
+ - Installing the XCode Command-Line Tools, by running ``xcode-select --install``
+   in a terminal.
+ - Installing `Anaconda <https://www.anaconda.com/download>`_ or `Miniconda
+   <https://docs.anaconda.com/miniconda/>`_.
+
+
+Once you have installed Python, you can create and activate a virtual
+environment for FSLeyes with these commands::
+
+  python -m venv fsleyes-virtualenv
+  . ./fsleyes-virtualenv/bin/activate
+
+Then you should be able to install FSLeyes like so::
 
     pip install fsleyes
 
@@ -127,64 +145,80 @@ install FSLeyes like so::
 Linux users
 ^^^^^^^^^^^
 
-Before installing FSLeyes, you first need to install wxPython. The easiest way
-to do this on Linux is to use the pre-release wxPython builds available at
-https://extras.wxpython.org/wxPython4/extras/linux/. For example, if you are
-using CentOS 7::
+Before installing FSLeyes, you first need to install Python and the wxPython
+runtime dependencies. Under Ubuntu 24.04, you will need to run the following
+command::
 
-    pip install -f https://extras.wxpython.org/wxPython4/extras/linux/gtk2/centos-7 wxpython
+    sudo apt install python3 python3-pip python3-venv \
+      curl libegl1 libgl1 libgtk-3-0 libnotify4       \
+      libpcre2-32-0 libsdl2-2.0-0 libsm6 libxxf86vm1
+
+Then you need to create and activate a virtual environment, and install
+wxPython and FSLeyes into it. For example, you can use these commands to
+create and activate a virtual environment::
+
+  python -m venv fsleyes-virtualenv
+  . ./fsleyes-virtualenv/bin/activate
+
+The easiest way to install wxPython on Linux is to use the pre-release
+wxPython builds available at
+https://extras.wxpython.org/wxPython4/extras/linux/, e.g.::
+
+    wxpyurl=https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-24.04
+    pip install -f  ${wxpyurl} wxpython
+
+Once you have installed wxPython, you can install FSLeyes::
+
     pip install fsleyes
 
-You will also need to install the wxPython runtime dependencies. Under CentOS
-7, you will need to run the following command::
-
-    sudo yum install SDL
-
-Similarly, under Ubuntu::
-
-    sudo apt-get install libsdl1.2debian
+You should now be able to run the ``fsleyes`` command.
 
 
-Another option is to install wxPython directly from PyPi - if you do this, you
-will need to have C/C++ compilers installed, and all of the dependencies
-required to compile wxPython. Under CentOS 7, run the following commands::
-
-    sudo yum groupinstall "Development tools"
-    sudo yum install gtk2-devel gtk3-devel webkitgtk-devel webkitgtk3-devel
-    sudo yum install libjpeg-turbo-devel libtiff-devel SDL-devel gstreamer-plugins-base-devel libnotify-devel
-
-Under Ubuntu, run the following::
-
-    sudo apt-get install build-essential
-    sudo apt-get install libgtk2.0-dev libgtk-3-dev libwebkitgtk-dev libwebkitgtk-3.0-dev
-    sudo apt-get install libjpeg-turbo8-dev libtiff5-dev libsdl1.2-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libnotify-dev
-
-Then you should be able to run ``pip install fsleyes``.
-
-
-Install into a Singularity image
---------------------------------
+Install into a Docker/Singularity image
+---------------------------------------
 
 FSLeyes can be executed from `Docker <https://docs.docker.com/>`_ or
 `Singularity <https://sylabs.io/docs/>`_ containers. Here is an example
-Singularity definition file which contains FSLeyes::
+``Dockerfile`` file which contains FSLeyes::
 
-    Bootstrap: docker
-    From: centos:7
+  FROM ubuntu:24.04
 
-    %help
-      FSLeyes Singularity image
+  ENV MMURL="https://micro.mamba.pm/api/micromamba/linux-64/latest"
+  ENV MAMBA_ROOT_PREFIX="/micrommaba"
+  ENV DEBIAN_FRONTEND="noninteractive"
+  ENV TZ="Europe/London"
 
-    %post
-      yum -y update
-      yum -y install epel-release
-      yum -y install wget mesa-libGL mesa-libOSMesa
-      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-      sh Miniconda3-latest-Linux-x86_64.sh -b -p /miniconda3
-      /miniconda3/bin/conda create -p /fsleyes-env -c conda-forge fsleyes
+  RUN apt update
+  RUN apt install -y curl bzip2 tar libgl1 libegl1
+  RUN mkdir ${MAMBA_ROOT_PREFIX}
+  RUN curl -Ls ${MMURL} | tar -C ${MAMBA_ROOT_PREFIX} -xvj bin/micromamba
+  RUN eval "$(micromamba/bin/micromamba shell hook -s posix)"
+  RUN micromamba install -y -p ${MAMBA_ROOT_PREFIX} -c conda-forge fsleyes
 
-    %environment
-      source /miniconda3/bin/activate /fsleyes-env
+  CMD [ "/micromamba/bin/fsleyes" ]
 
-    %runscript
-      fsleyes "$@"
+And an equivalent Singularity definition file::
+
+  Bootstrap: docker
+  From: ubuntu:24.04
+
+  %help
+    FSLeyes Singularity image
+
+  %environment
+    export MMURL=https://micro.mamba.pm/api/micromamba/linux-64/latest
+    export MAMBA_ROOT_PREFIX=/micromamba
+    export TZ="Europe/London"
+    export DEBIAN_FRONTEND="noninteractive"
+
+  %post
+    apt update
+    apt install -y curl bzip2 tar libgl1 libegl1
+    mkdir ${MAMBA_ROOT_PREFIX}
+    curl -Ls ${MMURL} | tar -C ${MAMBA_ROOT_PREFIX} -xvj bin/micromamba
+    eval "$(micromamba/bin/micromamba shell hook -s posix)"
+    micromamba install -y -p ${MAMBA_ROOT_PREFIX} -c conda-forge fsleyes
+
+
+  %runscript
+    /micromamba/bin/fsleyes "$@"
