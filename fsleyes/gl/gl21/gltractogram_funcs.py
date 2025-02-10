@@ -86,11 +86,9 @@ def drawPseudo3D(self, canvas, mvp):
 def draw3D(self, canvas, xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
     opts       = self.opts
-    ovl        = self.overlay
     display    = self.display
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    vertXform  = ovl.affine
     mvp        = canvas.mvpMatrix
     lineWidth  = opts.lineWidth
     offsets    = self.offsets
@@ -98,10 +96,8 @@ def draw3D(self, canvas, xform=None):
     nstrms     = len(offsets)
     shader     = self.shaders['3D'][colourMode][clipMode][0]
 
-    if xform is None: xform = vertXform
-    else:             xform = affine.concat(xform, vertXform)
-
-    mvp = affine.concat(mvp, xform)
+    if xform is not None:
+        mvp = affine.concat(mvp, xform)
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP', mvp)

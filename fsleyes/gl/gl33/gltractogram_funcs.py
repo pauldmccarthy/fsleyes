@@ -112,9 +112,7 @@ def draw3D(self, canvas, xform=None):
     display    = self.display
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    vertXform  = ovl.affine
     mvp        = canvas.mvpMatrix
-    mv         = canvas.viewMatrix
     lighting   = canvas.opts.light
     lightPos   = affine.transform(canvas.lightPos, mvp)
     nstrms     = ovl.nstreamlines
@@ -129,11 +127,8 @@ def draw3D(self, canvas, xform=None):
     if geom == 'line': shader = self.shaders['3D'][colourMode][clipMode][0]
     else:              shader = self.shaders['3D'][colourMode][clipMode][1]
 
-    if xform is None: xform = vertXform
-    else:             xform = affine.concat(xform, vertXform)
-
-    mvp = affine.concat(mvp, xform)
-    mv  = affine.concat(mv,  xform)
+    if xform is not None:
+        mvp = affine.concat(mvp, xform)
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',        mvp)

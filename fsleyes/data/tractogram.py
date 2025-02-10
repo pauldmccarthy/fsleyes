@@ -79,9 +79,11 @@ class Tractogram:
 
     @property
     def affine(self):
-        """Returns an affine transformation matrix which can be used to
-        transform the streamline vertices into an RAS / millimetre-based
-        coordinate system.
+        """Returns an affine transformation matrix which defines the
+        voxel->world transformation of the image from which the tractogram
+        was derived. Note that nibabel will typically apply this transformation
+        when loading a ``.trk``/`.tck`` file,so this affine generally shouldn't
+        be needed.
         """
         return self.tractFile.affine
 
@@ -137,9 +139,6 @@ class Tractogram:
     def orientation(self):
         """Returns codes indicating the orientation of the coordinate
         system in which the streamline vertices are defined.
-
-        The codes that are returned are only valid if the :meth:`affine`
-        transformation is applied to the vertex coordinates.
         """
         # Currently always RAS - mrtrix coordinates are always RAS
         # (and the affine is typically an identity transform), and

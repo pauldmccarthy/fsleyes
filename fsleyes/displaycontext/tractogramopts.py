@@ -224,6 +224,9 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     def displayTransform(self):
         """Return an affine transformation which will transform streamline
         vertex coordinates into the current display coordinate system.
+
+        Currently it is assumed that streamline vertices are defined in
+        mm/world coordinates.
         """
         ref = self.displayCtx.displaySpace
 
