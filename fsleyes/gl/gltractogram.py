@@ -115,33 +115,34 @@ class GLTractogram(globject.GLObject):
             self.updateClipData()
             self.notifyWhen(self.ready)
 
-        opts   .addListener('resolution',          name, shader,  weak=False)
-        opts   .addListener('subsample',           name, data,    weak=False)
-        opts   .addListener('colourMode',          name, colour,  weak=False)
-        opts   .addListener('clipMode',            name, clip,    weak=False)
-        opts   .addListener('lineWidth',           name, refresh, weak=False)
-        opts   .addListener('xColour',             name, shader,  weak=False)
-        opts   .addListener('yColour',             name, shader,  weak=False)
-        opts   .addListener('zColour',             name, shader,  weak=False)
-        opts   .addListener('suppressX',           name, shader,  weak=False)
-        opts   .addListener('suppressY',           name, shader,  weak=False)
-        opts   .addListener('suppressZ',           name, shader,  weak=False)
-        opts   .addListener('suppressMode',        name, shader,  weak=False)
-        opts   .addListener('displayRange',        name, cmaps,   weak=False)
-        opts   .addListener('clippingRange',       name, shader,  weak=False)
-        opts   .addListener('invertClipping',      name, shader,  weak=False)
-        opts   .addListener('cmap',                name, cmaps,   weak=False)
-        opts   .addListener('negativeCmap',        name, cmaps,   weak=False)
-        opts   .addListener('useNegativeCmap',     name, shader,  weak=False)
-        opts   .addListener('gamma',               name, cmaps,   weak=False)
-        opts   .addListener('logScale',            name, cmaps,   weak=False)
-        opts   .addListener('cmapResolution',      name, cmaps,   weak=False)
-        opts   .addListener('interpolateCmaps',    name, cmaps,   weak=False)
-        opts   .addListener('invert',              name, cmaps,   weak=False)
-        opts   .addListener('modulateAlpha',       name, shader,  weak=False)
-        opts   .addListener('invertModulateAlpha', name, shader,  weak=False)
-        opts   .addListener('modulateRange',       name, shader,  weak=False)
-        display.addListener('alpha',               name, cmaps,   weak=False)
+        opts   .listen('resolution',          name, shader,  weak=False)
+        opts   .listen('subsample',           name, data,    weak=False)
+        opts   .listen('colourMode',          name, colour,  weak=False)
+        opts   .listen('clipMode',            name, clip,    weak=False)
+        opts   .listen('lineWidth',           name, refresh, weak=False)
+        opts   .listen('xColour',             name, shader,  weak=False)
+        opts   .listen('yColour',             name, shader,  weak=False)
+        opts   .listen('zColour',             name, shader,  weak=False)
+        opts   .listen('suppressX',           name, shader,  weak=False)
+        opts   .listen('suppressY',           name, shader,  weak=False)
+        opts   .listen('suppressZ',           name, shader,  weak=False)
+        opts   .listen('suppressMode',        name, shader,  weak=False)
+        opts   .listen('displayRange',        name, cmaps,   weak=False)
+        opts   .listen('clippingRange',       name, shader,  weak=False)
+        opts   .listen('invertClipping',      name, shader,  weak=False)
+        opts   .listen('cmap',                name, cmaps,   weak=False)
+        opts   .listen('negativeCmap',        name, cmaps,   weak=False)
+        opts   .listen('useNegativeCmap',     name, shader,  weak=False)
+        opts   .listen('gamma',               name, cmaps,   weak=False)
+        opts   .listen('logScale',            name, cmaps,   weak=False)
+        opts   .listen('cmapResolution',      name, cmaps,   weak=False)
+        opts   .listen('interpolateCmaps',    name, cmaps,   weak=False)
+        opts   .listen('invert',              name, cmaps,   weak=False)
+        opts   .listen('modulateAlpha',       name, shader,  weak=False)
+        opts   .listen('invertModulateAlpha', name, shader,  weak=False)
+        opts   .listen('modulateRange',       name, shader,  weak=False)
+        opts   .listen('pseudo3D',            name, data,    weak=False)
+        display.listen('alpha',               name, cmaps,   weak=False)
 
 
     def removeListeners(self):
@@ -150,33 +151,34 @@ class GLTractogram(globject.GLObject):
         display = self.display
         name    = self.name
 
-        opts   .removeListener('resolution',          name)
-        opts   .removeListener('subsample',           name)
-        opts   .removeListener('lineWidth',           name)
-        opts   .removeListener('colourMode',          name)
-        opts   .removeListener('clipMode',            name)
-        opts   .removeListener('xColour',             name)
-        opts   .removeListener('yColour',             name)
-        opts   .removeListener('zColour',             name)
-        opts   .removeListener('suppressX',           name)
-        opts   .removeListener('suppressY',           name)
-        opts   .removeListener('suppressZ',           name)
-        opts   .removeListener('suppressMode',        name)
-        opts   .removeListener('displayRange',        name)
-        opts   .removeListener('clippingRange',       name)
-        opts   .removeListener('invertClipping',      name)
-        opts   .removeListener('cmap',                name)
-        opts   .removeListener('negativeCmap',        name)
-        opts   .removeListener('useNegativeCmap',     name)
-        opts   .removeListener('gamma',               name)
-        opts   .removeListener('logScale',            name)
-        opts   .removeListener('cmapResolution',      name)
-        opts   .removeListener('interpolateCmaps',    name)
-        opts   .removeListener('invert',              name)
-        opts   .removeListener('modulateAlpha',       name)
-        opts   .removeListener('invertModulateAlpha', name)
-        opts   .removeListener('modulateRange',       name)
-        display.removeListener('alpha',               name)
+        opts   .remove('resolution',          name)
+        opts   .remove('subsample',           name)
+        opts   .remove('lineWidth',           name)
+        opts   .remove('colourMode',          name)
+        opts   .remove('clipMode',            name)
+        opts   .remove('xColour',             name)
+        opts   .remove('yColour',             name)
+        opts   .remove('zColour',             name)
+        opts   .remove('suppressX',           name)
+        opts   .remove('suppressY',           name)
+        opts   .remove('suppressZ',           name)
+        opts   .remove('suppressMode',        name)
+        opts   .remove('displayRange',        name)
+        opts   .remove('clippingRange',       name)
+        opts   .remove('invertClipping',      name)
+        opts   .remove('cmap',                name)
+        opts   .remove('negativeCmap',        name)
+        opts   .remove('useNegativeCmap',     name)
+        opts   .remove('gamma',               name)
+        opts   .remove('logScale',            name)
+        opts   .remove('cmapResolution',      name)
+        opts   .remove('interpolateCmaps',    name)
+        opts   .remove('invert',              name)
+        opts   .remove('modulateAlpha',       name)
+        opts   .remove('invertModulateAlpha', name)
+        opts   .remove('modulateRange',       name)
+        opts   .remove('pseudo3D',            name)
+        display.remove('alpha',               name)
 
 
     def destroy(self):
@@ -320,9 +322,9 @@ class GLTractogram(globject.GLObject):
         instanced rendering, so a divisor must be set for all vertex
         attributes.
         """
-        if fslgl.GL_COMPATIBILITY != '2.1': return {}
-        if self.threedee:                   return {}
-        else:                               return {'divisor' : 1}
+        if fslgl.GL_COMPATIBILITY != '2.1':     return {}
+        if self.threedee or self.opts.pseudo3D: return {}
+        else:                                   return {'divisor' : 1}
 
 
     def compileShaders(self):
@@ -351,7 +353,7 @@ class GLTractogram(globject.GLObject):
         nverts      = ovl.nvertices
         nstrms      = ovl.nstreamlines
         kwargs      = self.shaderAttributeArgs()
-        threedee    = self.threedee
+        threedee    = self.threedee or opts.pseudo3D
         indices     = None
 
         # randomly select a subset of streamlines
@@ -616,6 +618,10 @@ class GLTractogram(globject.GLObject):
         :func:`.gl33.gltractogram_funcs.draw2D`.
         """
 
+        if self.opts.pseudo3D:
+            self.drawPseudo3D(canvas, zpos, axes, xform=None)
+            return
+
         if xform is None:
             xform = np.eye(4)
 
@@ -648,6 +654,12 @@ class GLTractogram(globject.GLObject):
         fslgl.gltractogram_funcs.draw2D(self, canvas, mvp)
 
 
+    def drawPseudo3D(self, canvas, zpos, axes, xform=None):
+        """Draws a 3D rendering of the tractogram onto a 2D canvas.
+
+        :func:`.gl21.gltractogram_funcs.drawPseudo3D` or
+        :func:`.gl33.gltractogram_funcs.drawPseudo3D`.
+        """
     def draw3D(self, *args, **kwargs):
         """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
         :func:`.gl33.gltractogram_funcs.draw3D`.
