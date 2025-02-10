@@ -35,23 +35,24 @@ def compileShaders(self):
         'imageData'   : idatafsrc,
     }
 
+    dims        = ['2D', '3D']
     colourModes = ['orientation', 'vertexData', 'imageData']
     clipModes   = ['none',        'vertexData', 'imageData']
     kwa         = {'resourceName' : f'GLTractogram_{id(self)}',
                    'shared'       : ['vertex']}
 
-    for colourMode, clipMode in it.product(colourModes, clipModes):
+    for dim, colourMode, clipMode in it.product(dims, colourModes, clipModes):
 
         fsrc   = colourSources[colourMode]
         consts = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
             'lighting'   : False,
-            'twod'       : not self.threedee,
+            'twod'       : dim == '2D'
         }
         shader = shaders.GLSLShader(vsrc, fsrc, constants=consts, **kwa)
 
-        self.shaders[colourMode][clipMode].append(shader)
+        self.shaders[dim][colourMode][clipMode].append(shader)
 
 
 def draw2D(self, canvas, mvp):
@@ -61,12 +62,12 @@ def draw2D(self, canvas, mvp):
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
     res        = max((opts.resolution, 3))
-    shader     = self.shaders[colourMode][clipMode][0]
+    shader     = self.shaders['2D'][colourMode][clipMode][0]
 
     # each vertex is drawn as a circle,
     # using instanced rendering.
     vertices         = glroutines.unitCircle(res)
-    scales           = self.normalisedLineWidth(canvas, mvp)
+    scales           = self.normalisedLineWidth(canvas, mvp, False)
     vertices[:, :2] *= scales[:2]
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -89,18 +90,16 @@ def draw3D(self, canvas, xform=None):
     clipMode   = opts.effectiveClipMode
     vertXform  = ovl.affine
     mvp        = canvas.mvpMatrix
-    mv         = canvas.viewMatrix
     lineWidth  = opts.lineWidth
     offsets    = self.offsets
     counts     = self.counts
     nstrms     = len(offsets)
-    shader     = self.shaders[colourMode][clipMode][0]
+    shader     = self.shaders['3D'][colourMode][clipMode][0]
 
     if xform is None: xform = vertXform
     else:             xform = affine.concat(xform, vertXform)
 
     mvp = affine.concat(mvp, xform)
-    mv  = affine.concat(mv,  xform)
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP', mvp)

@@ -61,6 +61,7 @@ def compileShaders(self):
 
     colourModes = ['orientation', 'vertexData', 'imageData']
     clipModes   = ['none',        'vertexData', 'imageData']
+    dims        = ['2D', '3D']
 
     # Share the "in vec3 vertex"
     # buffer across all shaders
@@ -70,20 +71,20 @@ def compileShaders(self):
     if self.threedee: geomsrcs = [linegsrc, tubegsrc]
     else:             geomsrcs = [pointgsrc]
 
-    for colourMode, clipMode in it.product(colourModes, clipModes):
+    for dim, colourMode, clipMode in it.product(dims, colourModes, clipModes):
 
         fsrc  = colourSources[colourMode]
         const = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
-            'lighting'   : self.threedee
+            'lighting'   : dim == '3D'
         }
 
         progs = []
         for gsrc in geomsrcs:
             progs.append(shaders.GLSLShader(vsrc, fsrc, gsrc, const, **kwa))
 
-        self.shaders[colourMode][clipMode].extend(progs)
+        self.shaders[dim][colourMode][clipMode].extend(progs)
 
 
 def draw2D(self, canvas, mvp):
@@ -91,8 +92,8 @@ def draw2D(self, canvas, mvp):
     opts       = self.opts
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    shader     = self.shaders[colourMode][clipMode][0]
-    scales     = self.normalisedLineWidth(canvas, mvp)
+    shader     = self.shaders['2D'][colourMode][clipMode][0]
+    scales     = self.normalisedLineWidth(canvas, mvp, False)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
@@ -117,7 +118,7 @@ def draw3D(self, canvas, xform=None):
     lighting   = canvas.opts.light
     lightPos   = affine.transform(canvas.lightPos, mvp)
     nstrms     = ovl.nstreamlines
-    lineWidth  = self.normalisedLineWidth(canvas, mvp)
+    lineWidth  = self.normalisedLineWidth(canvas, mvp, True)
     offsets    = self.offsets
     counts     = self.counts
     nstrms     = len(offsets)
@@ -125,8 +126,8 @@ def draw3D(self, canvas, xform=None):
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if geom == 'line': shader = self.shaders[colourMode][clipMode][0]
-    else:              shader = self.shaders[colourMode][clipMode][1]
+    if geom == 'line': shader = self.shaders['3D'][colourMode][clipMode][0]
+    else:              shader = self.shaders['3D'][colourMode][clipMode][1]
 
     if xform is None: xform = vertXform
     else:             xform = affine.concat(xform, vertXform)

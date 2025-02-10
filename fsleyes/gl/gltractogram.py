@@ -47,10 +47,16 @@ class GLTractogram(globject.GLObject):
         #                   data used for colouring
         #  - 'vertexData' - clipping by a separate vertex data set
         #  - 'imageData'  - clipping by a separate image data set
-        self.shaders        = {
-            'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
-            'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
-            'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}}
+        self.shaders = {
+            '2D' : {
+                'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
+                'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
+                'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}},
+            '3D' : {
+                'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
+                'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
+                'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}}
+        }
 
         # Scale alpha exponentially in the
         # colour maps (see inline comments in
@@ -194,7 +200,7 @@ class GLTractogram(globject.GLObject):
         globject.GLObject.destroy(self)
 
 
-    def iterShaders(self, colourModes=None, clipModes=None):
+    def iterShaders(self, colourModes=None, clipModes=None, dims=None):
         """Returns all shader programs for the specified colour/clipping
         modes.
         """
@@ -202,12 +208,17 @@ class GLTractogram(globject.GLObject):
             colourModes = [colourModes]
         if isinstance(clipModes, str):
             clipModes = [clipModes]
+        if isinstance(dims, str):
+            dims = [dims]
         if colourModes is None or len(colourModes) == 0:
             colourModes = ['orientation', 'vertexData', 'imageData']
         if clipModes is None or len(clipModes) == 0:
             clipModes = ['none', 'vertexData', 'imageData']
-        shaders = [self.shaders[m] for m in colourModes]
-        shaders = it.chain(*[[s[m] for m in clipModes] for s in shaders])
+        if dims is None or len(dims) == 0:
+            dims = ['2D', '3D']
+        shaders = [self.shaders[d] for d in dims]
+        shaders = it.chain(*[[s[m] for m in colourModes] for s in shaders])
+        shaders = it.chain(*[[s[m] for m in clipModes]   for s in shaders])
         return it.chain(*shaders)
 
 
@@ -232,7 +243,7 @@ class GLTractogram(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    def normalisedLineWidth(self, canvas, mvp):
+    def normalisedLineWidth(self, canvas, mvp, threedee):
         """Returns :attr:`lineWidth`, scaled so that it is with respect to
         normalised device coordinates. Streamline lines/tubes (in 3D) and
         vertices (in 2D) are drawn such that the width/radius is fixed w.r.t.
@@ -248,14 +259,14 @@ class GLTractogram(globject.GLObject):
         # in terms of NDCs.
         lineWidth =  self.opts.lineWidth / 10
 
-        if self.threedee:
+        if threedee:
             # We don't apply the scene3d rotation, because
             # the projection matrix adds an uneven scaling
             # to the depth axis (see routines.ortho3D),
             # which will affect scaling when rotated to be
             # in line with that axis.  I may revisit this in
             # the future, as the ortho3D function is a bit
-            # nuts in how it handles depth (caused my my
+            # nuts in how it handles depth (caused by my
             # lack of understanding of near/far clipping).
             scaling   = affine.concat(canvas.projectionMatrix,
                                       canvas.viewScale)
