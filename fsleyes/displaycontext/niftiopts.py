@@ -559,7 +559,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return ['volume', 'volumeDim']
 
 
-    def getTransform(self, from_, to, xform=None):
+    def getTransform(self, from_, to):
         """Return a matrix which may be used to transform coordinates
         from ``from_`` to ``to``. Valid values for ``from_`` and ``to``
         are:
@@ -598,27 +598,19 @@ class NiftiOpts(fsldisplay.DisplayOpts):
                         suitable for looking up voxel values when stored as
                         an OpenGL texture.
         =============== ======================================================
-
-
-        If the ``xform`` parameter is provided, and one of ``from_`` or ``to``
-        is ``display``, the value of ``xform`` is used instead of the current
-        value of :attr:`transform`.
         """
 
         if not self.__child:
             raise RuntimeError('getTransform cannot be called on '
                                'a parent NiftiOpts instance')
 
-        if xform is None:
-            xform = self.transform
-
-        if   from_ == 'display': from_ = xform
+        if   from_ == 'display': from_ = self.transform
         elif from_ == 'world':   from_ = 'affine'
         elif from_ == 'voxel':   from_ = 'id'
         elif from_ == 'pixflip': from_ = 'pixdim-flip'
         elif from_ == 'ref':     from_ = 'reference'
 
-        if   to    == 'display': to    = xform
+        if   to    == 'display': to    = self.transform
         elif to    == 'world':   to    = 'affine'
         elif to    == 'voxel':   to    = 'id'
         elif to    == 'pixflip': to    = 'pixdim-flip'
