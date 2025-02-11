@@ -629,7 +629,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
                 'coordSpace', opts.coordSpace].format(refImg.name)
             mesh2worldXform = affine.concat(
                 refOpts.getTransform('display', 'world'),
-                opts.getTransform('mesh', 'display'))
+                opts.getTransform(to='display'))
 
             if refOpts.transform == 'reference':
                 dsDisplay    = self.displayCtx.getDisplay(dsImg)

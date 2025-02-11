@@ -440,7 +440,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
         if xyz is None:
             xyz = self.displayCtx.location
 
-        xyz        = self.transformCoords(xyz, 'display', 'mesh')
+        xyz        = self.transformCoords(xyz, from_='display')
         xyz        = np.asarray(xyz).reshape(1, 3)
         dist, vidx = self.overlay.trimesh.nearest.vertex(xyz)
         dist       = dist[0]
@@ -450,89 +450,21 @@ class MeshOpts(cmapopts.ColourMapOpts,
         else:                              return vidx
 
 
-    def normaliseSpace(self, space):
-        """Used by :meth:`transformCoords` and :meth:`getTransform` to
-        normalise their ``from_`` and ``to`` parameters.
-        """
-        if space not in ('world', 'display', 'mesh', 'voxel', 'id'):
-            raise ValueError('Invalid space: {}'.format(space))
-
-        if space == 'mesh':  space = self.coordSpace
-        if space == 'torig': space = 'affine'
-
-        return space
-
-
-    def transformCoords(self, coords, from_, to, *args, **kwargs):
-        """Transforms the given ``coords`` from ``from_`` to ``to``.
-
-        :arg coords: Coordinates to transform.
-        :arg from_:  Space that the coordinates are in
-        :arg to:     Space to transform the coordinates to
-
-        All other parameters are passed through to the
-        :meth:`.NiftiOpts.transformCoords` method of the reference image
-        ``DisplayOpts``.
-
-        The following values are accepted for the ``from_`` and ``to``
-        parameters:
-
-          - ``'world'``:  World coordinate system
-          - ``'display'`` Display coordinate system
-          - ``'mesh'``    The coordinate system of this mesh.
-          - ``'voxel'``:   The voxel coordinate system of the reference
-                           image
-          - ``'id'``:      Equivalent to ``'voxel'``.
-        """
-
-        nfrom_ = self.normaliseSpace(from_)
-        nto    = self.normaliseSpace(to)
-        ref    = self.refImage
-        pre    = None
-        post   = None
-
-        if ref is None:
-            return coords
-
-        if from_ == 'mesh' and self.coordSpace == 'torig':
-            pre = affine.concat(ref.getAffine('voxel', 'world'),
-                                affine.invert(fslmgh.voxToSurfMat(ref)))
-
-        if to == 'mesh' and self.coordSpace == 'torig':
-            post = affine.concat(fslmgh.voxToSurfMat(ref),
-                                 ref.getAffine('world', 'voxel'))
-
-        opts = self.displayCtx.getOpts(ref)
-
-        return opts.transformCoords(
-            coords, nfrom_, nto, pre=pre, post=post, **kwargs)
-
-
-    def getTransform(self, from_, to):
-        """Overrides :meth:`.RefImageOpts.getTransform`. If ``from_`` or
-        ``to`` are set to ``'mesh'``, they are replaced with the current
-        value of :attr:`.RefImageOpts.coordSpace`.
-        """
-        if from_ == 'mesh': from_ = self.coordSpace
-        if to    == 'mesh': to    = self.coordSpace
-        return refimgopts.RefImageOpts.getTransform(self, from_, to)
-
-
-    def __transformChanged(self, value, valid, ctx, name):
+    def __transformChanged(self):
         """Called when the :attr:`.NiftiOpts.transform` property of the current
         :attr:`refImage` changes. Calls :meth:`__updateBounds`.
         """
         self.__updateBounds()
 
 
-    def __coordSpaceChanged(self, *a):
+    def __coordSpaceChanged(self):
         """Called when the :attr:`coordSpace` property changes.
         Calls :meth:`__updateBounds`.
         """
         self.__updateBounds()
 
 
-    def __refImageChanged(self, *a):
+    def __refImageChanged(self):
         """Called when the :attr:`refImage` property changes.
 
         If a new reference image has been specified, removes listeners from
@@ -580,7 +512,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
 
         # Transform the bounding box
         # into display coordinates
-        xform         = self.getTransform('mesh', 'display')
+        xform         = self.getTransform(to='display')
         bbox          = list(it.product(*zip(lo, hi)))
         bbox          = affine.transform(bbox, xform)
 
@@ -599,7 +531,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
             self.propNotify('bounds')
 
 
-    def __overlayVerticesChanged(self, *a):
+    def __overlayVerticesChanged(self):
         """Called when the :attr:`.Mesh.vertices` change. Makes sure that the
         :attr:`vertexSet` attribute is synchronised.
         """
@@ -612,7 +544,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
         self.vertexSet = vset
 
 
-    def __vertexSetChanged(self, *a):
+    def __vertexSetChanged(self):
         """Called when the :attr:`.MeshOpts.vertexSet` property changes.
         Updates the current vertex set on the :class:`.Mesh` overlay, and
         the overlay bounds.

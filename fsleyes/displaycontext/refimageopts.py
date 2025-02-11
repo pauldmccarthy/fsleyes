@@ -139,21 +139,74 @@ class RefImageOpts:
                     pass
 
 
-    def getTransform(self, from_, to):
+    def transformCoords(self, coords, from_=None, to=None, **kwargs):
+        """Transforms the given ``coords`` from ``from_`` to ``to``.
+
+        :arg coords: Coordinates to transform.
+        :arg from_:  Space that the coordinates are in
+        :arg to:     Space to transform the coordinates to
+
+        All other parameters are passed through to the
+        :meth:`.NiftiOpts.transformCoords` method of the reference image
+        ``DisplayOpts``.
+
+        The ``from_`` and ``to`` parameters may be set to any value accepted
+        by :meth:`.NiftiOpts.getTransform`, in addition to ``'torig'``, which
+        refers to the Freesurfer coordinate system.
+
+        If ``from_`` or ``to`` are not provided, they are set to the current
+        value of :attr:`coordSpace`.
+        """
+
+        ref = self.refImage
+
+        if ref is None:
+            return coords
+
+        if from_ is None: from_ = self.coordSpace
+        if to    is None: to    = self.coordSpace
+
+        pre  = None
+        post = None
+
+        if from_ == 'torig':
+            from_ = 'world'
+            pre   = affine.concat(
+                ref.getAffine('voxel', 'world'),
+                affine.invert(fslmgh.voxToSurfMat(ref)))
+
+        if to == 'torig':
+            to   = 'world'
+            post = affine.concat(
+                fslmgh.voxToSurfMat(ref),
+                ref.getAffine('world', 'voxel'))
+
+        opts = self.displayCtx.getOpts(ref)
+        return opts.transformCoords(
+            coords, from_, to, pre=pre, post=post, **kwargs)
+
+
+    def getTransform(self, from_=None, to=None):
         """Return a matrix which may be used to transform coordinates from
         ``from_`` to ``to``.
 
         If the :attr:`refImage` property is not set, an identity matrix is
         returned.
 
-        The following the ``from_`` and ``to`` parameters may be set to any
-        value accepted by :meth:`.NiftiOpts.getTransform`, in addition to
-        ``'torig'``, which refers to the Freesurfer coordinate system.
+        The ``from_`` and ``to`` parameters may be set to any value accepted
+        by :meth:`.NiftiOpts.getTransform`, in addition to ``'torig'``, which
+        refers to the Freesurfer coordinate system.
+
+        If ``from_`` or ``to`` are not provided, they are set to the current
+        value of :attr:`coordSpace`.
         """
         ref = self.refImage
 
         if ref is None:
             return np.eye(4)
+
+        if from_ is None: from_ = self.coordSpace
+        if to    is None: to    = self.coordSpace
 
         pre  = np.eye(4)
         post = np.eye(4)

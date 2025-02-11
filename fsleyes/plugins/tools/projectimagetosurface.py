@@ -72,7 +72,7 @@ class ProjectImageToSurfaceAction(base.NeedOverlayAction):
         # system are given as options
         images = []
         mbbox  = affine.transform(
-            mesh.bounds, mopts.getTransform('mesh', 'display'))
+            mesh.bounds, mopts.getTransform(to='display'))
         mbbox  = list(zip(*mbbox))
 
         for o in self.overlayList:
@@ -129,7 +129,7 @@ def projectImageDataOntoMesh(displayCtx, image, mesh):
     # the image voxel coordinate system
     mopts   = displayCtx.getOpts(mesh)
     iopts   = displayCtx.getOpts(image)
-    m2d     = mopts.getTransform('mesh', 'display')
+    m2d     = mopts.getTransform(to='display')
     verts   = mesh.vertices
     verts   = iopts.transformCoords(verts, 'display', 'voxel', pre=m2d)
 

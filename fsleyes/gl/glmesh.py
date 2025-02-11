@@ -334,7 +334,7 @@ class GLMesh(globject.GLObject):
         interp   = opts.interpolation
         normals  = overlay.vnormals
         vdata    = opts.getVertexData('vertex')
-        xform    = opts.getTransform('mesh', 'display')
+        xform    = opts.getTransform(to='display')
 
         if not np.all(np.isclose(xform, np.eye(4))):
             vertices = affine.transform(vertices, xform)
@@ -381,7 +381,7 @@ class GLMesh(globject.GLObject):
                     :class:`.LightBoxCanvas` may have x flips).
         """
 
-        m2d = self.opts.getTransform('mesh', 'display')
+        m2d = self.opts.getTransform(to='display')
         if xform is not None:
             m2d = affine.concat(xform, m2d)
 
@@ -577,7 +577,7 @@ class GLMesh(globject.GLObject):
             # so we need to give the lineAsPolygon
             # function the display->mesh transform.
             zax               = axes[2]
-            d2m               = opts.getTransform('display', 'mesh')
+            d2m               = opts.getTransform(from_='display')
             lineWidth         = opts.outlineWidth * canvas.pixelSize()[0]
             glprim            = gl.GL_TRIANGLES
             vertices, indices = glroutines.lineAsPolygon(
@@ -840,10 +840,9 @@ class GLMesh(globject.GLObject):
         origin[zax] = zpos
         normal[zax] = 1
 
-        vertXform = opts.getTransform(           'mesh',    'display')
-        origin    = opts.transformCoords(origin, 'display', 'mesh')
-        normal    = opts.transformCoords(normal, 'display', 'mesh',
-                                         vector=True)
+        vertXform = opts.getTransform(           to='display')
+        origin    = opts.transformCoords(origin, from_='display')
+        normal    = opts.transformCoords(normal, from_='display', vector=True)
 
         # TODO use bbox to constrain? This
         #      would be nice, but is not
