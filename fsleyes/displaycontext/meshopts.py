@@ -192,7 +192,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
-        refimgopts.RefImageOpts .__init__(self, self.__updateBounds)
+        refimgopts.RefImageOpts .__init__(self)
 
         self.__registered = self.getParent() is not None
 
@@ -420,39 +420,11 @@ class MeshOpts(cmapopts.ColourMapOpts,
         else:                              return vidx
 
 
-    def __updateBounds(self):
-        """Called whenever any of the :attr:`refImage`, :attr:`coordSpace`,
-        or :attr:`transform` properties change.
-
-        Updates the :attr:`.DisplayOpts.bounds` property accordingly.
+    def getBounds(self):
+        """Overrides :meth:`.RefImageOpts.getBounds`. Returns the
+        mesh bounds in its native coordinate system.
         """
-
-        # create a bounding box for the
-        # overlay vertices in their
-        # native coordinate system
-        lo, hi        = self.overlay.bounds
-        xlo, ylo, zlo = lo
-        xhi, yhi, zhi = hi
-
-        # Transform the bounding box
-        # into display coordinates
-        xform         = self.getTransform(to='display')
-        bbox          = list(it.product(*zip(lo, hi)))
-        bbox          = affine.transform(bbox, xform)
-
-        # re-calculate the min/max bounds
-        x        = np.sort(bbox[:, 0])
-        y        = np.sort(bbox[:, 1])
-        z        = np.sort(bbox[:, 2])
-        xlo, xhi = x.min(), x.max()
-        ylo, yhi = y.min(), y.max()
-        zlo, zhi = z.min(), z.max()
-
-        oldBounds   = self.bounds
-        self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
-
-        if np.all(np.isclose(oldBounds, self.bounds)):
-            self.propNotify('bounds')
+        return self.overlay.bounds
 
 
     def __overlayVerticesChanged(self):
@@ -480,7 +452,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
             with self.overlay.skip(self.name, 'vertices'):
                 self.overlay.vertices = self.vertexSet
 
-        self.__updateBounds()
+        self.updateBounds()
 
 
     def __vdataChanged(self, value, valid, ctx, name):

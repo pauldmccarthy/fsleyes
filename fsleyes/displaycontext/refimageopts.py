@@ -8,6 +8,8 @@
 :class:`.DisplayOpts` sub-classes.
 """
 
+import itertools            as it
+
 import numpy                as np
 
 import fsl.transform.affine as affine
@@ -83,20 +85,10 @@ class RefImageOpts:
     """
 
 
-    def __init__(self, updateBounds=None):
+    def __init__(self):
         """Initialise a ``RefImageOpts`` instance. This must be called
         *after* the :meth:`.DisplayOpts.__init__` method.
-
-        :arg updateBounds: Function which is called whenever any properties
-                           change which would require the
-                           :attr:`.DisplayOpts.bounds` to be updated.
         """
-
-        if updateBounds is None:
-            def updateBounds():
-                pass
-
-        self.__updateBounds = updateBounds
 
         # A copy of the refImage property
         # value is kept here so, when it
@@ -112,7 +104,7 @@ class RefImageOpts:
 
             olist.ilisten('overlays',   lname, self.__overlayListChanged)
             self .ilisten('refImage',   lname, self.__refImageChanged)
-            self .ilisten('coordSpace', lname, self.__updateBounds)
+            self .ilisten('coordSpace', lname, self.updateBounds)
 
             self.__overlayListChanged()
             self.__refImageChanged()
@@ -261,6 +253,50 @@ class RefImageOpts:
         return affine.concat(post, xform, pre)
 
 
+    def getBounds(self):
+        """Must be implemented by sub-classes. Must return the
+        overlay bounds in its native coordinate system (i.e. the coordinate
+        system corresponding to :attr:`coordSpace`).
+        """
+        raise NotImplementedError()
+
+
+    def updateBounds(self):
+        """Called whenever any of the :attr:`refImage`, :attr:`coordSpace`,
+        or :attr:`transform` properties change. May also be invoked by
+        sub-classes to trigger a bounds update.
+
+        Updates the :attr:`.DisplayOpts.bounds` property accordingly.
+        """
+
+        # create a bounding box for the
+        # overlay vertices in their
+        # native coordinate system
+        lo, hi        = self.getBounds()
+        xlo, ylo, zlo = lo
+        xhi, yhi, zhi = hi
+
+        # Transform the bounding box
+        # into display coordinates
+        xform         = self.getTransform(to='display')
+        bbox          = list(it.product(*zip(lo, hi)))
+        bbox          = affine.transform(bbox, xform)
+
+        # re-calculate the min/max bounds
+        x        = np.sort(bbox[:, 0])
+        y        = np.sort(bbox[:, 1])
+        z        = np.sort(bbox[:, 2])
+        xlo, xhi = x.min(), x.max()
+        ylo, yhi = y.min(), y.max()
+        zlo, zhi = z.min(), z.max()
+
+        oldBounds   = self.bounds
+        self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
+
+        if np.all(np.isclose(oldBounds, self.bounds)):
+            self.propNotify('bounds')
+
+
     def __overlayListChanged(self):
         """Called when the overlay list changes. Updates the :attr:`refImage`
         property so that it contains a list of overlays which can be
@@ -309,7 +345,7 @@ class RefImageOpts:
         If a new reference image has been specified, removes listeners from
         the old one (if necessary), and adds listeners to the
         :attr:`.NiftiOpts.transform` property associated with the new image.
-        Calls the ``updateBounds`` callback.
+        Calls the :meth:`updateBounds` method.
         """
 
         # TODO You are not tracking changes to the
@@ -328,6 +364,6 @@ class RefImageOpts:
 
         if self.refImage is not None:
             opts = self.displayCtx.getOpts(self.refImage)
-            opts.ilisten('transform', lname, self.__updateBounds)
+            opts.ilisten('transform', lname, self.updateBounds)
 
-        self.__updateBounds()
+        self.updateBounds()

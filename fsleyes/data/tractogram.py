@@ -231,8 +231,8 @@ class Tractogram:
         nverts = self.nvertices
 
         if vdata.ndim != 1 or vdata.shape[0] not in (nverts, nstrms):
-            raise ValueError('{}: incompatible vertex/streamline data '
-                             'shape: {}'.format(key, vdata.shape))
+            raise ValueError(f'{key}: incompatible vertex/streamline '
+                             f'data shape: {vdata.shape}')
 
         # Duplicate per-streamline
         # data to be per-vertex

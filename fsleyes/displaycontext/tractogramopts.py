@@ -203,7 +203,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:            return np.nanmin(data), np.nanmax(data)
 
 
-    def updateColourClipModes(self, *_):
+    def updateColourClipModes(self):
         """Called when the :class:`.OverlayList` changes, and may be called
         externally (see e.g. :func:`.loadvertexdata.loadVertexData`) .
         Refreshes the options available on the :attr:`colourMode` and
@@ -273,7 +273,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         return zlen / 200
 
 
-    def __colourModeChanged(self, *_):
+    def __colourModeChanged(self):
         """Called when :attr:`colourMode` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
         and clipping ranges are up to date.
@@ -281,7 +281,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         self.updateDataRange(resetCR=(self.clipMode is None))
 
 
-    def __clipModeChanged(self, *_):
+    def __clipModeChanged(self):
         """Called when :attr:`clipMode` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
         and clipping ranges are up to date.
