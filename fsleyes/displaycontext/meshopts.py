@@ -145,45 +145,6 @@ class MeshOpts(cmapopts.ColourMapOpts,
     """
 
 
-    # This property is implicitly tightly-coupled to
-    # the NiftiOpts.getTransform method - the choices
-    # defined in this property are assumed to be valid
-    # inputs to that method (with the exception of
-    # ``'torig'``).
-    coordSpace = props.Choice(('affine', 'pixdim', 'pixdim-flip', 'id',
-                               'torig'),
-                              default='pixdim-flip')
-    """If :attr:`refImage` is not ``None``, this property defines the
-    reference image coordinate space in which the mesh coordinates are
-    defined (i.e. voxels, scaled voxels, or world coordinates).
-
-    =============== =========================================================
-    ``affine``      The mesh coordinates are defined in the reference image
-                    world coordinate system.
-
-    ``id``          The mesh coordinates are defined in the reference image
-                    voxel coordinate system.
-
-    ``pixdim``      The mesh coordinates are defined in the reference image
-                    voxel coordinate system, scaled by the voxel pixdims.
-
-    ``pixdim-flip`` The mesh coordinates are defined in the reference image
-                    voxel coordinate system, scaled by the voxel pixdims. If
-                    the reference image transformation matrix has a positive
-                    determinant, the X axis is flipped.
-
-    ``torig``       The mesh coordinates are defined in the Freesurfer
-                    "Torig" / "vox2ras-tkr" coordinate system.
-    =============== =========================================================
-
-    The default value is ``pixdim-flip``, as this is the coordinate system
-    used in the VTK sub-cortical segmentation model files output by FIRST.
-    See also the :ref:`note on coordinate systems
-    <volumeopts-coordinate-systems>`, and the :meth:`.NiftiOpts.getTransform`
-    method.
-    """
-
-
     interpolation = props.Choice(('linear', 'nearest'), default='linear')
     """Interpolate across vertices when colouring a mesh with vertex data.
     When using nearest neighbour interpolation, each face is coloured
@@ -200,7 +161,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``MeshOpts`` instance.
 
-        All other arguments are passed through to the :class:`.DisplayOpts`
+        All arguments are passed through to the :class:`.DisplayOpts`
         constructor.
         """
 
@@ -548,45 +509,13 @@ class MeshOpts(cmapopts.ColourMapOpts,
 
 
     def getTransform(self, from_, to):
-        """Return a matrix which may be used to transform coordinates from
-        ``from_`` to ``to``.
-
-        If the :attr:`refImage` property is not set, an identity matrix is
-        returned.
-
-        The following values are accepted for the ``from_`` and ``to``
-        parameters:
-
-          - ``'world'``:   World coordinate system
-          - ``'display'``: Display coordinate system
-          - ``'mesh'``:    The coordinate system of this mesh.
-          - ``'voxel'``:   The voxel coordinate system of the reference
-                           image
-          - ``'id'``:      Equivalent to ``'voxel'``.
+        """Overrides :meth:`.RefImageOpts.getTransform`. If ``from_`` or
+        ``to`` are set to ``'mesh'``, they are replaced with the current
+        value of :attr:`.RefImageOpts.coordSpace`.
         """
-
-        nfrom_ = self.normaliseSpace(from_)
-        nto    = self.normaliseSpace(to)
-        ref    = self.refImage
-
-        if ref is None:
-            return np.eye(4)
-
-        opts  = self.displayCtx.getOpts(ref)
-        xform = opts.getTransform(nfrom_, nto)
-
-        if from_ == 'mesh' and self.coordSpace == 'torig':
-            surfToVox = affine.invert(fslmgh.voxToSurfMat(ref))
-            xform     = affine.concat(xform,
-                                      ref.getAffine('voxel', 'world'),
-                                      surfToVox)
-        if to == 'mesh' and self.coordSpace == 'torig':
-            voxToSurf = fslmgh.voxToSurfMat(ref)
-            xform     = affine.concat(voxToSurf,
-                                      ref.getAffine('world', 'voxel'),
-                                      xform)
-
-        return xform
+        if from_ == 'mesh': from_ = self.coordSpace
+        if to    == 'mesh': to    = self.coordSpace
+        return refimgopts.RefImageOpts.getTransform(self, from_, to)
 
 
     def __transformChanged(self, value, valid, ctx, name):
