@@ -438,9 +438,9 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         shape = np.array(image.shape[:3])
 
         voxToIdMat      = np.eye(4)
-        voxToPixdimMat  = np.diag(list(image.pixdim[:3]) + [1.0])
-        voxToPixFlipMat = image.voxToScaledVoxMat
-        voxToWorldMat   = image.voxToWorldMat
+        voxToPixdimMat  = image.getAffine('voxel', 'scaled')
+        voxToPixFlipMat = image.getAffine('voxel', 'fsl')
+        voxToWorldMat   = image.getAffine('voxel', 'world')
         voxToWorldMat   = affine.concat(self.displayXform, voxToWorldMat)
         ds              = self.displayCtx.displaySpace
 
@@ -455,8 +455,8 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         elif ds is self.overlay:
             voxToRefMat = voxToPixFlipMat
         else:
-            voxToRefMat = affine.concat(ds.voxToScaledVoxMat,
-                                        ds.worldToVoxMat,
+            voxToRefMat = affine.concat(ds.getAffine('voxel', 'fsl'),
+                                        ds.getAffine('world', 'voxel'),
                                         voxToWorldMat)
 
         # When going from voxels to textures,
