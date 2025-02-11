@@ -18,6 +18,7 @@
    fsleyes.displaycontext.mipopts
    fsleyes.displaycontext.niftiopts
    fsleyes.displaycontext.orthoopts
+   fsleyes.displaycontext.refimageopts
    fsleyes.displaycontext.sceneopts
    fsleyes.displaycontext.scene3dopts
    fsleyes.displaycontext.shopts
