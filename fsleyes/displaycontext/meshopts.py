@@ -172,12 +172,6 @@ class MeshOpts(cmapopts.ColourMapOpts,
         # True, which is annoying for surfaces.
         self.linkLowRanges = False
 
-        # A copy of the refImage property
-        # value is kept here so, when it
-        # changes, we can de-register from
-        # the previous one.
-        self.__oldRefImage = None
-
         # When the vertexData/modulateData properties
         # are changed, the data (and its min/max)
         # is loaded and stored in these
@@ -198,7 +192,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
-        refimgopts.RefImageOpts .__init__(self)
+        refimgopts.RefImageOpts .__init__(self, self.__updateBounds)
 
         self.__registered = self.getParent() is not None
 
@@ -212,15 +206,6 @@ class MeshOpts(cmapopts.ColourMapOpts,
         # sync-slave, so we only need to register
         # property listeners on child instances
         else:
-            self.addListener('refImage',
-                             self.name,
-                             self.__refImageChanged,
-                             immediate=True)
-            self.addListener('coordSpace',
-                             self.name,
-                             self.__coordSpaceChanged,
-                             immediate=True)
-
             self.addListener('vertexData',
                              self.name,
                              self.__vdataChanged,
@@ -236,9 +221,6 @@ class MeshOpts(cmapopts.ColourMapOpts,
             overlay.register(self.name,
                              self.__overlayVerticesChanged,
                              'vertices')
-
-            self.__updateBounds()
-            self.__refImageChanged()
 
         # If we have inherited values from a
         # parent instance, make sure the vertex/
@@ -263,24 +245,12 @@ class MeshOpts(cmapopts.ColourMapOpts,
         """
 
         if self.__registered:
-
-            self.display.remove('alpha',  self.name)
-            self        .remove('colour', self.name)
+            self.remove('vertexData',   self.name)
+            self.remove('modulateData', self.name)
+            self.remove('vertexSet',    self.name)
             self.overlay.deregister(self.name, 'vertices')
 
-            if self.refImage is not None:
-
-                # An error could be raised if the
-                # DC has been/is being destroyed
-                try:
-                    opts = self.displayCtx.getOpts(self.refImage)
-                    opts.removeListener('transform', self.name)
-
-                except Exception:
-                    pass
-
-        self.__oldRefImage = None
-        self.__vdata       = None
+        self.__vdata = None
 
         cmapopts  .ColourMapOpts.destroy(self)
         refimgopts.RefImageOpts .destroy(self)
@@ -359,7 +329,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
         # vertex data if one with the
         # given key already exists
         while key in sets:
-            key   = '{} [{}]'.format(origKey, count)
+            key   = f'{origKey} [{count}]'
             count = count + 1
 
         self.overlay.addVertexData(key, data)
@@ -448,52 +418,6 @@ class MeshOpts(cmapopts.ColourMapOpts,
 
         if tol is not None and dist > tol: return None
         else:                              return vidx
-
-
-    def __transformChanged(self):
-        """Called when the :attr:`.NiftiOpts.transform` property of the current
-        :attr:`refImage` changes. Calls :meth:`__updateBounds`.
-        """
-        self.__updateBounds()
-
-
-    def __coordSpaceChanged(self):
-        """Called when the :attr:`coordSpace` property changes.
-        Calls :meth:`__updateBounds`.
-        """
-        self.__updateBounds()
-
-
-    def __refImageChanged(self):
-        """Called when the :attr:`refImage` property changes.
-
-        If a new reference image has been specified, removes listeners from
-        the old one (if necessary), and adds listeners to the
-        :attr:`.NiftiOpts.transform` property associated with the new image.
-        Calls :meth:`__updateBounds`.
-        """
-
-        # TODO You are not tracking changes to the
-        # refImage overlay type -  if this changes,
-        # you will need to re-bind to the transform
-        # property of the new DisplayOpts instance
-
-        if self.__oldRefImage is not None and \
-           self.__oldRefImage in self.overlayList:
-
-            opts = self.displayCtx.getOpts(self.__oldRefImage)
-            opts.removeListener('transform', self.name)
-
-        self.__oldRefImage = self.refImage
-
-        if self.refImage is not None:
-            opts = self.displayCtx.getOpts(self.refImage)
-            opts.addListener('transform',
-                             self.name,
-                             self.__transformChanged,
-                             immediate=True)
-
-        self.__updateBounds()
 
 
     def __updateBounds(self):

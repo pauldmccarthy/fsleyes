@@ -83,19 +83,39 @@ class RefImageOpts:
     """
 
 
-    def __init__(self):
+    def __init__(self, updateBounds=None):
         """Initialise a ``RefImageOpts`` instance. This must be called
         *after* the :meth:`.DisplayOpts.__init__` method.
+
+        :arg updateBounds: Function which is called whenever any properties
+                           change which would require the
+                           :attr:`.DisplayOpts.bounds` to be updated.
         """
 
+        if updateBounds is None:
+            def updateBounds():
+                pass
+
+        self.__updateBounds = updateBounds
+
+        # A copy of the refImage property
+        # value is kept here so, when it
+        # changes, we can de-register from
+        # the previous one.
+        self.__oldRefImage = None
+
         self.__child = self.getParent() is not None
+
         if self.__child:
             olist = self.overlayList
             lname = self.listenerName
 
-            olist.ilisten('overlays', lname, self.__overlayListChanged)
+            olist.ilisten('overlays',   lname, self.__overlayListChanged)
+            self .ilisten('refImage',   lname, self.__refImageChanged)
+            self .ilisten('coordSpace', lname, self.__updateBounds)
 
             self.__overlayListChanged()
+            self.__refImageChanged()
 
 
     @property
@@ -123,17 +143,30 @@ class RefImageOpts:
         if self.__child:
             olist = self.overlayList
             lname = self.listenerName
+            ref   = self.refImage
 
-            olist.removeListener('overlays', lname)
+            self.__oldRefImage = None
+
+            olist.removeListener('overlays',   lname)
+            self .removeListener('refImage',   lname)
+            self .removeListener('coordSpace', lname)
+
+            if ref is not None:
+                # An exception may occur if the
+                # DC has been/is being destroyed
+                try:
+                    ropts = self.displayCtx.getOpts(ref)
+                    ropts.removeListener('transform', lname)
+                except Exception:
+                    pass
 
             for overlay in self.overlayList:
                 if not isinstance(overlay, fslimage.Nifti):
                     continue
-
                 # An exception may occur if the
                 # DC has been/is being destroyed
                 try:
-                    display = self.displayCtx.getDIsplay(overlay)
+                    display = self.displayCtx.getDisplay(overlay)
                     display.remove('name', lname)
                 except Exception:
                     pass
@@ -268,3 +301,33 @@ class RefImageOpts:
         else:                    self.refImage = None
 
         imgProp.setChoices(imgOptions, instance=self)
+
+
+    def __refImageChanged(self):
+        """Called when the :attr:`refImage` property changes.
+
+        If a new reference image has been specified, removes listeners from
+        the old one (if necessary), and adds listeners to the
+        :attr:`.NiftiOpts.transform` property associated with the new image.
+        Calls the ``updateBounds`` callback.
+        """
+
+        # TODO You are not tracking changes to the
+        # refImage overlay type -  if this changes,
+        # you will need to re-bind to the transform
+        # property of the new DisplayOpts instance
+        lname = self.listenerName
+
+        if self.__oldRefImage is not None and \
+           self.__oldRefImage in self.overlayList:
+
+            opts = self.displayCtx.getOpts(self.__oldRefImage)
+            opts.removeListener('transform', lname)
+
+        self.__oldRefImage = self.refImage
+
+        if self.refImage is not None:
+            opts = self.displayCtx.getOpts(self.refImage)
+            opts.ilisten('transform', lname, self.__updateBounds)
+
+        self.__updateBounds()
