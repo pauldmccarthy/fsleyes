@@ -124,7 +124,7 @@ class RefImageOpts:
             olist = self.overlayList
             lname = self.listenerName
 
-            olist.remove('overlays', lname)
+            olist.removeListener('overlays', lname)
 
             for overlay in self.overlayList:
                 if not isinstance(overlay, fslimage.Nifti):
