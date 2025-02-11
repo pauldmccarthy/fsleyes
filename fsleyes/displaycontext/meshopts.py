@@ -14,7 +14,6 @@ import              logging
 
 import numpy as np
 
-import fsl.data.image       as fslimage
 import fsl.data.mghimage    as fslmgh
 import fsl.data.utils       as dutils
 import fsl.transform.affine as affine
@@ -24,6 +23,7 @@ import fsleyes.overlay      as fsloverlay
 import fsleyes.colourmaps   as fslcmaps
 from . import display       as fsldisplay
 from . import colourmapopts as cmapopts
+from . import refimageopts  as refimgopts
 
 
 log = logging.getLogger(__name__)
@@ -59,7 +59,9 @@ def genMeshColour(overlay):
     return fslcmaps.randomBrightColour()
 
 
-class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
+class MeshOpts(cmapopts.ColourMapOpts,
+               refimgopts.RefImageOpts,
+               fsldisplay.DisplayOpts):
     """The ``MeshOpts`` class defines settings for displaying :class:`.Mesh`
     overlays. See also the :class:`.GiftiOpts` and :class:`.FreesurferOpts`
     sub-classes.
@@ -127,19 +129,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
     .. note:: There is currently no support for indexing into multi-
               dimensional modulate data (e.g. time points). A separate
               ``modulateDataIndex`` property may be added in the future.
-    """
-
-
-    refImage = props.Choice()
-    """A reference :class:`.Image` instance which the mesh coordinates are
-    in terms of.
-
-    For example, if this :class:`.Mesh` represents the segmentation of
-    a sub-cortical region from a T1 image, you would set the ``refImage`` to
-    that T1 image.
-
-    Any :class:`.Image` instance in the :class:`.OverlayList` may be chosen
-    as the reference image.
     """
 
 
@@ -248,6 +237,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
+        refimgopts.RefImageOpts .__init__(self)
 
         self.__registered = self.getParent() is not None
 
@@ -261,12 +251,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         # sync-slave, so we only need to register
         # property listeners on child instances
         else:
-
-            self.overlayList.addListener('overlays',
-                                         self.name,
-                                         self.__overlayListChanged,
-                                         immediate=True)
-
             self.addListener('refImage',
                              self.name,
                              self.__refImageChanged,
@@ -292,7 +276,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
                              self.__overlayVerticesChanged,
                              'vertices')
 
-            self.__overlayListChanged()
             self.__updateBounds()
             self.__refImageChanged()
 
@@ -320,24 +303,17 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         if self.__registered:
 
-            self.overlayList.removeListener('overlays', self.name)
-            self.display    .removeListener('alpha',    self.name)
-            self            .removeListener('colour',   self.name)
-            self.overlay    .deregister(self.name, 'vertices')
+            self.display.remove('alpha',  self.name)
+            self        .remove('colour', self.name)
+            self.overlay.deregister(self.name, 'vertices')
 
-            for overlay in self.overlayList:
+            if self.refImage is not None:
 
                 # An error could be raised if the
                 # DC has been/is being destroyed
                 try:
-
-                    display = self.displayCtx.getDisplay(overlay)
-                    opts    = self.displayCtx.getOpts(   overlay)
-
-                    display.removeListener('name', self.name)
-
-                    if overlay is self.refImage:
-                        opts.removeListener('transform', self.name)
+                    opts = self.displayCtx.getOpts(self.refImage)
+                    opts.removeListener('transform', self.name)
 
                 except Exception:
                     pass
@@ -346,6 +322,7 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         self.__vdata       = None
 
         cmapopts  .ColourMapOpts.destroy(self)
+        refimgopts.RefImageOpts .destroy(self)
         fsldisplay.DisplayOpts  .destroy(self)
 
 
@@ -484,16 +461,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
         colour.append(display.alpha / 100.0)
 
         return colour
-
-
-    @property
-    def referenceImage(self):
-        """Overrides :meth:`.DisplayOpts.referenceImage`.
-
-        If a :attr:`refImage` is selected, it is returned. Otherwise,``None``
-        is returned.
-        """
-        return self.refImage
 
 
     def getVertex(self, xyz=None, tol=1):
@@ -701,46 +668,6 @@ class MeshOpts(cmapopts.ColourMapOpts, fsldisplay.DisplayOpts):
 
         if np.all(np.isclose(oldBounds, self.bounds)):
             self.propNotify('bounds')
-
-
-    def __overlayListChanged(self, *a):
-        """Called when the overlay list changes. Updates the :attr:`refImage`
-        property so that it contains a list of overlays which can be
-        associated with the mesh.
-        """
-
-        imgProp  = self.getProp('refImage')
-        imgVal   = self.refImage
-        overlays = self.displayCtx.getOrderedOverlays()
-
-        # the overlay for this MeshOpts
-        # instance has been removed
-        if self.overlay not in overlays:
-            self.overlayList.removeListener('overlays', self.name)
-            return
-
-        imgOptions = [None]
-
-        for overlay in overlays:
-
-            # The overlay must be a Nifti instance.
-            if not isinstance(overlay, fslimage.Nifti):
-                continue
-
-            imgOptions.append(overlay)
-
-            display = self.displayCtx.getDisplay(overlay)
-            display.addListener('name',
-                                self.name,
-                                self.__overlayListChanged,
-                                overwrite=True)
-
-        # The previous refImage may have
-        # been removed from the overlay list
-        if imgVal in imgOptions: self.refImage = imgVal
-        else:                    self.refImage = None
-
-        imgProp.setChoices(imgOptions, instance=self)
 
 
     def __overlayVerticesChanged(self, *a):

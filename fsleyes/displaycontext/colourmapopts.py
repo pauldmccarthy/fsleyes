@@ -227,7 +227,7 @@ class ColourMapOpts:
 
 
     def __init__(self):
-        """Create a ``ColourMapOpts`` instance. This must be called
+        """Initialise a ``ColourMapOpts`` instance. This must be called
         *after* the :meth:`.DisplayOpts.__init__` method.
         """
 
