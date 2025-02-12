@@ -171,7 +171,7 @@ class RefImageOpts:
                 # DC has been/is being destroyed
                 try:
                     ropts = self.displayCtx.getOpts(ref)
-                    ropts.removeListener('transform', lname)
+                    ropts.removeListener('bounds', lname)
                 except Exception:
                     pass
 
@@ -316,6 +316,8 @@ class RefImageOpts:
         oldBounds   = self.bounds
         self.bounds = [xlo, xhi, ylo, yhi, zlo, zhi]
 
+        # make sure listeners are notified
+        # even if bounds haven't changed
         if np.all(np.isclose(oldBounds, self.bounds)):
             self.propNotify('bounds')
 
@@ -379,14 +381,13 @@ class RefImageOpts:
 
         if self.__oldRefImage is not None and \
            self.__oldRefImage in self.overlayList:
-
             opts = self.displayCtx.getOpts(self.__oldRefImage)
-            opts.removeListener('transform', lname)
+            opts.removeListener('bounds', lname)
 
         self.__oldRefImage = self.refImage
 
         if self.refImage is not None:
             opts = self.displayCtx.getOpts(self.refImage)
-            opts.ilisten('transform', lname, self.updateBounds)
+            opts.ilisten('bounds', lname, self.updateBounds)
 
         self.updateBounds()
