@@ -367,8 +367,8 @@ class RefImageOpts:
 
         If a new reference image has been specified, removes listeners from
         the old one (if necessary), and adds listeners to the
-        :attr:`.NiftiOpts.transform` property associated with the new image.
-        Calls the :meth:`updateBounds` method.
+        :attr:`.NiftiOpts.bounds` property associated with the new reference
+        image. Calls the :meth:`updateBounds` method.
         """
 
         # TODO You are not tracking changes to the

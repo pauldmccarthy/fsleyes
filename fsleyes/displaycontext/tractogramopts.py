@@ -110,6 +110,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         self.getProp('coordSpace').setDefault('affine', self)
         self.coordSpace = 'affine'
 
+        nounbind = kwargs.get('nounbind', [])
+        nounbind.extend(['refImage', 'coordSpace'])
+        kwargs['nounbind'] = nounbind
+
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
         refimgopts.RefImageOpts .__init__(self)

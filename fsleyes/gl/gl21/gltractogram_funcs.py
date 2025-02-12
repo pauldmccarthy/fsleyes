@@ -83,14 +83,18 @@ def draw2D(self, canvas, mvp):
 
 def drawPseudo3D(self, canvas, mvp):
     """Called by :class:`.GLTractogram.drawPseudo3D`. """
-    draw3D(self, canvas, mvp)
+    draw3D(self, canvas, mvp, None, None, None)
 
 
 def draw3D(self,
            canvas,
            mvp,
+           lighting,
+           lightPos,
            xform=None):
-    """Called by :class:`.GLTractogram.draw3D`. """
+    """Called by :class:`.GLTractogram.draw3D`.
+    The lighting arguments are ignored.
+    """
     opts       = self.opts
     display    = self.display
     colourMode = opts.effectiveColourMode

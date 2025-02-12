@@ -634,7 +634,7 @@ class GLTractogram(globject.GLObject):
 
         # Draw 3D tractogram on 2D canvas
         if self.opts.pseudo3D:
-            self.drawPseudo3D(canvas, zpos, axes, xform=None)
+            self.drawPseudo3D(canvas, zpos, axes, xform)
             return
 
         if xform is None:

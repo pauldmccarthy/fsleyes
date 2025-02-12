@@ -206,18 +206,9 @@ class MeshOpts(cmapopts.ColourMapOpts,
         # sync-slave, so we only need to register
         # property listeners on child instances
         else:
-            self.addListener('vertexData',
-                             self.name,
-                             self.__vdataChanged,
-                             immediate=True)
-            self.addListener('modulateData',
-                             self.name,
-                             self.__vdataChanged,
-                             immediate=True)
-            self.addListener('vertexSet',
-                             self.name,
-                             self.__vertexSetChanged,
-                             immediate=True)
+            self.ilisten('vertexData',   self.name, self.__vdataChanged)
+            self.ilisten('modulateData', self.name, self.__vdataChanged)
+            self.ilisten('vertexSet',    self.name, self.__vertexSetChanged)
             overlay.register(self.name,
                              self.__overlayVerticesChanged,
                              'vertices')
@@ -474,7 +465,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
             if vdfile is not None:
 
                 if vdfile not in overlay.vertexDataSets():
-                    log.debug('Loading vertex data: {}'.format(vdfile))
+                    log.debug('Loading vertex data: %s', vdfile)
                     vdata = overlay.loadVertexData(vdfile)
                 else:
                     vdata = overlay.getVertexData(vdfile)
@@ -489,8 +480,8 @@ class MeshOpts(cmapopts.ColourMapOpts,
         except Exception as e:
 
             # TODO show a warning
-            log.warning('Unable to load vertex data from {}: {}'.format(
-                vdfile, e, exc_info=True))
+            log.warning('Unable to load vertex data from %s: %s',
+                        vdfile, e, exc_info=True)
 
             vdata      = None
             vdataRange = None
