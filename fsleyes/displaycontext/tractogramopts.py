@@ -20,10 +20,12 @@ import fsleyes_props                        as props
 import fsleyes.displaycontext.display       as fsldisplay
 import fsleyes.displaycontext.colourmapopts as cmapopts
 import fsleyes.displaycontext.vectoropts    as vectoropts
+import fsleyes.displaycontext.refimageopts  as refimgopts
 
 
 class TractogramOpts(fsldisplay.DisplayOpts,
                      cmapopts.ColourMapOpts,
+                     refimgopts.RefImageOpts,
                      vectoropts.VectorOpts):
     """Display options for :class:`.Tractogram` overlays. """
 
@@ -103,28 +105,46 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         if overlay.nstreamlines > 150000:
             self.subsample = 15000000 / overlay.nstreamlines
 
+        # nibabel.streamlines.Tractogram vertices
+        # should be defined in mm coordinates
+        self.getProp('coordSpace').setDefault('affine', self)
+        self.coordSpace = 'affine'
+
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
+        refimgopts.RefImageOpts .__init__(self)
         vectoropts.VectorOpts   .__init__(self)
 
-        olist         = self.overlayList
-        lo, hi        = self.overlay.bounds
-        xlo, ylo, zlo = lo
-        xhi, yhi, zhi = hi
-        self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
+        self.__child = self.getParent() is not None
 
-        self .addListener('colourMode', self.name, self.__colourModeChanged)
-        self .addListener('clipMode',   self.name, self.__clipModeChanged)
-        olist.addListener('overlays',   self.name, self.updateColourClipModes)
+        if self.__child:
 
-        self.updateColourClipModes()
-        self.updateDataRange()
+            olist = self.overlayList
+
+            self .listen('colourMode', self.name, self.__colourModeChanged)
+            self .listen('clipMode',   self.name, self.__clipModeChanged)
+            olist.listen('overlays',   self.name, self.updateColourClipModes)
+
+            self.updateColourClipModes()
+            self.updateDataRange()
+
+
+    def getBounds(self):
+        """Overrides :meth:`.RefImageOpts.getBounds`. Returns the
+        tractogram vertex bounds in its native coordinate system.
+        """
+        return self.overlay.bounds
 
 
     def destroy(self):
         """Removes property listeners. """
-        self.overlayList.removeListener('overlays', self.name)
-        fsldisplay.DisplayOpts.destroy(self)
+        if self.__child:
+            self.overlayList.removeListener('overlays', self.name)
+            self.remove('clipMode',   self.name)
+            self.remove('colourMode', self.name)
+        cmapopts.ColourMapOpts .destroy(self)
+        refimgopts.RefImageOpts.destroy(self)
+        fsldisplay.DisplayOpts .destroy(self)
 
 
     @property

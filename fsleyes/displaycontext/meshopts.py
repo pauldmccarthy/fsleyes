@@ -422,7 +422,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
 
     def getBounds(self):
         """Overrides :meth:`.RefImageOpts.getBounds`. Returns the
-        mesh bounds in its native coordinate system.
+        mesh vertex bounds in its native coordinate system.
         """
         return self.overlay.bounds
 

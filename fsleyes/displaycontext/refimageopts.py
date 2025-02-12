@@ -31,6 +31,29 @@ class RefImageOpts:
 
     See the :class:`.MeshOpts` and :class:`.TractogramOpts` classes for
     examples of ``DisplayOpts`` classes which use the ``RefImageOpts`` mixin.
+
+    To use the ``RefImageOpts`` class, you must:
+
+      1. Define your class to inherit from both :class:`.DisplayOpts` and
+         ``RefImageOpts``::
+
+             class MyOpts(DisplayOpts, RefImageOpts):
+                 ...
+
+      2. Call the ``RefImageOpts.__init__`` method *after*
+         :meth:`.DisplayOpts.__init__`::
+
+             def __init__(self, *args, **kwargs):
+                 DisplayOpts.__init__(self, *args, **kwargs)
+                 RefImageOpts.__init__(self)
+
+      3. Implement the :meth:`getBounds` method to return the overlay bounds
+         in its native coordinate system (the value of :attr:`coordSpace`).
+
+      4. Call :meth:`updateBounds` whenever your overlay's native bounds
+         change.
+
+      5. Call :meth:`destroy` when your instance is being destroyed.
     """
 
 

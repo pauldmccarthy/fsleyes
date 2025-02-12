@@ -49,6 +49,8 @@ class ColourMapOpts:
       4. Call :meth:`updateDataRange` whenever the data driving the colouring
          changes.
 
+      5. Call :meth:`destroy` when your instance is being destroyed.
+
 
     The ``ColourMapOpts`` class links the :attr:`.Display.brightness` and
     :attr:`.Display.contrast` properties to its own :attr:`displayRange`
