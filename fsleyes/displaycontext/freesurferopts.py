@@ -9,10 +9,8 @@ settings for displaying a :class:`.FreesurferMesh` overlay.
 """
 
 
-import fsl.data.freesurfer  as fslfs
-import fsl.data.mghimage    as fslmgh
-import fsl.transform.affine as affine
-from . import                  meshopts
+import fsl.data.freesurfer as fslfs
+from . import                 meshopts
 
 
 class FreesurferOpts(meshopts.MeshOpts):

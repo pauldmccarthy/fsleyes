@@ -1247,11 +1247,12 @@ properties = TypeDict({
     'LineVectorOpts.unitLength'  : 'Scale vectors to unit length',
     'LineVectorOpts.lengthScale' : 'Length scaling factor (%)',
 
+    'RefImageOpts.refImage'      : 'Reference image',
+    'RefImageOpts.coordSpace'    : 'Mesh coordinate space',
+
     'MeshOpts.colour'            : 'Colour',
     'MeshOpts.outline'           : 'Show outline only',
     'MeshOpts.outlineWidth'      : 'Outline width',
-    'MeshOpts.refImage'          : 'Reference image',
-    'MeshOpts.coordSpace'        : 'Mesh coordinate space',
     'MeshOpts.custom_vertexSet'  : 'Surface definition',
     'MeshOpts.custom_vertexData' : 'Vertex data',
     'MeshOpts.vertexSet'         : 'Surface definition',
@@ -1399,14 +1400,14 @@ choices = TypeDict({
                                      'alpha'       : 'Transparency',
                                      'lineLength'  : 'Line length'},
 
-    'MeshOpts.refImage.none'  : 'No reference image',
+    'RefImageOpts.refImage.none'  : 'No reference image',
 
-    'MeshOpts.coordSpace' : {'torig'       : 'Freesurfer coordinates',
-                             'affine'      : 'World coordinates',
-                             'pixdim'      : 'Scaled voxels',
-                             'pixdim-flip' : 'Scaled voxels forced to '
-                                             'radiological orientation',
-                             'id'          : 'Voxels'},
+    'RefImageOpts.coordSpace' : {'torig'       : 'Freesurfer coordinates',
+                                 'affine'      : 'World coordinates',
+                                 'pixdim'      : 'Scaled voxels',
+                                 'pixdim-flip' : 'Scaled voxels forced to '
+                                                 'radiological orientation',
+                                 'id'          : 'Voxels'},
 
     'TensorOpts.tensorResolution.min' : 'Low',
     'TensorOpts.tensorResolution.max' : 'High',

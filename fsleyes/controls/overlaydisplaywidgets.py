@@ -354,7 +354,9 @@ def _initPropertyList_TractogramOpts(threedee):
         plist.append('pseudo3D')
         plist.append('custom_zclipping')
 
-    plist += ['custom_colourMode',
+    plist += ['refImage',
+              'coordSpace',
+              'custom_colourMode',
               'clipMode',
               'custom_cmap',
               'cmapResolution',
@@ -798,8 +800,8 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
         'refImage'     : props.Widget('refImage', labels=imageName),
         'coordSpace'   : props.Widget(
             'coordSpace',
-            enabledWhen=lambda o, ri: ri != 'none',
-            labels=strings.choices['MeshOpts.coordSpace'],
+            enabledWhen=lambda o, ri: ri is not None,
+            labels=strings.choices['RefImageOpts.coordSpace'],
             dependencies=['refImage']),
         'colour'       : props.Widget('colour'),
         'custom_vertexData' : _MeshOpts_vertexDataWidget,
@@ -975,6 +977,10 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         else:
             return op.basename(data)
 
+    def imageName(img):
+        if img is None: return 'None'
+        else:           return displayCtx.getDisplay(img).name
+
     cmapOpts    = dict(dependencies=['colourMode'],
                        enabledWhen=lambda o, cm: cm != 'orientation')
     orientOpts  = dict(dependencies=['colourMode'],
@@ -1015,6 +1021,13 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'invertClipping'   : props.Widget('invertClipping',   **cmapOpts),
         'linkLowRanges'    : props.Widget('linkLowRanges',    **cmapOpts),
         'linkHighRanges'   : props.Widget('linkHighRanges',   **cmapOpts),
+
+        'refImage'     : props.Widget('refImage', labels=imageName),
+        'coordSpace'   : props.Widget(
+            'coordSpace',
+            enabledWhen=lambda o, ri: ri is not None,
+            labels=strings.choices['RefImageOpts.coordSpace'],
+            dependencies=['refImage']),
 
         'cmap' : props.Widget(
             'cmap',
