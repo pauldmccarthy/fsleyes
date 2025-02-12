@@ -121,37 +121,38 @@ class GLTractogram(globject.GLObject):
             self.updateClipData()
             self.notifyWhen(self.ready)
 
-        opts   .listen('resolution',          name, shader,  weak=False)
-        opts   .listen('subsample',           name, data,    weak=False)
-        opts   .listen('colourMode',          name, colour,  weak=False)
-        opts   .listen('clipMode',            name, clip,    weak=False)
-        opts   .listen('lineWidth',           name, refresh, weak=False)
-        opts   .listen('xColour',             name, shader,  weak=False)
-        opts   .listen('yColour',             name, shader,  weak=False)
-        opts   .listen('zColour',             name, shader,  weak=False)
-        opts   .listen('suppressX',           name, shader,  weak=False)
-        opts   .listen('suppressY',           name, shader,  weak=False)
-        opts   .listen('suppressZ',           name, shader,  weak=False)
-        opts   .listen('suppressMode',        name, shader,  weak=False)
-        opts   .listen('displayRange',        name, cmaps,   weak=False)
-        opts   .listen('clippingRange',       name, shader,  weak=False)
-        opts   .listen('invertClipping',      name, shader,  weak=False)
-        opts   .listen('cmap',                name, cmaps,   weak=False)
-        opts   .listen('negativeCmap',        name, cmaps,   weak=False)
-        opts   .listen('useNegativeCmap',     name, shader,  weak=False)
-        opts   .listen('gamma',               name, cmaps,   weak=False)
-        opts   .listen('logScale',            name, cmaps,   weak=False)
-        opts   .listen('cmapResolution',      name, cmaps,   weak=False)
-        opts   .listen('interpolateCmaps',    name, cmaps,   weak=False)
-        opts   .listen('invert',              name, cmaps,   weak=False)
-        opts   .listen('modulateAlpha',       name, shader,  weak=False)
-        opts   .listen('invertModulateAlpha', name, shader,  weak=False)
-        opts   .listen('modulateRange',       name, shader,  weak=False)
-        opts   .listen('pseudo3D',            name, data,    weak=False)
-        opts   .listen('xclipdir',            name, refresh, weak=False)
-        opts   .listen('yclipdir',            name, refresh, weak=False)
-        opts   .listen('zclipdir',            name, refresh, weak=False)
-        display.listen('alpha',               name, cmaps,   weak=False)
+        opts   .wlisten('bounds',              name, refresh)
+        opts   .wlisten('resolution',          name, shader)
+        opts   .wlisten('subsample',           name, data)
+        opts   .wlisten('colourMode',          name, colour)
+        opts   .wlisten('clipMode',            name, clip)
+        opts   .wlisten('lineWidth',           name, refresh)
+        opts   .wlisten('xColour',             name, shader)
+        opts   .wlisten('yColour',             name, shader)
+        opts   .wlisten('zColour',             name, shader)
+        opts   .wlisten('suppressX',           name, shader)
+        opts   .wlisten('suppressY',           name, shader)
+        opts   .wlisten('suppressZ',           name, shader)
+        opts   .wlisten('suppressMode',        name, shader)
+        opts   .wlisten('displayRange',        name, cmaps)
+        opts   .wlisten('clippingRange',       name, shader)
+        opts   .wlisten('invertClipping',      name, shader)
+        opts   .wlisten('cmap',                name, cmaps)
+        opts   .wlisten('negativeCmap',        name, cmaps)
+        opts   .wlisten('useNegativeCmap',     name, shader)
+        opts   .wlisten('gamma',               name, cmaps)
+        opts   .wlisten('logScale',            name, cmaps)
+        opts   .wlisten('cmapResolution',      name, cmaps)
+        opts   .wlisten('interpolateCmaps',    name, cmaps)
+        opts   .wlisten('invert',              name, cmaps)
+        opts   .wlisten('modulateAlpha',       name, shader)
+        opts   .wlisten('invertModulateAlpha', name, shader)
+        opts   .wlisten('modulateRange',       name, shader)
+        opts   .wlisten('pseudo3D',            name, data)
+        opts   .wlisten('xclipdir',            name, refresh)
+        opts   .wlisten('yclipdir',            name, refresh)
+        opts   .wlisten('zclipdir',            name, refresh)
+        display.wlisten('alpha',               name, cmaps)
 
 
     def removeListeners(self):
@@ -160,6 +161,7 @@ class GLTractogram(globject.GLObject):
         display = self.display
         name    = self.name
 
+        opts   .remove('bounds',              name)
         opts   .remove('resolution',          name)
         opts   .remove('subsample',           name)
         opts   .remove('lineWidth',           name)
@@ -630,6 +632,7 @@ class GLTractogram(globject.GLObject):
         :func:`.gl33.gltractogram_funcs.draw2D`.
         """
 
+        # Draw 3D tractogram on 2D canvas
         if self.opts.pseudo3D:
             self.drawPseudo3D(canvas, zpos, axes, xform=None)
             return
@@ -660,7 +663,7 @@ class GLTractogram(globject.GLObject):
             projmat[2, 2] *= -1
 
         viewmat   = canvas.viewMatrix
-        strm2disp = opts.displayTransform
+        strm2disp = opts.getTransform(to='display')
         mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 
         fslgl.gltractogram_funcs.draw2D(self, canvas, mvp)
@@ -707,9 +710,9 @@ class GLTractogram(globject.GLObject):
         if zax == 1:
             projmat[2, 2] *= -1
 
-        viewmat  = canvas.viewMatrix
-        wld2disp = opts.displayTransform
-        mvp      = affine.concat(projmat, viewmat, xform, wld2disp)
+        viewmat   = canvas.viewMatrix
+        strm2disp = opts.getTransform(to='display')
+        mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 
         fslgl.gltractogram_funcs.drawPseudo3D(self, canvas, mvp)
 
@@ -718,9 +721,11 @@ class GLTractogram(globject.GLObject):
         """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
         :func:`.gl33.gltractogram_funcs.draw3D`.
         """
-        mvp      = canvas.mvpMatrix
-        lighting = canvas.opts.light
-        lightPos = affine.transform(canvas.lightPos, mvp)
+        mvp       = canvas.mvpMatrix
+        lighting  = canvas.opts.light
+        lightPos  = affine.transform(canvas.lightPos, mvp)
+        strm2disp = self.opts.getTransform(to='display')
+        mvp       = affine.concat(mvp, strm2disp)
 
         fslgl.gltractogram_funcs.draw3D(
             self, canvas, mvp, lighting, lightPos, xform=xform)

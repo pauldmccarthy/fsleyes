@@ -256,24 +256,6 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                       self.clipMode   = None
 
 
-    @property
-    def displayTransform(self):
-        """Return an affine transformation which will transform streamline
-        vertex coordinates into the current display coordinate system.
-
-        Currently it is assumed that streamline vertices are defined in
-        mm/world coordinates.
-        """
-        ref = self.displayCtx.displaySpace
-
-        if not isinstance(ref, fslimage.Image):
-            return np.eye(4)
-
-        opts = self.displayCtx.getOpts(ref)
-
-        return opts.getTransform('world', 'display')
-
-
     def sliceWidth(self, zax):
         """Returns a width along the specified **display** coordinate system
         axis, to be used for drawing a 2D slice through the tractogram on the
@@ -285,7 +267,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         # identify the corresponding axis in the
         # tractogram/world coordinate system.
         codes = [[0, 0], [1, 1], [2, 2]]
-        xform = affine.invert(self.displayTransform)
+        xform = self.getTransform(from_='display')
         zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
 
         los, his = self.overlay.bounds

@@ -119,22 +119,22 @@ def draw3D(self,
            xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
 
-    opts       = self.opts
-    ovl        = self.overlay
-    display    = self.display
-    colourMode = opts.effectiveColourMode
-    clipMode   = opts.effectiveClipMode
-    nstrms     = ovl.nstreamlines
-    lineWidth  = self.normalisedLineWidth(canvas, mvp, threedee)
-    offsets    = self.offsets
-    counts     = self.counts
-    nstrms     = len(offsets)
+    opts      = self.opts
+    ovl       = self.overlay
+    display   = self.display
+    colMode   = opts.effectiveColourMode
+    clipMode  = opts.effectiveClipMode
+    nstrms    = ovl.nstreamlines
+    lineWidth = self.normalisedLineWidth(canvas, mvp, threedee)
+    offsets   = self.offsets
+    counts    = self.counts
+    nstrms    = len(offsets)
 
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if geom == 'line': shader = self.shaders['3D'][colourMode][clipMode]['line']
-    else:              shader = self.shaders['3D'][colourMode][clipMode]['tube']
+    if geom == 'line': shader = self.shaders['3D'][colMode][clipMode]['line']
+    else:              shader = self.shaders['3D'][colMode][clipMode]['tube']
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)
