@@ -648,21 +648,19 @@ class GLTractogram(globject.GLObject):
         # coordinates within the slice are mapped to
         # the range (-1, +1). Vertices with z outside
         # of that range will be clipped by GL.
-        projmat       = np.array(canvas.projectionMatrix)
-        step          = opts.sliceWidth(zax)
-        zlo           = zpos - step
-        zhi           = zpos + step
-        projmat[2, 2] = 2 / (zhi - zlo)
-        projmat[2, 3] = -(zhi + zlo) / (zhi - zlo)
+        step    = opts.sliceWidth(zax)
+        zmin    = zpos - step
+        zmax    = zpos + step
+        viewmat = canvas.viewMatrix
+        projmat = canvas.calculateViewport(
+            zmin=zmin, zmax=zmax, expandz=False)[1]
 
-        # The routines.show2D function encodes a
-        # -ve scale on the yaxis in the view
-        # matrix.  We need to accommodate it
-        # here.
-        if zax == 1:
+        # Make sure that the scales have the same
+        # sign as the rotations in the view matrix
+        # produced by gl.routines.show2D
+        if np.sign(projmat[2, 2]) != np.sign(viewmat[2, :2].sum()):
             projmat[2, 2] *= -1
 
-        viewmat   = canvas.viewMatrix
         strm2disp = opts.getTransform(to='display')
         mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 

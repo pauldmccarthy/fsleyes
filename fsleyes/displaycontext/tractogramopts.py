@@ -276,6 +276,9 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
         los, his = self.overlay.bounds
         zlen     = his[zax] - los[zax]
+
+        # Arbitrarily clip to 1/200th of the
+        # width of the tractogram bounding box
         return zlen / 200
 
 
