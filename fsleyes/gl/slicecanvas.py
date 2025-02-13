@@ -1251,39 +1251,71 @@ s
         opts.displayBounds[:] = (xmin, xmax, ymin, ymax)
 
 
-    def _setViewport(self, invertX=None, invertY=None):
-        """Calculates the GL bounds, projection, and model view matrices. They
-        are stored as attributes which are accessible via the
-        :meth:`viewport`, :meth:`projectionMatrix` and :meth:`viewMatrix`
-        methods.
+    def calculateViewport(self,
+                          xmin=None,
+                          xmax=None,
+                          ymin=None,
+                          ymax=None,
+                          zmin=None,
+                          zmax=None,
+                          invertX=None,
+                          invertY=None,
+                          expandz=True):
+        """Called by :meth:`_setViewport`. Calculates and returns the GL
+        bounds, projection, and model view matrices.
+
+        :arg xmin:    Minimum X coordinate. If not provided, taken
+                      from :attr:`.SliceCanvasOpts.displayBounds`.
+
+        :arg xmax:    Maximum X coordinate. If not provided, taken
+                      from :attr:`.SliceCanvasOpts.displayBounds`.
+
+        :arg ymin:    Minimum Y coordinate. If not provided, taken
+                      from :attr:`.SliceCanvasOpts.displayBounds`.
+
+        :arg ymax:    Maximum Y coordinate. If not provided, taken
+                      from :attr:`.SliceCanvasOpts.displayBounds`.
+
+        :arg zmin:    Minimum Z coordinate. If not provided, taken
+                      from :attr:`.DisplayContext.bounds`.
+
+        :arg zmax:    Maximum Z coordinate. If not provided, taken
+                      from :attr:`.DisplayContext.bounds`.
 
         :arg invertX: Invert the X axis. If not provided, taken from
-                      :attr:`invertX`.
+                      :attr:`.SliceCanvasOpts.invertX`.
 
         :arg invertY: Invert the Y axis. If not provided, taken from
-                      :attr:`invertY`.
+                      :attr:`.SliceCanvasOpts.invertY`.
+
+        :arg expandz: If ``True`` (default), the Z range is automatically
+                      expanded to guard against anything being unintentionally
+                      clipped.
+
+        :returns: A tuple containing the following. If the viewport is
+                  invalid, all values will be ``None``.
+                   - A sequence of three ``(lo, hi)`` pairs, for each axis,
+                     defining the viewport boundes
+                   - The projection matrix
+                   - The view matirx
         """
+        opts = self.opts
+        xax  = opts.xax
+        yax  = opts.yax
+        zax  = opts.zax
 
-        opts          = self.opts
-        xax           = opts.xax
-        yax           = opts.yax
-        zax           = opts.zax
-        xmin          = opts.displayBounds.xlo
-        xmax          = opts.displayBounds.xhi
-        ymin          = opts.displayBounds.ylo
-        ymax          = opts.displayBounds.yhi
-        zmin          = self.displayCtx.bounds.getLo(zax)
-        zmax          = self.displayCtx.bounds.getHi(zax)
-
+        if xmin    is None: xmin    = opts.displayBounds.xlo
+        if xmax    is None: xmax    = opts.displayBounds.xhi
+        if ymin    is None: ymin    = opts.displayBounds.ylo
+        if ymax    is None: ymax    = opts.displayBounds.yhi
+        if zmin    is None: zmin    = self.displayCtx.bounds.getLo(zax)
+        if zmax    is None: zmax    = self.displayCtx.bounds.getHi(zax)
         if invertX is None: invertX = opts.invertX
         if invertY is None: invertY = opts.invertY
 
-        # If there is  no space to draw, do nothing
+        # If there is no space to draw, do nothing
         if (xmin == xmax) or (ymin == ymax):
-            self.__viewport         = None
-            self.__projectionMatrix = None
-            self.__viewMatrix       = None
-            return
+            return None, None, None
 
         # Add a bit of padding to the depth limits
         zmin -= 1e-3
@@ -1296,16 +1328,29 @@ s
         lo[yax], hi[yax] = ymin, ymax
         lo[zax], hi[zax] = zmin, zmax
 
+        viewport = [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
+
         # calculate projection and mv
         # matrices for 2D ortho
         projmat, mvmat = glroutines.show2D(
-            xax, yax, lo, hi, invertX, invertY)
+            xax, yax, lo, hi, invertX, invertY, expandz)
+
+        return viewport, projmat, mvmat
+
+
+    def _setViewport(self, **kwargs):
+        """Calculates the GL bounds, projection, and model view matrices. They
+        are stored as attributes which are accessible via the
+        :meth:`viewport`, :meth:`projectionMatrix` and :meth:`viewMatrix`
+        methods.
+        """
 
         # store a copy of the final bounds and
         # proj/mv matrices interested parties can
         # retrieve them via the viewport/
         # projectionMatrix/ viewMatrix methods.
-        self.__viewport         = [(lo[0], hi[0]), (lo[1], hi[1]), (lo[2], hi[2])]
+        viewport, projmat, mvmat = self.calculateViewport(**kwargs)
+        self.__viewport         = viewport
         self.__projectionMatrix = projmat
         self.__viewMatrix       = mvmat
 

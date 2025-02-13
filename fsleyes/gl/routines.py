@@ -135,21 +135,29 @@ def disabled(capabilities):
         yield
 
 
-def show2D(xax, yax, lo, hi, flipx=False, flipy=False):
+def show2D(xax, yax, lo, hi, flipx=False, flipy=False, expandz=True):
     """Generates a projection and model view matrix for 2D orthographic
     display for the given axes and bounds.
 
-    :arg xax:   Index (into ``lo`` and ``hi``) of the axis which
-                corresponds to the horizontal screen axis.
-    :arg yax:   Index (into ``lo`` and ``hi``) of the axis which
-                corresponds to the vertical screen axis.
-    :arg lo:    Tuple containing the mininum ``(x, y, z)`` display
-                coordinates.
-    :arg hi:    Tuple containing the maxinum ``(x, y, z)`` display
-                coordinates.
-    :arg flipx: If ``True``, the x axis is inverted.
+    :arg xax:     Index (into ``lo`` and ``hi``) of the axis which
+                  corresponds to the horizontal screen axis.
 
-    :arg flipy: If ``True``, the y axis is inverted.
+    :arg yax:     Index (into ``lo`` and ``hi``) of the axis which
+                  corresponds to the vertical screen axis.
+
+    :arg lo:      Tuple containing the mininum ``(x, y, z)`` display
+                  coordinates.
+
+    :arg hi:      Tuple containing the maxinum ``(x, y, z)`` display
+                  coordinates.
+
+    :arg flipx:   If ``True``, the x axis is inverted.
+
+    :arg flipy:   If ``True``, the y axis is inverted.
+
+    :arg expandz: If ``True`` (default), the Z range is automatically
+                  expanded to guard against anything being unintentionally
+                  clipped.
 
     Returns a tuple containing the projection and modelview matrices.
     """
@@ -162,9 +170,10 @@ def show2D(xax, yax, lo, hi, flipx=False, flipy=False):
 
     # Expand the Z range so we don't
     # accidentally clip anything
-    zdist      = max(abs(zmin), abs(zmax))
-    zmin       = -zdist
-    zmax       =  zdist
+    if expandz:
+        zdist = max(abs(zmin), abs(zmax))
+        zmin  = -zdist
+        zmax  =  zdist
 
     projmat = np.eye(4, dtype=np.float32)
 
