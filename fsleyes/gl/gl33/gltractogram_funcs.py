@@ -107,21 +107,26 @@ def draw2D(self, canvas, mvp):
 
 def drawPseudo3D(self, canvas, mvp):
     """Called by :class:`.GLTractogram.drawPseudo3D`. """
+
     dctx          = self.displayCtx
     xax           = canvas.opts.xax
     yax           = canvas.opts.yax
     zax           = canvas.opts.zax
-    xmid          = (dctx.bounds.getHi(xax) - dctx.bounds.getLo(xax)) / 2
-    ymid          = (dctx.bounds.getHi(yax) - dctx.bounds.getLo(yax)) / 2
-    zlo           =  dctx.bounds.getLo(zax) - dctx.bounds.getLen(zax)
+    xmin, xmax    = dctx.bounds.x
+    ymin, ymax    = dctx.bounds.y
+    zmin, zmax    = dctx.bounds.z
+    xmid          = xmin + (xmax - xmin) / 2
+    ymid          = ymin + (ymax - ymin) / 2
     lightPos      = [0, 0, 0]
     lightPos[xax] = xmid
     lightPos[yax] = ymid
-    lightPos[zax] = zlo
-    lightPos      = affine.transform(lightPos, mvp)
+    lightPos[zax] = zmin - 5 * (zmax - zmin)
+
+    lightPos = affine.transform(lightPos, mvp)
 
     if lightPos[2] > 0:
         lightPos[2] *= -1
+
     draw3D(self, canvas, mvp, True, lightPos, threedee=False)
 
 
