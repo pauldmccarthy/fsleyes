@@ -292,6 +292,7 @@ class GLTractogram(globject.GLObject):
         else:
             # return separate scales for each axis
             lineWidth = affine.transform([lineWidth] * 3, mvp, vector=True)
+            lineWidth = np.abs(lineWidth[:2])
 
         return lineWidth
 
@@ -676,11 +677,8 @@ class GLTractogram(globject.GLObject):
         if xform is None:
             xform = np.eye(4)
 
-        dctx  = self.displayCtx
-        opts  = self.opts
-        zax   = axes[2]
-
-        projmat = np.array(canvas.projectionMatrix)
+        opts = self.opts
+        zax  = axes[2]
 
         if   zax == 0: clipdir = opts.xclipdir
         elif zax == 1: clipdir = opts.yclipdir
@@ -688,25 +686,22 @@ class GLTractogram(globject.GLObject):
 
         if clipdir != 'none':
 
-            if   zax == 0: zmin, zmax = dctx.bounds.x
-            elif zax == 1: zmin, zmax = dctx.bounds.y
-            elif zax == 2: zmin, zmax = dctx.bounds.z
+            zmin, zmax = canvas.viewport[zax]
 
-            if clipdir == 'low': zlo, zhi = zpos, zmax
-            else:                zlo, zhi = zmin, zpos
+            if clipdir == 'low': zmin = zpos
+            else:                zmax = zpos
 
-            zlo, zhi = sorted((zlo, zhi))
+            # manipulate projection matrix to
+            # clip vertices - see notes in draw2D
+            viewmat = canvas.viewMatrix
+            projmat = canvas.calculateViewport(
+                zmin=zmin, zmax=zmax, expandz=False)[1]
 
-            # Guard against div-by-0
-            if zhi == zlo:
-                zhi = zlo + 0.0000001
+            if np.sign(projmat[2, 2]) != np.sign(viewmat[2, :2].sum()):
+                projmat[2, 2] *= -1
 
-            projmat[2, 2] = 2 / (zhi - zlo)
-            projmat[2, 3] = -(zhi + zlo) / (zhi - zlo)
-
-        # See comment within draw2D
-        if zax == 1:
-            projmat[2, 2] *= -1
+        else:
+            projmat = np.array(canvas.projectionMatrix)
 
         viewmat   = canvas.viewMatrix
         strm2disp = opts.getTransform(to='display')

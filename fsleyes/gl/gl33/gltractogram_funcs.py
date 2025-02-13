@@ -102,7 +102,7 @@ def draw2D(self, canvas, mvp):
         shader.set('MVP',    mvp)
         shader.set('xscale', scales[0])
         shader.set('yscale', scales[1])
-        shader.draw(gl.GL_POINTS, 0,  len(self.vertices))
+        shader.draw(gl.GL_POINTS, 0, len(self.vertices))
 
 
 def drawPseudo3D(self, canvas, mvp):
@@ -133,8 +133,7 @@ def draw3D(self,
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if geom == 'line': shader = self.shaders['3D'][colMode][clipMode]['line']
-    else:              shader = self.shaders['3D'][colMode][clipMode]['tube']
+    shader = self.shaders['3D'][colMode][clipMode][geom]
 
     if xform is not None:
         mvp = affine.concat(mvp, xform)
@@ -142,7 +141,6 @@ def draw3D(self,
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',        mvp)
         shader.set('lineWidth',  lineWidth)
-
         # Line geometry shader needs to know
         # the camera direction so it can
         # position line/rectangle vertices
