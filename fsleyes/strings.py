@@ -823,6 +823,24 @@ labels = TypeDict({
     'OverlayInfoPanel.Tractogram.numStreamlines' : 'Total number of streamlines',
     'OverlayInfoPanel.Tractogram.numVertices'    : 'Total number of vertices',
     'OverlayInfoPanel.Tractogram.size'           : 'Bounding box size',
+    'OverlayInfoPanel.Tractogram.displaySpace'   :
+    'Display space',
+    'OverlayInfoPanel.Tractogram.refImage'       :
+    'Reference image',
+    'OverlayInfoPanel.Tractogram.coordSpace'             :
+    'Vertices defined in',
+    'OverlayInfoPanel.Tractogram.coordSpace.id'          :
+    'Voxels ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.pixdim'      :
+    'Scaled voxels ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.pixdim-flip' :
+    'Scaled voxels [FSL convention] ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.affine'      :
+    'World coordinates ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.display'     :
+    'Display coordinate system',
+    'OverlayInfoPanel.Tractogram.coordSpace.torig'       :
+    'Freesurfer coordinates',
 
     'MelodicClassificationPanel.componentTab'   : 'Components',
     'MelodicClassificationPanel.labelTab'       : 'Labels',
