@@ -686,10 +686,12 @@ class GLTractogram(globject.GLObject):
 
         if clipdir != 'none':
 
+            step       = opts.sliceWidth(zax)
             zmin, zmax = canvas.viewport[zax]
 
-            if clipdir == 'low': zmin = zpos
-            else:                zmax = zpos
+            if   clipdir == 'low':  zmin       = zpos
+            elif clipdir == 'high': zmax       = zpos
+            else:                   zmin, zmax = zpos - step, zpos + step
 
             # manipulate projection matrix to
             # clip vertices - see notes in draw2D

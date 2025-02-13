@@ -13,8 +13,6 @@ import numpy   as np
 import nibabel as nib
 
 import fsl.data.image                       as fslimage
-import fsl.transform.affine                 as affine
-import fsleyes.gl                           as fslgl
 import fsleyes.strings                      as strings
 import fsleyes_props                        as props
 import fsleyes.displaycontext.display       as fsldisplay
@@ -81,19 +79,22 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
-    xclipdir = props.Choice(('low', 'high', 'none'))
+    xclipdir = props.Choice(('low', 'high', 'slice', 'none'))
     """Clipping direction along the X axis when :attr:`pseudo3D` is active.
-    This property controls whether areas of the tractogram which are below
-    (``'low'``) or above (``'high'``) the current location on the depth axis
-    are clipped.
+    This property controls whether areas of the tractogram are clipped along
+    the the depth axis:
+      - ``'slice'``: Areas below and above the current depth are clipped
+      - ``'low'``:   Areas below the current depth are clipped
+      - ``'high'``:  Areas above the current depth are clipped
+      - ``'none'``:  No clipping - the entire tractogram is drawn
     """
 
 
-    yclipdir = props.Choice(('low', 'high', 'none'))
+    yclipdir = props.Choice(('low', 'high', 'slice', 'none'))
     """Clipping direction along the X axis when :attr:`pseudo3D` is active. """
 
 
-    zclipdir = props.Choice(('low', 'high', 'none'))
+    zclipdir = props.Choice(('low', 'high', 'slice', 'none'))
     """Clipping direction along the Z axis when :attr:`pseudo3D` is active. """
 
 
@@ -260,26 +261,42 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                       self.clipMode   = None
 
 
-    def sliceWidth(self, zax):
+    def sliceWidth(self, zax, nvoxels=1):
         """Returns a width along the specified **display** coordinate system
         axis, to be used for drawing a 2D slice through the tractogram on the
         axis plane.
+
+        If ``refImage is not None``, the width is set to ``nvoxels`` in terms
+        of ``refImage``.
         """
 
-        # The z axis is specified in terms of
-        # the display coordinate system -
-        # identify the corresponding axis in the
-        # tractogram/world coordinate system.
-        codes = [[0, 0], [1, 1], [2, 2]]
-        xform = self.getTransform(from_='display')
-        zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
-
-        los, his = self.overlay.bounds
-        zlen     = his[zax] - los[zax]
+        ref = self.refImage
 
         # Arbitrarily clip to 1/200th of the
         # width of the tractogram bounding box
-        return zlen / 200
+        if ref is None:
+
+            # The z axis is specified in terms of
+            # the display coordinate system -
+            # identify the corresponding axis in the
+            # tractogram/world coordinate system.
+            codes = [[0, 0], [1, 1], [2, 2]]
+            xform = self.getTransform(from_='display')
+            zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
+
+            los, his = self.overlay.bounds
+            zlen     = his[zax] - los[zax]
+            return (nvoxels * zlen) / 200
+
+        # Clip to N voxels in terms of the reference image
+        else:
+            # Identify the voxel axis corresponding
+            # to the requested display axis, and
+            # return a width in terms of its pixdim
+            axes  = ref.axisMapping(self.getTransform('display', 'voxel'))
+            zax   = abs(axes[zax] - 1)
+            zlen  = ref.pixdim[zax]
+            return nvoxels * zlen
 
 
     def __colourModeChanged(self):

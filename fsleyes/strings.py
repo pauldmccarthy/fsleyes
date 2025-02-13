@@ -1436,9 +1436,10 @@ choices = TypeDict({
                                 'phase' : 'Phase'},
 
     'TractogramOpts.colourMode' : {'orientation' : 'Orientation'},
-    'TractogramOpts.clipdir'    : {'low'  : 'Low',
-                                   'high' : 'High',
-                                   'none' : 'None'},
+    'TractogramOpts.clipdir'    : {'slice' : 'Show slice',
+                                   'low'   : 'Show above',
+                                   'high'  : 'Show below',
+                                   'none'  : 'Show all'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',
