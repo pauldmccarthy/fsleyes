@@ -16,10 +16,22 @@ chronological order.
 -----------------------------------
 
 
+Added
+^^^^^
+
+
+* Improved support for tractograms (TrackVis ``.trk`` and Mrtrix3 ``.tck``
+  files). Tractograms can now be associated with a reference image, and so
+  will be re-positioned as needed with changes to the display space (!466).
+* New *Pseudo-3D* option for tractograms, which causes it to be displayed in
+  3D in the ortho and lightbox views. When using this option, the tractogram
+  can be clipped above, below, or near the currently displayed slice (!466).
+
+
 Changed
 ^^^^^^^
 
-* Alpha modulation settings (e.g. _Modulate alpha by intensity_) are now
+* Alpha modulation settings (e.g. *Modulate alpha by intensity*) are now
   applied to the colour bar if it is displayed (!464).
 * The ``--autoDisplay`` / ``-ad`` command-line option will now enable
   alpha-modulation on FEAT statistic images (e.g. ``stats/zstat1.nii.gz``
