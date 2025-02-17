@@ -140,10 +140,16 @@ class GLSLShader:
         if constants is None:
             constants = {}
 
-        srcs = []
-        for src in (vertSrc, fragSrc, geomSrc):
+        srcs = {'vert' : vertSrc,
+                'frag' : fragSrc,
+                'geom' : geomSrc}
+
+        for stype, src in srcs.items():
             if src is not None:
-                srcs.append(j2.Template(src).render(**constants))
+                srcs[stype] = j2.Template(src).render(**constants)
+
+        self.__srcs = srcs
+
         types      = {}
         sizes      = {}
         attributes = []
@@ -155,7 +161,7 @@ class GLSLShader:
         # declared as 'varying' or 'in', and
         # anything from any of the shaders
         # declared as 'uniform'.
-        for i, src in enumerate(srcs):
+        for stype, src in srcs.items():
             if src is None:
                 continue
             decs = parse.parseGLSL(src)
@@ -163,7 +169,7 @@ class GLSLShader:
             # get attributes/vertex inputs from
             # vertex shader. For the other shaders,
             # we only care about uniforms.
-            if i == 0:
+            if stype == 'vert':
                 atts  = decs['attribute']
                 unifs = decs['uniform']
             else:
@@ -176,7 +182,7 @@ class GLSLShader:
                 types[dname] = dtype
                 sizes[dname] = dsize
 
-        self.program     = self.__compile(*srcs)
+        self.program     = self.__compile(srcs['vert'], srcs['frag'], srcs['geom'])
         self.attDivisors = {}
         self.types       = types
         self.sizes       = sizes
@@ -228,6 +234,26 @@ class GLSLShader:
         """Prints a log message. """
         if log:
             log.debug('%s.del(%s)', type(self).__name__, id(self))
+
+
+    @property
+    def vertexSource(self):
+        """Return the vertex shader source code. """
+        return self.__srcs['vert']
+
+
+    @property
+    def fragmentSource(self):
+        """Return the fragmentshader source code. """
+        return self.__srcs['frag']
+
+
+    @property
+    def geometrySource(self):
+        """Return the geometry shader source code. Returns ``None`` for
+        programs without a geometry shader.
+        """
+        return self.__srcs['geom']
 
 
     def ready(self):
