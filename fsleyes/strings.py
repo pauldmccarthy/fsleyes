@@ -1266,7 +1266,7 @@ properties = TypeDict({
     'LineVectorOpts.lengthScale' : 'Length scaling factor (%)',
 
     'RefImageOpts.refImage'      : 'Reference image',
-    'RefImageOpts.coordSpace'    : 'Mesh coordinate space',
+    'RefImageOpts.coordSpace'    : 'Coordinate space',
 
     'MeshOpts.colour'            : 'Colour',
     'MeshOpts.outline'           : 'Show outline only',
