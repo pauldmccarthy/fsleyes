@@ -6,6 +6,7 @@
 #
 
 from unittest import mock
+import itertools as it
 import random
 import numpy as np
 
@@ -89,14 +90,49 @@ cli_tests = """
 {prefix} {zoom40} {{{{reseed('tractogram/spirals.trk')}}}} -lw {linewidth} -s 25 -co vdata -cm hot
 """
 
+cli_refImage_tests = """
+tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk              -lw 10
+tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -lw 10
+tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk              -lw 10
+tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -cs pixdim -lw 10
+"""
 
+cli_pseudo3d_tests = """
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl low   -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl high  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl slice -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl low   -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl high  -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl slice -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl low
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl high
+tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl none
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl none
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl none
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl low
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl low
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl low
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl high
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl high
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl high
+"""
+
+
+# run on 3D, and ortho with the --pseudo3D flag (GL33 only)
 cli_tube_tests = """
--s3d -z 40      tractogram/spirals.trk -lw 20 -r 3
--s3d -z 40      tractogram/spirals.trk -lw 20 -r 6
--s3d -z 40      tractogram/spirals.trk -lw 20 -r 10
--s3d -z 40  -dl tractogram/spirals.trk -lw 20 -r 3
--s3d -z 40  -dl tractogram/spirals.trk -lw 20 -r 6
--s3d -z 40  -dl tractogram/spirals.trk -lw 20 -r 10
+-s{view} -z 40      tractogram/spirals.trk -lw 20 -r 3  {extra}
+-s{view} -z 40      tractogram/spirals.trk -lw 20 -r 6  {extra}
+-s{view} -z 40      tractogram/spirals.trk -lw 20 -r 10 {extra}
+-s{view} -z 40  -dl tractogram/spirals.trk -lw 20 -r 3  {extra}
+-s{view} -z 40  -dl tractogram/spirals.trk -lw 20 -r 6  {extra}
+-s{view} -z 40  -dl tractogram/spirals.trk -lw 20 -r 10 {extra}
 """
 
 # hack to ensure the RNG is in the same
@@ -120,9 +156,15 @@ def test_overlay_tractogram_2d_gl21():
                   extras=extras)
 
 
+@pytest.mark.skipif('not haveGL(2.1)')
+def test_overlay_tractogram_2d_refImage():
+    run_cli_tests('test_overlay_tractogram_2d_refImage',
+                  cli_refImage_tests,
+                  extras=extras)
+
+
 @pytest.mark.skipif('not haveGL(3.3)')
 @pytest.mark.gl33test
-@pytest.mark.overlayclitest
 def test_overlay_tractogram_2d_gl33():
     fmtargs = { 'prefix'    : '-sortho -wl 0 -10 25',
                 'linewidth' : '10',
@@ -144,10 +186,22 @@ def test_overlay_tractogram_3d_gl21():
                   tests,
                   extras=extras)
 
+@pytest.mark.skipif('not haveGL(2.1)')
+def test_overlay_tractogram_pseudo3d_gl21():
+    run_cli_tests('test_overlay_tractogram_pseudo3d_gl21',
+                  cli_pseudo3d_tests,
+                  extras=extras)
 
 @pytest.mark.skipif('not haveGL(3.3)')
 @pytest.mark.gl33test
-@pytest.mark.overlayclitest
+def test_overlay_tractogram_pseudo3d_gl33():
+    run_cli_tests('test_overlay_tractogram_pseudo3d_gl33',
+                  cli_pseudo3d_tests,
+                  extras=extras)
+
+
+@pytest.mark.skipif('not haveGL(3.3)')
+@pytest.mark.gl33test
 def test_overlay_tractogram_3d_gl33():
     fmtargs = { 'prefix'    : '-s3d',
                 'linewidth' : '5',
@@ -161,6 +215,13 @@ def test_overlay_tractogram_3d_gl33():
 
 @pytest.mark.skipif('not haveGL(3.3)')
 @pytest.mark.gl33test
-@pytest.mark.overlayclitest
 def test_overlay_tractogram_3d_tubes():
-    run_cli_tests('test_overlay_tractogram_3d_tubes', cli_tube_tests)
+    run_cli_tests('test_overlay_tractogram_3d_tubes',
+                  cli_tube_tests.format(view='3d', extra=''))
+
+
+@pytest.mark.skipif('not haveGL(3.3)')
+@pytest.mark.gl33test
+def test_overlay_tractogram_pseudo3d_tubes():
+    run_cli_tests('test_overlay_tractogram_pseudo3d_tubes',
+                  cli_tube_tests.format(view='ortho', extra='-p'))
