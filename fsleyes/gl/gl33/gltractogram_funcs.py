@@ -82,7 +82,7 @@ def compileShaders(self):
         const = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
-            'lighting'   : dim == '3D'
+            'lighting'   : (dim == '3D') and (geom == 'tube')
         }
         prog = shaders.GLSLShader(vsrc, fsrc, gsrc, const, **kwa)
         self.shaders[dim][colourMode][clipMode][geom] = prog
