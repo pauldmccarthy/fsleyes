@@ -956,7 +956,7 @@ display settings:
   image associated with the model (see the :ref:`sidebar
   <overlays_mesh_reference_image>`).
 
-- **Mesh coordinate space** This is an advanced setting which allows you to
+- **Coordinate space** This is an advanced setting which allows you to
   specify how the mesh vertex coordinates are defined, relative to its
   reference image. FSLeyes will try to guess the correct coordinate system when
   it can, but you can explicitly change this setting if needed. The options
@@ -1034,6 +1034,16 @@ be visualised in 3D - see :ref:`here <3d_view_tractogram>` for more details.
     created by Marlene Tahedl and released under a CC-By Attribution 4.0
     International license (DOI 10.17605/OSF.IO/FKYHT).*
 
+.. _overlays_tractogram_reference_image:
+
+.. sidebar:: Tractogram reference image
+
+             In the same manner as for :ref:`mesh overlays
+             <overlays_mesh_reference_image>`, tractograms may be associated
+             with a *reference image*, typically the image from which the
+             tractogram was generated. This allows FSLeyes to correctly
+             position the tractogram in the display coordinate system.
+
 
 The overlay display settings dialog (the |gear_icon| button) has several
 options allowing you to control how tractograms are displayed.
@@ -1049,6 +1059,27 @@ The **Sub-sample** option allows you to reduce the number of streamlines drawn
 to improve performance - a random selection of streamlines will be drawn. This
 option is automatically scaled down for large tractograms, but can be manually
 increased if desired.
+
+
+By default FSLeyes displays individual streamline vertices which are near the
+current depth position. The **Pseudo-3D** checkbox causes FSLeyes to display
+the full 3D tractogram, overlaid on the 2D view.
+
+  .. image:: images/overlays_tractogram_pseudo3d.png
+     :width: 50%
+     :align: right
+
+When displaying tractograms with the **Pseudo-3D** option, the **Depth
+clipping** options allow you to show or hide regions of the tractogram
+independently on each axis:
+
+- **Show slice** only displays regions of the tractogram around the current
+  depth position.
+- **Show above** only displays regions of the tractogram above the current
+  depth.
+- **Show below** only displays regions of the tractogram below the current
+  depth.
+- **Show all** displays the full 3D tractogram.
 
 
 The **Colour by** option allows you to control how a tractogram is coloured.
@@ -1074,3 +1105,10 @@ transparency by the data.
 The **Clip by** option can be set independently of the **Colour by** option,
 and can be used to clip/hide streamlines according to the data set, and
 **Clipping range** that you specify.
+
+The **Reference image** option allows you to associate a tractogram with a
+NIFTI reference image - if you set this to the image from which the tractogram
+was generated (or any image in the same space), FSLeyes will be able to
+correctly position the tractogram in the display coordinate system. By default
+FSLeyes assumes that tractogram vertices are defined in *world coordinates*,
+but this can be changed via the **Coordinate space** option.
