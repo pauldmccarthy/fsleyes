@@ -102,3 +102,7 @@ DICOM to NIFTI conversion is performed with Chris Rorden's dcm2niix
 
 The *brain_colours* colour maps were produced and provided by Cyril Pernet
 (https://doi.org/10.1111/ejn.14430).
+
+The data files used in the FSLeyes ``tractogram`` unit tests are from the
+`DIPY <https://dipy.org/>`_ example data sets
+(``dipy.data.fetch_stanford_hardi``).
