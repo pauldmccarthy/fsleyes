@@ -98,30 +98,30 @@ tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -cs pixdim -l
 """
 
 cli_pseudo3d_tests = """
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl low   -ycl none  -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl high  -ycl none  -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl slice -ycl none  -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl low   -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl high  -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl slice -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl none
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl low
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl high
-tractogram/dipy_tracks.trk -lw 10 -p -xcl none  -ycl none  -zcl slice
--slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl slice
--slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl slice
--slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl slice
--slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl none
--slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl none
--slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl none
--slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl low
--slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl low
--slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl low
--slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -xcl high
--slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -ycl high
--slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 10 -p -zcl high
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl low   -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl high  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl slice -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl low   -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl high  -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl slice -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl none  -zcl none
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl none  -zcl low
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl none  -zcl high
+tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl none  -zcl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -xcl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -ycl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -zcl slice
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -xcl none
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -ycl none
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -zcl none
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -xcl low
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -ycl low
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -zcl low
+-slightbox -bg 0.2 0.2 0.2 -zx 0 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -xcl high
+-slightbox -bg 0.2 0.2 0.2 -zx 1 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -ycl high
+-slightbox -bg 0.2 0.2 0.2 -zx 2 -zr 0 1 tractogram/dipy_tracks.trk -ri tractogram/dipy_ref.nii.gz -lw 1 -p -zcl high
 """
 
 
