@@ -1293,11 +1293,12 @@ s
                       clipped.
 
         :returns: A tuple containing the following. If the viewport is
-                  invalid, all values will be ``None``.
-                   - A sequence of three ``(lo, hi)`` pairs, for each axis,
-                     defining the viewport boundes
-                   - The projection matrix
-                   - The view matirx
+                  invalid, all values will be ``None``:
+
+                  - A sequence of three ``(lo, hi)`` pairs, for each axis,
+                    defining the viewport bounds
+                  - The projection matrix
+                  - The view matirx
         """
         opts = self.opts
         xax  = opts.xax

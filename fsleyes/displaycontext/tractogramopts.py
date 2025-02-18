@@ -83,10 +83,11 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """Clipping direction along the X axis when :attr:`pseudo3D` is active.
     This property controls whether areas of the tractogram are clipped along
     the the depth axis:
-      - ``'slice'``: Areas below and above the current depth are clipped
-      - ``'low'``:   Areas below the current depth are clipped
-      - ``'high'``:  Areas above the current depth are clipped
-      - ``'none'``:  No clipping - the entire tractogram is drawn
+
+    - ``'slice'``: Areas below and above the current depth are clipped
+    - ``'low'``:   Areas below the current depth are clipped
+    - ``'high'``:  Areas above the current depth are clipped
+    - ``'none'``:  No clipping - the entire tractogram is drawn
     """
 
 

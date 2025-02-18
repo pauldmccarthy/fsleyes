@@ -835,7 +835,7 @@ on diffusion SH overlays:
 - **FOD size** This setting allows you to scale the size of each FOD by a
   constant factor.
 
-- **Radious threshold** This setting allows you to clip FODs which have a
+- **Radius threshold** This setting allows you to clip FODs which have a
   small maximum radius.
 
 - **Colour mode** You can choose to colour FODs by direction, or by the

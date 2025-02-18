@@ -739,13 +739,14 @@ class ClusterPanel(ctrlpanel.ControlPanel):
         """Loads cluster results for all contrasts and f-tests from the FEAT
         analysis for ``featImage``.  Returns a list of tuples, with each
         tuple containing:
-          - The test index, starting from 0, relative to the total number of
-            contrasts/f-tests. Contrasts and f-tests are indexed separately.
-          - A boolean indicating whether the test is a contrast or an f-test
-          - The test name
-          - A list of cluster results (see
-            :meth:`.featanalysis.loadClusterResults`). This will be ``None``
-            if the results could not be loaded for some reason.
+
+        - The test index, starting from 0, relative to the total number of
+          contrasts/f-tests. Contrasts and f-tests are indexed separately.
+        - A boolean indicating whether the test is a contrast or an f-test
+        - The test name
+        - A list of cluster results (see
+          :meth:`.featanalysis.loadClusterResults`). This will be ``None``
+          if the results could not be loaded for some reason.
         """
 
         if featImage in self.__clusterData:
