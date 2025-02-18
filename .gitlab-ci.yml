@@ -247,14 +247,14 @@ test:3.10:
   stage: test
   image: pauldmccarthy/fsleyes-py310-wxpy4-gtk3
   <<: *test_template
-  <<: *test_rules
+  <<: *test_rules_upstream
 
 
 test:3.11:
   stage: test
   image: pauldmccarthy/fsleyes-py311-wxpy4-gtk3
   <<: *test_template
-  <<: *test_rules_upstream
+  <<: *test_rules
 
 
 test:3.12:
