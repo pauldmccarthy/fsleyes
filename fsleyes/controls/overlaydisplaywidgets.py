@@ -983,6 +983,8 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
 
     cmapOpts    = dict(dependencies=['colourMode'],
                        enabledWhen=lambda o, cm: cm != 'orientation')
+    clipOpts    = dict(dependencies=['clipMode'],
+                       enabledWhen=lambda o, cm: cm is not None)
     orientOpts  = dict(dependencies=['colourMode'],
                        enabledWhen=lambda o, cm: cm == 'orientation')
     sliderOpts  = dict(spin=True, slider=True, showLimits=False)
@@ -1058,7 +1060,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
             slider=True,
             labels=[strings.choices['ColourMapOpts.displayRange.min'],
                     strings.choices['ColourMapOpts.displayRange.max']],
-            **cmapOpts),
+            **clipOpts),
     }
 
 
