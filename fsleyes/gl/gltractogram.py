@@ -119,6 +119,7 @@ class GLTractogram(globject.GLObject):
 
         def clip(*_):
             self.updateClipData()
+            self.updateShaderState()
             self.notifyWhen(self.ready)
 
         opts   .wlisten('bounds',              name, refresh)
@@ -461,6 +462,7 @@ class GLTractogram(globject.GLObject):
                                        ['vertexData', 'imageData']):
             with shader.loaded():
                 shader.set('invertClip',   opts.invertClipping)
+                shader.set('applyClip',    opts.clipMode is not None)
                 shader.set('clipLow',      opts.clippingRange.xlo)
                 shader.set('clipHigh',     opts.clippingRange.xhi)
 
@@ -473,6 +475,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('cmapScale',     cmapScale)
                 shader.set('cmapOffset',    cmapOffset)
                 shader.set('sameData',      sameData)
+                shader.set('applyClip',     opts.clipMode is not None)
                 shader.set('invertClip',    opts.invertClipping)
                 shader.set('clipLow',       opts.clippingRange.xlo)
                 shader.set('clipHigh',      opts.clippingRange.xhi)

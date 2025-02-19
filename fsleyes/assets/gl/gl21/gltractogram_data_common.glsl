@@ -18,6 +18,7 @@ uniform float     cmapOffset;
  * as the colouring data.
  */
 uniform bool      sameData;
+uniform bool      applyClip;
 uniform bool      invertClip;
 uniform float     clipLow;
 uniform float     clipHigh;
@@ -45,11 +46,13 @@ vec4 generateColour(float data, float clipData) {
   if (negative) { data     = -data; }
   if (sameData) { clipData =  data; }
 
-  clip = (!invertClip && (clipData <= clipLow || clipData >= clipHigh)) ||
-         ( invertClip && (clipData >= clipLow && clipData <= clipHigh));
+  if (applyClip) {
+    clip = (!invertClip && (clipData <= clipLow || clipData >= clipHigh)) ||
+           ( invertClip && (clipData >= clipLow && clipData <= clipHigh));
 
-  if (clip) {
-    discard;
+    if (clip) {
+      discard;
+    }
   }
 
   texCoord = data * cmapScale + cmapOffset;

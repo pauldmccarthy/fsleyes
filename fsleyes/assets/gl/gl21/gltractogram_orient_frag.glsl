@@ -27,6 +27,7 @@ uniform float colourOffset;
  * to clip outside or inside the range.
  */
 uniform bool  invertClip;
+uniform float applyClip;
 uniform float clipLow;
 uniform float clipHigh;
 {% endif %}
