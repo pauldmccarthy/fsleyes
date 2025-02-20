@@ -44,6 +44,8 @@ Fixed
 * The `melodic_IC` file should now be selected by default when using Melodic
   mode in conjunction with ``--autoDisplay`` (e.g. ``fsleyes -smelodic -ad
   ..``) (!465).
+* Fixed an issue with tractogram overlay vertices being clipped when the
+  *Colour by* option weas set, but *Clip by* was set to *None* (!466).
 
 
 1.13.0 (Thursday 14th November 2024)
