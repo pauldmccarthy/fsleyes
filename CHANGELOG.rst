@@ -11,9 +11,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-
-1.14.0 (Tuesday 11th February 2025)
------------------------------------
+1.14.0 (Monday 24th February 2025)
+----------------------------------
 
 
 Added
@@ -23,9 +22,10 @@ Added
 * Improved support for tractograms (TrackVis ``.trk`` and Mrtrix3 ``.tck``
   files). Tractograms can now be associated with a reference image, and so
   will be re-positioned as needed with changes to the display space (!466).
-* New *Pseudo-3D* option for tractograms, which causes it to be displayed in
-  3D in the ortho and lightbox views. When using this option, the tractogram
-  can be clipped above, below, or near the currently displayed slice (!466).
+* New *Pseudo-3D* option for tractograms (``--pseudo3D`` on the command-line),
+  which causes it to be displayed in 3D in the ortho and lightbox views. When
+  using this option, the tractogram can be clipped above, below, or near the
+  currently displayed slice (!466).
 
 
 Changed
@@ -34,8 +34,8 @@ Changed
 * Alpha modulation settings (e.g. *Modulate alpha by intensity*) are now
   applied to the colour bar if it is displayed (!464).
 * The ``--autoDisplay`` / ``-ad`` command-line option will now enable
-  alpha-modulation on FEAT statistic images (e.g. ``stats/zstat1.nii.gz``
-  etc) (!464).
+  alpha-modulation on FEAT statistic images (e.g. ``stats/zstat1.nii.gz`` etc)
+  and MELODIC ICA images (``melodic_IC.nii.gz``) (!464, !467).
 
 
 Fixed
