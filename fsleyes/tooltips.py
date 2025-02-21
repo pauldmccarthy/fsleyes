@@ -454,6 +454,15 @@ properties = TypeDict({
     'TractogramOpts.subsample' :
     'Draw a randomly selected subset of streamlines. This setting is useful '
     'when viewing very large tractograms.',
+    'TractogramOpts.pseudo3D' :
+    'Instead of drawing a 2D cross-section of the tractogram vertices, draw '
+    'the full 3D tractogram, overlaid on the 2D scene.',
+    'TractogramOpts.xclipdir' :
+    'Direction of depth clipping along the X axis.',
+    'TractogramOpts.yclipdir' :
+    'Direction of depth clipping along the Y axis.',
+    'TractogramOpts.zclipdir' :
+    'Direction of depth clipping along the Z axis.',
 
     # MIPOpts
     'MIPOpts.window'  :

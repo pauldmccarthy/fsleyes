@@ -823,6 +823,24 @@ labels = TypeDict({
     'OverlayInfoPanel.Tractogram.numStreamlines' : 'Total number of streamlines',
     'OverlayInfoPanel.Tractogram.numVertices'    : 'Total number of vertices',
     'OverlayInfoPanel.Tractogram.size'           : 'Bounding box size',
+    'OverlayInfoPanel.Tractogram.displaySpace'   :
+    'Display space',
+    'OverlayInfoPanel.Tractogram.refImage'       :
+    'Reference image',
+    'OverlayInfoPanel.Tractogram.coordSpace'             :
+    'Vertices defined in',
+    'OverlayInfoPanel.Tractogram.coordSpace.id'          :
+    'Voxels ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.pixdim'      :
+    'Scaled voxels ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.pixdim-flip' :
+    'Scaled voxels [FSL convention] ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.affine'      :
+    'World coordinates ({})',
+    'OverlayInfoPanel.Tractogram.coordSpace.display'     :
+    'Display coordinate system',
+    'OverlayInfoPanel.Tractogram.coordSpace.torig'       :
+    'Freesurfer coordinates',
 
     'MelodicClassificationPanel.componentTab'   : 'Components',
     'MelodicClassificationPanel.labelTab'       : 'Labels',
@@ -1247,11 +1265,12 @@ properties = TypeDict({
     'LineVectorOpts.unitLength'  : 'Scale vectors to unit length',
     'LineVectorOpts.lengthScale' : 'Length scaling factor (%)',
 
+    'RefImageOpts.refImage'      : 'Reference image',
+    'RefImageOpts.coordSpace'    : 'Coordinate space',
+
     'MeshOpts.colour'            : 'Colour',
     'MeshOpts.outline'           : 'Show outline only',
     'MeshOpts.outlineWidth'      : 'Outline width',
-    'MeshOpts.refImage'          : 'Reference image',
-    'MeshOpts.coordSpace'        : 'Mesh coordinate space',
     'MeshOpts.custom_vertexSet'  : 'Surface definition',
     'MeshOpts.custom_vertexData' : 'Vertex data',
     'MeshOpts.vertexSet'         : 'Surface definition',
@@ -1307,6 +1326,11 @@ properties = TypeDict({
     'TractogramOpts.lineWidth'         : 'Width',
     'TractogramOpts.resolution'        : 'Resolution',
     'TractogramOpts.subsample'         : 'Sub-sample',
+    'TractogramOpts.pseudo3D'          : 'Pseudo-3D',
+    'TractogramOpts.custom_zclipping'  : 'Depth clipping',
+    'TractogramOpts.xclipdir'          : 'X clip direction',
+    'TractogramOpts.yclipdir'          : 'Y clip direction',
+    'TractogramOpts.zclipdir'          : 'Z clip direction',
 })
 
 
@@ -1394,14 +1418,14 @@ choices = TypeDict({
                                      'alpha'       : 'Transparency',
                                      'lineLength'  : 'Line length'},
 
-    'MeshOpts.refImage.none'  : 'No reference image',
+    'RefImageOpts.refImage.none'  : 'No reference image',
 
-    'MeshOpts.coordSpace' : {'torig'       : 'Freesurfer coordinates',
-                             'affine'      : 'World coordinates',
-                             'pixdim'      : 'Scaled voxels',
-                             'pixdim-flip' : 'Scaled voxels forced to '
-                                             'radiological orientation',
-                             'id'          : 'Voxels'},
+    'RefImageOpts.coordSpace' : {'torig'       : 'Freesurfer coordinates',
+                                 'affine'      : 'World coordinates',
+                                 'pixdim'      : 'Scaled voxels',
+                                 'pixdim-flip' : 'Scaled voxels forced to '
+                                                 'radiological orientation',
+                                 'id'          : 'Voxels'},
 
     'TensorOpts.tensorResolution.min' : 'Low',
     'TensorOpts.tensorResolution.max' : 'High',
@@ -1430,6 +1454,10 @@ choices = TypeDict({
                                 'phase' : 'Phase'},
 
     'TractogramOpts.colourMode' : {'orientation' : 'Orientation'},
+    'TractogramOpts.clipdir'    : {'slice' : 'Show slice',
+                                   'low'   : 'Show above',
+                                   'high'  : 'Show below',
+                                   'none'  : 'Show all'},
 
     'Display.overlayType' : {
         'volume'         : '3D/4D volume',

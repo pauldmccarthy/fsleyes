@@ -93,6 +93,7 @@ if [[ "$MACOS_OVERLAY_TEST" == "" ]]; then
 fi
 
 # gl21 compatibility
+export MESA_GL_VERSION_OVERRIDE=2.1
 export FSLEYES_TEST_GL=2.1
 ((pytest ${PYTEST_EXTRA_ARGS[@]} --cov-report= --cov-append -m "overlayclitest" && echo "0" > status) || echo "1" > status) || true
 status=`cat status`

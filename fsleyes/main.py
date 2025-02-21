@@ -364,10 +364,30 @@ def main(args=None):
 
     def buildGui():
 
+        frame = None
+
+        # Called after overlays have been loaded. The
+        # SliceCanvas (upon which OrthoPanel is
+        # built) has some janky logic which tries to
+        # preserve the display bounds when new
+        # overlays are loaded. This does a reasonable
+        # job when the bounds are already valid and a
+        # new overlay is loaded, but it can mess up
+        # during initialisation. So we call
+        # resetDisplay once they're loaded and we're
+        # ready to go.
+        def onLoad(*_a):
+            from fsleyes.views.orthopanel import OrthoPanel
+            if frame is not None:
+                for vp in frame.viewPanels:
+                    if isinstance(vp, OrthoPanel):
+                        vp.resetDisplay()
+
         # Now the main stuff - create the overlay
         # list and the master display context,
         # and then create the FSLeyesFrame.
-        overlayList, displayCtx = makeDisplayContext(namespace[0], splash)
+        overlayList, displayCtx = makeDisplayContext(namespace[0], splash,
+                                                     onLoad)
         app.SetOverlayListAndDisplayContext(overlayList, displayCtx)
         frame = makeFrame(namespace[0],
                           displayCtx,
@@ -689,7 +709,7 @@ def parseArgs(argv):
                                exclude=exclude)
 
 
-def makeDisplayContext(namespace, splash):
+def makeDisplayContext(namespace, splash, onLoad=None):
     """Creates the top-level *FSLeyes* :class:`.DisplayContext` and
     :class:`.OverlayList` .
 
@@ -704,6 +724,9 @@ def makeDisplayContext(namespace, splash):
     :arg namesace: Parsed command line arguments (see :func:`parseArgs`).
 
     :arg splash:   The :class:`.FSLeyesSplash` frame, created in :func:`init`.
+
+    :arg onLoad:   Function called when overlays have been loaded - see
+                   :func:`.loadoverlay.loadOverlays`
 
     :returns: a tuple containing:
                 - the :class:`.OverlayList`
@@ -740,7 +763,8 @@ def makeDisplayContext(namespace, splash):
     # Load the images - the splash screen status will
     # be updated with the currently loading overlay name.
     parseargs.applyMainArgs(   namespace, overlayList, displayCtx)
-    parseargs.applyOverlayArgs(namespace, overlayList, displayCtx)
+    parseargs.applyOverlayArgs(namespace, overlayList, displayCtx,
+                               onLoad=onLoad)
 
     return overlayList, displayCtx
 

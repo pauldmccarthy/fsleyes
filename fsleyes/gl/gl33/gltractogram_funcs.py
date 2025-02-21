@@ -58,32 +58,34 @@ def compileShaders(self):
         'vertexData'  : vdatafsrc,
         'imageData'   : idatafsrc,
     }
+    geomSources = {
+        'line'  : linegsrc,
+        'point' : pointgsrc,
+        'tube'  : tubegsrc
+    }
 
     colourModes = ['orientation', 'vertexData', 'imageData']
     clipModes   = ['none',        'vertexData', 'imageData']
+    dims        = ['2D', '3D']
+    geoms       = ['line', 'tube', 'point']
 
     # Share the "in vec3 vertex"
     # buffer across all shaders
     kwa = {'resourceName' : f'GLTractogram_{id(self)}',
            'shared'       : ['vertex']}
 
-    if self.threedee: geomsrcs = [linegsrc, tubegsrc]
-    else:             geomsrcs = [pointgsrc]
-
-    for colourMode, clipMode in it.product(colourModes, clipModes):
+    for dim, geom, colourMode, clipMode in it.product(
+            dims, geoms, colourModes, clipModes):
 
         fsrc  = colourSources[colourMode]
+        gsrc  = geomSources[geom]
         const = {
             'colourMode' : colourMode,
             'clipMode'   : clipMode,
-            'lighting'   : self.threedee
+            'lighting'   : (dim == '3D') and (geom == 'tube')
         }
-
-        progs = []
-        for gsrc in geomsrcs:
-            progs.append(shaders.GLSLShader(vsrc, fsrc, gsrc, const, **kwa))
-
-        self.shaders[colourMode][clipMode].extend(progs)
+        prog = shaders.GLSLShader(vsrc, fsrc, gsrc, const, **kwa)
+        self.shaders[dim][colourMode][clipMode][geom] = prog
 
 
 def draw2D(self, canvas, mvp):
@@ -91,8 +93,8 @@ def draw2D(self, canvas, mvp):
     opts       = self.opts
     colourMode = opts.effectiveColourMode
     clipMode   = opts.effectiveClipMode
-    shader     = self.shaders[colourMode][clipMode][0]
-    scales     = self.normalisedLineWidth(canvas, mvp)
+    shader     = self.shaders['2D'][colourMode][clipMode]['point']
+    scales     = self.normalisedLineWidth(canvas, mvp, False)
 
     gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
@@ -100,44 +102,65 @@ def draw2D(self, canvas, mvp):
         shader.set('MVP',    mvp)
         shader.set('xscale', scales[0])
         shader.set('yscale', scales[1])
-        shader.draw(gl.GL_POINTS, 0,  len(self.vertices))
+        shader.draw(gl.GL_POINTS, 0, len(self.vertices))
 
 
-def draw3D(self, canvas, xform=None):
+def drawPseudo3D(self, canvas, mvp):
+    """Called by :class:`.GLTractogram.drawPseudo3D`. """
+
+    dctx          = self.displayCtx
+    xax           = canvas.opts.xax
+    yax           = canvas.opts.yax
+    zax           = canvas.opts.zax
+    xmin, xmax    = dctx.bounds.x
+    ymin, ymax    = dctx.bounds.y
+    zmin, zmax    = dctx.bounds.z
+    xmid          = xmin + (xmax - xmin) / 2
+    ymid          = ymin + (ymax - ymin) / 2
+    lightPos      = [0, 0, 0]
+    lightPos[xax] = xmid
+    lightPos[yax] = ymid
+    lightPos[zax] = zmin - 5 * (zmax - zmin)
+
+    lightPos = affine.transform(lightPos, mvp)
+
+    if lightPos[2] > 0:
+        lightPos[2] *= -1
+
+    draw3D(self, canvas, mvp, True, lightPos, threedee=False)
+
+
+def draw3D(self,
+           canvas,
+           mvp,
+           lighting,
+           lightPos,
+           threedee=True,
+           xform=None):
     """Called by :class:`.GLTractogram.draw3D`. """
 
-    opts       = self.opts
-    ovl        = self.overlay
-    display    = self.display
-    colourMode = opts.effectiveColourMode
-    clipMode   = opts.effectiveClipMode
-    vertXform  = ovl.affine
-    mvp        = canvas.mvpMatrix
-    mv         = canvas.viewMatrix
-    lighting   = canvas.opts.light
-    lightPos   = affine.transform(canvas.lightPos, mvp)
-    nstrms     = ovl.nstreamlines
-    lineWidth  = self.normalisedLineWidth(canvas, mvp)
-    offsets    = self.offsets
-    counts     = self.counts
-    nstrms     = len(offsets)
+    opts      = self.opts
+    ovl       = self.overlay
+    display   = self.display
+    colMode   = opts.effectiveColourMode
+    clipMode  = opts.effectiveClipMode
+    nstrms    = ovl.nstreamlines
+    lineWidth = self.normalisedLineWidth(canvas, mvp, threedee)
+    offsets   = self.offsets
+    counts    = self.counts
+    nstrms    = len(offsets)
 
     if opts.resolution <= 2: geom = 'line'
     else:                    geom = 'tube'
 
-    if geom == 'line': shader = self.shaders[colourMode][clipMode][0]
-    else:              shader = self.shaders[colourMode][clipMode][1]
+    shader = self.shaders['3D'][colMode][clipMode][geom]
 
-    if xform is None: xform = vertXform
-    else:             xform = affine.concat(xform, vertXform)
-
-    mvp = affine.concat(mvp, xform)
-    mv  = affine.concat(mv,  xform)
+    if xform is not None:
+        mvp = affine.concat(mvp, xform)
 
     with shader.loaded(), shader.loadedAtts():
         shader.set('MVP',        mvp)
         shader.set('lineWidth',  lineWidth)
-
         # Line geometry shader needs to know
         # the camera direction so it can
         # position line/rectangle vertices

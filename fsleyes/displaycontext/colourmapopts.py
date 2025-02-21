@@ -49,6 +49,8 @@ class ColourMapOpts:
       4. Call :meth:`updateDataRange` whenever the data driving the colouring
          changes.
 
+      5. Call :meth:`destroy` when your instance is being destroyed.
+
 
     The ``ColourMapOpts`` class links the :attr:`.Display.brightness` and
     :attr:`.Display.contrast` properties to its own :attr:`displayRange`
@@ -227,7 +229,7 @@ class ColourMapOpts:
 
 
     def __init__(self):
-        """Create a ``ColourMapOpts`` instance. This must be called
+        """Initialise a ``ColourMapOpts`` instance. This must be called
         *after* the :meth:`.DisplayOpts.__init__` method.
         """
 

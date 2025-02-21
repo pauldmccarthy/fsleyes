@@ -785,7 +785,7 @@ class OrthoViewProfile(profiles.Profile):
             return False
 
         opts  = self.displayCtx.getOpts(overlay)
-        loc   = opts.transformCoords(canvasPos, 'display', 'mesh')
+        loc   = opts.transformCoords(canvasPos, from_='display')
 
         # The GLMesh caches the most
         # recently drawn cross section
@@ -822,7 +822,7 @@ class OrthoViewProfile(profiles.Profile):
         vidx   = np.argsort(fdists)[0]
         vidx   = face[vidx]
         loc    = overlay.vertices[vidx, :]
-        loc    = opts.transformCoords(loc, 'mesh', 'display')
+        loc    = opts.transformCoords(loc, to='display')
 
         self.displayCtx.location.xyz = loc
 

@@ -309,8 +309,8 @@ class Scene3DViewProfile(profiles.Profile):
             rayDir    = affine.normalise(farPos - canvasPos)
 
             # transform location from display into model space
-            rayOrigin = opts.transformCoords(rayOrigin, 'display', 'mesh')
-            rayDir    = opts.transformCoords(rayDir,    'display', 'mesh',
+            rayOrigin = opts.transformCoords(rayOrigin, from_='display')
+            rayDir    = opts.transformCoords(rayDir,    from_='display',
                                              vector=True)
             loc, tri  = ovl.rayIntersection([rayOrigin],
                                             [rayDir],
@@ -331,7 +331,7 @@ class Scene3DViewProfile(profiles.Profile):
             vertIdx  = np.argsort(triDists)[0]
 
             loc      = ovl.vertices[tri[vertIdx], :]
-            loc      = opts.transformCoords(loc, 'mesh', 'display')
+            loc      = opts.transformCoords(loc, to='display')
 
             self.displayCtx.location.xyz = loc
 

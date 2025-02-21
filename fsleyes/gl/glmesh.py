@@ -217,32 +217,32 @@ class GLMesh(globject.GLObject):
             self.notify()
 
         self.overlay.register(name, vertices, 'vertices')
-        opts   .addListener('bounds',              name, vertices, weak=False)
-        opts   .addListener('colour',              name, shader,   weak=False)
-        opts   .addListener('outline',             name, refresh,  weak=False)
-        opts   .addListener('outlineWidth',        name, refresh,  weak=False)
-        opts   .addListener('wireframe',           name, refresh,  weak=False)
-        opts   .addListener('vertexData',          name, shader,   weak=False)
-        opts   .addListener('modulateData',        name, shader,   weak=False)
-        opts   .addListener('vertexDataIndex',     name, shader,   weak=False)
-        opts   .addListener('clippingRange',       name, shader,   weak=False)
-        opts   .addListener('modulateRange',       name, shader,   weak=False)
-        opts   .addListener('invertClipping',      name, shader,   weak=False)
-        opts   .addListener('discardClipped',      name, shader,   weak=False)
-        opts   .addListener('cmap',                name, cmap,     weak=False)
-        opts   .addListener('useNegativeCmap',     name, cmap,     weak=False)
-        opts   .addListener('negativeCmap',        name, cmap,     weak=False)
-        opts   .addListener('cmapResolution',      name, cmap,     weak=False)
-        opts   .addListener('interpolateCmaps',    name, cmap,     weak=False)
-        opts   .addListener('invert',              name, cmap,     weak=False)
-        opts   .addListener('gamma',               name, cmap,     weak=False)
-        opts   .addListener('displayRange',        name, cmap,     weak=False)
-        opts   .addListener('useLut',              name, shader,   weak=False)
-        opts   .addListener('lut',                 name, lut,      weak=False)
-        opts   .addListener('modulateAlpha',       name, shader,   weak=False)
-        opts   .addListener('invertModulateAlpha', name, shader,   weak=False)
-        opts   .addListener('interpolation',       name, vertices, weak=False)
-        display.addListener('alpha',               name, cmap,     weak=False)
+        opts   .wlisten('bounds',              name, vertices)
+        opts   .wlisten('colour',              name, shader)
+        opts   .wlisten('outline',             name, refresh)
+        opts   .wlisten('outlineWidth',        name, refresh)
+        opts   .wlisten('wireframe',           name, refresh)
+        opts   .wlisten('vertexData',          name, shader)
+        opts   .wlisten('modulateData',        name, shader)
+        opts   .wlisten('vertexDataIndex',     name, shader)
+        opts   .wlisten('clippingRange',       name, shader)
+        opts   .wlisten('modulateRange',       name, shader)
+        opts   .wlisten('invertClipping',      name, shader)
+        opts   .wlisten('discardClipped',      name, shader)
+        opts   .wlisten('cmap',                name, cmap)
+        opts   .wlisten('useNegativeCmap',     name, cmap)
+        opts   .wlisten('negativeCmap',        name, cmap)
+        opts   .wlisten('cmapResolution',      name, cmap)
+        opts   .wlisten('interpolateCmaps',    name, cmap)
+        opts   .wlisten('invert',              name, cmap)
+        opts   .wlisten('gamma',               name, cmap)
+        opts   .wlisten('displayRange',        name, cmap)
+        opts   .wlisten('useLut',              name, shader)
+        opts   .wlisten('lut',                 name, lut)
+        opts   .wlisten('modulateAlpha',       name, shader)
+        opts   .wlisten('invertModulateAlpha', name, shader)
+        opts   .wlisten('interpolation',       name, vertices)
+        display.wlisten('alpha',               name, cmap)
 
         # We don't need to listen for
         # brightness or contrast, because
@@ -259,32 +259,32 @@ class GLMesh(globject.GLObject):
         name    = self.name
 
         overlay.deregister(name, 'vertices')
-        opts   .removeListener('bounds',              name)
-        opts   .removeListener('colour',              name)
-        opts   .removeListener('outline',             name)
-        opts   .removeListener('outlineWidth',        name)
-        opts   .removeListener('wireframe',           name)
-        opts   .removeListener('vertexData',          name)
-        opts   .removeListener('modulateData',        name)
-        opts   .removeListener('vertexDataIndex',     name)
-        opts   .removeListener('clippingRange',       name)
-        opts   .removeListener('modulateRange',       name)
-        opts   .removeListener('invertClipping',      name)
-        opts   .removeListener('discardClipped',      name)
-        opts   .removeListener('cmap',                name)
-        opts   .removeListener('useNegativeCmap',     name)
-        opts   .removeListener('negativeCmap',        name)
-        opts   .removeListener('cmapResolution',      name)
-        opts   .removeListener('interpolateCmaps',    name)
-        opts   .removeListener('invert',              name)
-        opts   .removeListener('gamma',               name)
-        opts   .removeListener('displayRange',        name)
-        opts   .removeListener('useLut',              name)
-        opts   .removeListener('lut',                 name)
-        opts   .removeListener('modulateAlpha',       name)
-        opts   .removeListener('invertModulateAlpha', name)
-        opts   .removeListener('interpolation',       name)
-        display.removeListener('alpha',               name)
+        opts   .remove('bounds',              name)
+        opts   .remove('colour',              name)
+        opts   .remove('outline',             name)
+        opts   .remove('outlineWidth',        name)
+        opts   .remove('wireframe',           name)
+        opts   .remove('vertexData',          name)
+        opts   .remove('modulateData',        name)
+        opts   .remove('vertexDataIndex',     name)
+        opts   .remove('clippingRange',       name)
+        opts   .remove('modulateRange',       name)
+        opts   .remove('invertClipping',      name)
+        opts   .remove('discardClipped',      name)
+        opts   .remove('cmap',                name)
+        opts   .remove('useNegativeCmap',     name)
+        opts   .remove('negativeCmap',        name)
+        opts   .remove('cmapResolution',      name)
+        opts   .remove('interpolateCmaps',    name)
+        opts   .remove('invert',              name)
+        opts   .remove('gamma',               name)
+        opts   .remove('displayRange',        name)
+        opts   .remove('useLut',              name)
+        opts   .remove('lut',                 name)
+        opts   .remove('modulateAlpha',       name)
+        opts   .remove('invertModulateAlpha', name)
+        opts   .remove('interpolation',       name)
+        display.remove('alpha',               name)
 
 
     def getDataResolution(self, *args, **kwargs):
@@ -334,7 +334,7 @@ class GLMesh(globject.GLObject):
         interp   = opts.interpolation
         normals  = overlay.vnormals
         vdata    = opts.getVertexData('vertex')
-        xform    = opts.getTransform('mesh', 'display')
+        xform    = opts.getTransform(to='display')
 
         if not np.all(np.isclose(xform, np.eye(4))):
             vertices = affine.transform(vertices, xform)
@@ -381,7 +381,7 @@ class GLMesh(globject.GLObject):
                     :class:`.LightBoxCanvas` may have x flips).
         """
 
-        m2d = self.opts.getTransform('mesh', 'display')
+        m2d = self.opts.getTransform(to='display')
         if xform is not None:
             m2d = affine.concat(xform, m2d)
 
@@ -452,7 +452,7 @@ class GLMesh(globject.GLObject):
         # caches cross section vertices -
         # make sure they're cleared in case
         # we are not doing an outline draw.
-        self.overlayList.setData(overlay, 'crosssection_{}'.format(zax), None)
+        self.overlayList.setData(overlay, f'crosssection_{zax}', None)
 
         # Delegate to the appropriate sub-method
         if   is2D:    self.draw2DMesh(canvas, xform)
@@ -577,7 +577,7 @@ class GLMesh(globject.GLObject):
             # so we need to give the lineAsPolygon
             # function the display->mesh transform.
             zax               = axes[2]
-            d2m               = opts.getTransform('display', 'mesh')
+            d2m               = opts.getTransform(from_='display')
             lineWidth         = opts.outlineWidth * canvas.pixelSize()[0]
             glprim            = gl.GL_TRIANGLES
             vertices, indices = glroutines.lineAsPolygon(
@@ -840,10 +840,9 @@ class GLMesh(globject.GLObject):
         origin[zax] = zpos
         normal[zax] = 1
 
-        vertXform = opts.getTransform(           'mesh',    'display')
-        origin    = opts.transformCoords(origin, 'display', 'mesh')
-        normal    = opts.transformCoords(normal, 'display', 'mesh',
-                                         vector=True)
+        vertXform = opts.getTransform(           to='display')
+        origin    = opts.transformCoords(origin, from_='display')
+        normal    = opts.transformCoords(normal, from_='display', vector=True)
 
         # TODO use bbox to constrain? This
         #      would be nice, but is not
@@ -859,7 +858,7 @@ class GLMesh(globject.GLObject):
         # See, for example, OrthoViewProfile
         # pick mode methods.
         self.overlayList.setData(overlay,
-                                 'crosssection_{}'.format(zax),
+                                 f'crosssection_{zax}',
                                  (lines, faces))
 
         faces = overlay.indices[faces]

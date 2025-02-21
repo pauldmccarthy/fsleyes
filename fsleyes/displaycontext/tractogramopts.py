@@ -13,17 +13,17 @@ import numpy   as np
 import nibabel as nib
 
 import fsl.data.image                       as fslimage
-import fsl.transform.affine                 as affine
-import fsleyes.gl                           as fslgl
 import fsleyes.strings                      as strings
 import fsleyes_props                        as props
 import fsleyes.displaycontext.display       as fsldisplay
 import fsleyes.displaycontext.colourmapopts as cmapopts
 import fsleyes.displaycontext.vectoropts    as vectoropts
+import fsleyes.displaycontext.refimageopts  as refimgopts
 
 
 class TractogramOpts(fsldisplay.DisplayOpts,
                      cmapopts.ColourMapOpts,
+                     refimgopts.RefImageOpts,
                      vectoropts.VectorOpts):
     """Display options for :class:`.Tractogram` overlays. """
 
@@ -71,6 +71,34 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
+    pseudo3D = props.Boolean(default=False)
+    """When drawing to a 2D canvas (e.g. an :class:`.OrthoPanel`), this
+    property controls whether the tractogram is drawn as a 2D cross-section of
+    individual vertices, or as pseudo-3D streamlines overlaid on top of the
+    2D canvas.
+    """
+
+
+    xclipdir = props.Choice(('low', 'high', 'slice', 'none'))
+    """Clipping direction along the X axis when :attr:`pseudo3D` is active.
+    This property controls whether areas of the tractogram are clipped along
+    the the depth axis:
+
+    - ``'slice'``: Areas below and above the current depth are clipped
+    - ``'low'``:   Areas below the current depth are clipped
+    - ``'high'``:  Areas above the current depth are clipped
+    - ``'none'``:  No clipping - the entire tractogram is drawn
+    """
+
+
+    yclipdir = props.Choice(('low', 'high', 'slice', 'none'))
+    """Clipping direction along the X axis when :attr:`pseudo3D` is active. """
+
+
+    zclipdir = props.Choice(('low', 'high', 'slice', 'none'))
+    """Clipping direction along the Z axis when :attr:`pseudo3D` is active. """
+
+
     def __init__(self, overlay, *args, **kwargs):
         """Create a ``TractogramOpts`` instance. """
 
@@ -79,28 +107,50 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         if overlay.nstreamlines > 150000:
             self.subsample = 15000000 / overlay.nstreamlines
 
+        # nibabel.streamlines.Tractogram vertices
+        # should be defined in mm coordinates
+        self.getProp('coordSpace').setDefault('affine', self)
+        self.coordSpace = 'affine'
+
+        nounbind = kwargs.get('nounbind', [])
+        nounbind.extend(['refImage', 'coordSpace'])
+        kwargs['nounbind'] = nounbind
+
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
+        refimgopts.RefImageOpts .__init__(self)
         vectoropts.VectorOpts   .__init__(self)
 
-        olist         = self.overlayList
-        lo, hi        = self.overlay.bounds
-        xlo, ylo, zlo = lo
-        xhi, yhi, zhi = hi
-        self.bounds   = [xlo, xhi, ylo, yhi, zlo, zhi]
+        self.__child = self.getParent() is not None
 
-        self .addListener('colourMode', self.name, self.__colourModeChanged)
-        self .addListener('clipMode',   self.name, self.__clipModeChanged)
-        olist.addListener('overlays',   self.name, self.updateColourClipModes)
+        if self.__child:
 
-        self.updateColourClipModes()
-        self.updateDataRange()
+            olist = self.overlayList
+
+            self .listen('colourMode', self.name, self.__colourModeChanged)
+            self .listen('clipMode',   self.name, self.__clipModeChanged)
+            olist.listen('overlays',   self.name, self.updateColourClipModes)
+
+            self.updateColourClipModes()
+            self.updateDataRange()
+
+
+    def getBounds(self):
+        """Overrides :meth:`.RefImageOpts.getBounds`. Returns the
+        tractogram vertex bounds in its native coordinate system.
+        """
+        return self.overlay.bounds
 
 
     def destroy(self):
         """Removes property listeners. """
-        self.overlayList.removeListener('overlays', self.name)
-        fsldisplay.DisplayOpts.destroy(self)
+        if self.__child:
+            self.overlayList.removeListener('overlays', self.name)
+            self.remove('clipMode',   self.name)
+            self.remove('colourMode', self.name)
+        cmapopts.ColourMapOpts .destroy(self)
+        refimgopts.RefImageOpts.destroy(self)
+        fsldisplay.DisplayOpts .destroy(self)
 
 
     @property
@@ -179,7 +229,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:            return np.nanmin(data), np.nanmax(data)
 
 
-    def updateColourClipModes(self, *_):
+    def updateColourClipModes(self):
         """Called when the :class:`.OverlayList` changes, and may be called
         externally (see e.g. :func:`.loadvertexdata.loadVertexData`) .
         Refreshes the options available on the :attr:`colourMode` and
@@ -212,41 +262,45 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                       self.clipMode   = None
 
 
-    @property
-    def displayTransform(self):
-        """Return an affine transformation which will transform streamline
-        vertex coordinates into the current display coordinate system.
-        """
-        ref = self.displayCtx.displaySpace
-
-        if not isinstance(ref, fslimage.Image):
-            return np.eye(4)
-
-        opts = self.displayCtx.getOpts(ref)
-
-        return opts.getTransform('world', 'display')
-
-
-    def sliceWidth(self, zax):
+    def sliceWidth(self, zax, nvoxels=1):
         """Returns a width along the specified **display** coordinate system
         axis, to be used for drawing a 2D slice through the tractogram on the
         axis plane.
+
+        If ``refImage is not None``, the width is set to ``nvoxels`` in terms
+        of ``refImage``.
         """
 
-        # The z axis is specified in terms of
-        # the display coordinate system -
-        # identify the corresponding axis in the
-        # tractogram/world coordinate system.
-        codes = [[0, 0], [1, 1], [2, 2]]
-        xform = affine.invert(self.displayTransform)
-        zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
+        ref = self.refImage
 
-        los, his = self.overlay.bounds
-        zlen     = his[zax] - los[zax]
-        return zlen / 200
+        # Arbitrarily clip to 1/200th of the
+        # width of the tractogram bounding box
+        if ref is None:
+
+            # The z axis is specified in terms of
+            # the display coordinate system -
+            # identify the corresponding axis in the
+            # tractogram/world coordinate system.
+            codes = [[0, 0], [1, 1], [2, 2]]
+            xform = self.getTransform(from_='display')
+            zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
+
+            los, his = self.overlay.bounds
+            zlen     = his[zax] - los[zax]
+            return (nvoxels * zlen) / 200
+
+        # Clip to N voxels in terms of the reference image
+        else:
+            # Identify the voxel axis corresponding
+            # to the requested display axis, and
+            # return a width in terms of its pixdim
+            axes  = ref.axisMapping(self.getTransform('display', 'voxel'))
+            zax   = abs(axes[zax] - 1)
+            zlen  = ref.pixdim[zax]
+            return nvoxels * zlen
 
 
-    def __colourModeChanged(self, *_):
+    def __colourModeChanged(self):
         """Called when :attr:`colourMode` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
         and clipping ranges are up to date.
@@ -254,7 +308,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         self.updateDataRange(resetCR=(self.clipMode is None))
 
 
-    def __clipModeChanged(self, *_):
+    def __clipModeChanged(self):
         """Called when :attr:`clipMode` changes.  Calls
         :meth:`.ColourMapOpts.updateDataRange`, to ensure that the display
         and clipping ranges are up to date.

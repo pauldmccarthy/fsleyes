@@ -41,18 +41,19 @@ def _test_transformCoords(panel, overlayList, displayCtx):
     mopts = displayCtx.getOpts(mesh)
     ropts = displayCtx.getOpts(ref)
 
-    mopts.refImage = ref
+    mopts.refImage   = ref
+    mopts.coordSpace = 'pixdim-flip'
 
     # world display mesh
-    spaces = ['world', 'display', 'mesh', 'voxel']
+    spaces = ['world', 'display', 'pixdim-flip', 'voxel']
 
     (xlo, ylo, zlo), (xhi, yhi, zhi) = mesh.bounds
 
     coords = {
-        'mesh'    : np.array([  xhi - xlo,  yhi - ylo,    zhi - zlo]),
-        'world'   : np.array([ 3.92563438, 27.8010308,  34.60089011]),
-        'display' : np.array([23.10099983, 32.8390007,  23.02000046]),
-        'voxel'   : np.array([15.40066655, 21.89266713, 15.34666697]),
+        'pixdim-flip' : np.array([  xhi - xlo,  yhi - ylo,    zhi - zlo]),
+        'world'       : np.array([ 3.92563438, 27.8010308,  34.60089011]),
+        'display'     : np.array([23.10099983, 32.8390007,  23.02000046]),
+        'voxel'       : np.array([15.40066655, 21.89266713, 15.34666697]),
     }
 
     for from_, to in it.permutations(coords, 2):

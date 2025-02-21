@@ -665,11 +665,17 @@ OPTIONS = td.TypeDict({
                           'suppressA',
                           'suppressMode'],
     'ComplexOpts'       : ['component'],
-    'TractogramOpts'    : ['colourBy',
+    'TractogramOpts'    : ['refImage',
+                           'coordSpace',
+                           'colourBy',
                            'clipBy',
                            'lineWidth',
                            'resolution',
                            'subsample',
+                           'pseudo3D',
+                           'xclipdir',
+                           'yclipdir',
+                           'zclipdir',
                            'linkLowRanges',
                            'linkHighRanges',
                            'useNegativeCmap',
@@ -1032,11 +1038,17 @@ ARGUMENTS = td.TypeDict({
 
     'ComplexOpts.component' : ('co', 'component', True),
 
-    'TractogramOpts.colourBy'       : ('co', 'colourBy',   True),
-    'TractogramOpts.clipBy'         : ('cl', 'clipBy',     True),
-    'TractogramOpts.lineWidth'      : ('lw', 'lineWidth',  True),
-    'TractogramOpts.resolution'     : ('r',  'resolution', True),
-    'TractogramOpts.subsample'      : ('s',  'subsample',  True),
+    'TractogramOpts.refImage'   : ('ri',  'refImage',   True),
+    'TractogramOpts.coordSpace' : ('cs',  'coordSpace', True),
+    'TractogramOpts.colourBy'   : ('co',  'colourBy',   True),
+    'TractogramOpts.clipBy'     : ('cl',  'clipBy',     True),
+    'TractogramOpts.lineWidth'  : ('lw',  'lineWidth',  True),
+    'TractogramOpts.resolution' : ('r',   'resolution', True),
+    'TractogramOpts.subsample'  : ('s',   'subsample',  True),
+    'TractogramOpts.pseudo3D'   : ('p',   'pseudo3D',   False),
+    'TractogramOpts.xclipdir'   : ('xcl', 'xclipdir',   True),
+    'TractogramOpts.yclipdir'   : ('ycl', 'yclipdir',   True),
+    'TractogramOpts.zclipdir'   : ('zcl', 'zclipdir',   True),
 })
 """This dictionary defines the short and long command line flags to be used
 for every option. Each value has the form::
@@ -1361,12 +1373,14 @@ HELP = td.TypeDict({
     'RGBVectorOpts.interpolation' : 'Interpolation',
     'RGBVectorOpts.unitLength'    : 'Alias for --normaliseColour.',
 
+    'RefImageOpts.refImage' :
+    'Reference image for overlay',
+    'RefImageOpts.coordSpace' :
+    'Overlay vertex coordinate space (relative to reference image)',
+
     'MeshOpts.colour'       : 'Mesh colour (0-1)',
     'MeshOpts.outline'      : 'Show mesh outline',
     'MeshOpts.outlineWidth' : 'Mesh outline width (0-20, default: 2)',
-    'MeshOpts.refImage'     : 'Reference image for mesh',
-    'MeshOpts.coordSpace'   : 'Mesh vertex coordinate space '
-                              '(relative to reference image)',
     'MeshOpts.vertexData' :
     'A file (e.g. Freesurfer .curv file, GIFTI functional, shape, label, '
     'or time series file, or a plain text file) containing one or more values '
@@ -1461,7 +1475,18 @@ HELP = td.TypeDict({
     'Streamline resolution/quality',
     'TractogramOpts.subsample' :
     'Draw a randomly selected subsample of streamlines.',
- })
+    'TractogramOpts.pseudo3D' :
+    '2D only. Draw the full 3D tractogram, overlaid on the 2D scene.',
+    'TractogramOpts.xclipdir' :
+    '2D only. Direction in which to clip (hide) areas below/above the current '
+    'X location.',
+    'TractogramOpts.yclipdir' :
+    '2D only. Direction in which to clip (hide) areas below/above the current '
+    'Y location.',
+    'TractogramOpts.zclipdir' :
+    '2D only. Direction in which to clip (hide) areas below/above the current '
+    'Z location.',
+})
 """This dictionary defines the help text for all command line options."""
 
 
@@ -3900,28 +3925,28 @@ def _applySpecial_MeshOpts_vertexSet(
             target.overlay, displayCtx, vd, select=(i == last))
 
 
-def _configSpecial_MeshOpts_refImage(
+def _configSpecial_RefImageOpts_refImage(
         target, parser, shortArg, longArg, helpText):
     """Configures an ``ArgumentParser`` to handle the
-    :attr:`.MeshOpts.refImage` option.
+    :attr:`.RefImageOpts.refImage` option.
     """
     return _configSpecial_FileOption(
         target, parser, shortArg, longArg, helpText)
 
 
-def _applySpecial_MeshOpts_refImage(
+def _applySpecial_RefImageOpts_refImage(
         args, overlayList, displayCtx, target):
-    """Sets the :attr:`.MeshOpts.refImage` option from command-line
+    """Sets the :attr:`.RefImageOpts.refImage` option from command-line
     arguments.
     """
     _applySpecial_FileOption(
         args.refImage, overlayList, displayCtx, target, 'refImage')
 
 
-def _generateSpecial_MeshOpts_refImage(
+def _generateSpecial_RefImageOpts_refImage(
         overlayList, displayCtx, source, longArg):
     """Generates command-line arguments from the
-    :attr:`.MeshOpts.refImage` option.
+    :attr:`.RefImageOpts.refImage` option.
     """
     return _generateSpecial_FileOption(
         overlayList, displayCtx, source, longArg, 'refImage')

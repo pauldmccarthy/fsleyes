@@ -47,10 +47,22 @@ class GLTractogram(globject.GLObject):
         #                   data used for colouring
         #  - 'vertexData' - clipping by a separate vertex data set
         #  - 'imageData'  - clipping by a separate image data set
-        self.shaders        = {
-            'orientation' : {'none' : [], 'vertexData' : [], 'imageData' : []},
-            'vertexData'  : {'none' : [], 'vertexData' : [], 'imageData' : []},
-            'imageData'   : {'none' : [], 'vertexData' : [], 'imageData' : []}}
+        #
+        # Each leaf node is a dict of {<geometry> : GLSLShader}
+        # mappings for different geometry shaders. The GL21
+        # implementation does not use geometry, and hence will
+        # only contains one entry, whereas the GL33 implementation
+        # uses geometry shaders for different rendering applications.
+        self.shaders = {
+            '2D' : {
+                'orientation' : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'vertexData'  : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'imageData'   : {'none' : {}, 'vertexData' : {}, 'imageData' : {}}},
+            '3D' : {
+                'orientation' : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'vertexData'  : {'none' : {}, 'vertexData' : {}, 'imageData' : {}},
+                'imageData'   : {'none' : {}, 'vertexData' : {}, 'imageData' : {}}}
+        }
 
         # Scale alpha exponentially in the
         # colour maps (see inline comments in
@@ -107,35 +119,41 @@ class GLTractogram(globject.GLObject):
 
         def clip(*_):
             self.updateClipData()
+            self.updateShaderState()
             self.notifyWhen(self.ready)
 
-        opts   .addListener('resolution',          name, shader,  weak=False)
-        opts   .addListener('subsample',           name, data,    weak=False)
-        opts   .addListener('colourMode',          name, colour,  weak=False)
-        opts   .addListener('clipMode',            name, clip,    weak=False)
-        opts   .addListener('lineWidth',           name, refresh, weak=False)
-        opts   .addListener('xColour',             name, shader,  weak=False)
-        opts   .addListener('yColour',             name, shader,  weak=False)
-        opts   .addListener('zColour',             name, shader,  weak=False)
-        opts   .addListener('suppressX',           name, shader,  weak=False)
-        opts   .addListener('suppressY',           name, shader,  weak=False)
-        opts   .addListener('suppressZ',           name, shader,  weak=False)
-        opts   .addListener('suppressMode',        name, shader,  weak=False)
-        opts   .addListener('displayRange',        name, cmaps,   weak=False)
-        opts   .addListener('clippingRange',       name, shader,  weak=False)
-        opts   .addListener('invertClipping',      name, shader,  weak=False)
-        opts   .addListener('cmap',                name, cmaps,   weak=False)
-        opts   .addListener('negativeCmap',        name, cmaps,   weak=False)
-        opts   .addListener('useNegativeCmap',     name, shader,  weak=False)
-        opts   .addListener('gamma',               name, cmaps,   weak=False)
-        opts   .addListener('logScale',            name, cmaps,   weak=False)
-        opts   .addListener('cmapResolution',      name, cmaps,   weak=False)
-        opts   .addListener('interpolateCmaps',    name, cmaps,   weak=False)
-        opts   .addListener('invert',              name, cmaps,   weak=False)
-        opts   .addListener('modulateAlpha',       name, shader,  weak=False)
-        opts   .addListener('invertModulateAlpha', name, shader,  weak=False)
-        opts   .addListener('modulateRange',       name, shader,  weak=False)
-        display.addListener('alpha',               name, cmaps,   weak=False)
+        opts   .wlisten('bounds',              name, refresh)
+        opts   .wlisten('resolution',          name, shader)
+        opts   .wlisten('subsample',           name, data)
+        opts   .wlisten('colourMode',          name, colour)
+        opts   .wlisten('clipMode',            name, clip)
+        opts   .wlisten('lineWidth',           name, refresh)
+        opts   .wlisten('xColour',             name, shader)
+        opts   .wlisten('yColour',             name, shader)
+        opts   .wlisten('zColour',             name, shader)
+        opts   .wlisten('suppressX',           name, shader)
+        opts   .wlisten('suppressY',           name, shader)
+        opts   .wlisten('suppressZ',           name, shader)
+        opts   .wlisten('suppressMode',        name, shader)
+        opts   .wlisten('displayRange',        name, cmaps)
+        opts   .wlisten('clippingRange',       name, shader)
+        opts   .wlisten('invertClipping',      name, shader)
+        opts   .wlisten('cmap',                name, cmaps)
+        opts   .wlisten('negativeCmap',        name, cmaps)
+        opts   .wlisten('useNegativeCmap',     name, shader)
+        opts   .wlisten('gamma',               name, cmaps)
+        opts   .wlisten('logScale',            name, cmaps)
+        opts   .wlisten('cmapResolution',      name, cmaps)
+        opts   .wlisten('interpolateCmaps',    name, cmaps)
+        opts   .wlisten('invert',              name, cmaps)
+        opts   .wlisten('modulateAlpha',       name, shader)
+        opts   .wlisten('invertModulateAlpha', name, shader)
+        opts   .wlisten('modulateRange',       name, shader)
+        opts   .wlisten('pseudo3D',            name, data)
+        opts   .wlisten('xclipdir',            name, refresh)
+        opts   .wlisten('yclipdir',            name, refresh)
+        opts   .wlisten('zclipdir',            name, refresh)
+        display.wlisten('alpha',               name, cmaps)
 
 
     def removeListeners(self):
@@ -144,33 +162,38 @@ class GLTractogram(globject.GLObject):
         display = self.display
         name    = self.name
 
-        opts   .removeListener('resolution',          name)
-        opts   .removeListener('subsample',           name)
-        opts   .removeListener('lineWidth',           name)
-        opts   .removeListener('colourMode',          name)
-        opts   .removeListener('clipMode',            name)
-        opts   .removeListener('xColour',             name)
-        opts   .removeListener('yColour',             name)
-        opts   .removeListener('zColour',             name)
-        opts   .removeListener('suppressX',           name)
-        opts   .removeListener('suppressY',           name)
-        opts   .removeListener('suppressZ',           name)
-        opts   .removeListener('suppressMode',        name)
-        opts   .removeListener('displayRange',        name)
-        opts   .removeListener('clippingRange',       name)
-        opts   .removeListener('invertClipping',      name)
-        opts   .removeListener('cmap',                name)
-        opts   .removeListener('negativeCmap',        name)
-        opts   .removeListener('useNegativeCmap',     name)
-        opts   .removeListener('gamma',               name)
-        opts   .removeListener('logScale',            name)
-        opts   .removeListener('cmapResolution',      name)
-        opts   .removeListener('interpolateCmaps',    name)
-        opts   .removeListener('invert',              name)
-        opts   .removeListener('modulateAlpha',       name)
-        opts   .removeListener('invertModulateAlpha', name)
-        opts   .removeListener('modulateRange',       name)
-        display.removeListener('alpha',               name)
+        opts   .remove('bounds',              name)
+        opts   .remove('resolution',          name)
+        opts   .remove('subsample',           name)
+        opts   .remove('lineWidth',           name)
+        opts   .remove('colourMode',          name)
+        opts   .remove('clipMode',            name)
+        opts   .remove('xColour',             name)
+        opts   .remove('yColour',             name)
+        opts   .remove('zColour',             name)
+        opts   .remove('suppressX',           name)
+        opts   .remove('suppressY',           name)
+        opts   .remove('suppressZ',           name)
+        opts   .remove('suppressMode',        name)
+        opts   .remove('displayRange',        name)
+        opts   .remove('clippingRange',       name)
+        opts   .remove('invertClipping',      name)
+        opts   .remove('cmap',                name)
+        opts   .remove('negativeCmap',        name)
+        opts   .remove('useNegativeCmap',     name)
+        opts   .remove('gamma',               name)
+        opts   .remove('logScale',            name)
+        opts   .remove('cmapResolution',      name)
+        opts   .remove('interpolateCmaps',    name)
+        opts   .remove('invert',              name)
+        opts   .remove('modulateAlpha',       name)
+        opts   .remove('invertModulateAlpha', name)
+        opts   .remove('modulateRange',       name)
+        opts   .remove('pseudo3D',            name)
+        opts   .remove('xclipdir',            name)
+        opts   .remove('yclipdir',            name)
+        opts   .remove('zclipdir',            name)
+        display.remove('alpha',               name)
 
 
     def destroy(self):
@@ -194,7 +217,7 @@ class GLTractogram(globject.GLObject):
         globject.GLObject.destroy(self)
 
 
-    def iterShaders(self, colourModes=None, clipModes=None):
+    def iterShaders(self, colourModes=None, clipModes=None, dims=None):
         """Returns all shader programs for the specified colour/clipping
         modes.
         """
@@ -202,13 +225,18 @@ class GLTractogram(globject.GLObject):
             colourModes = [colourModes]
         if isinstance(clipModes, str):
             clipModes = [clipModes]
+        if isinstance(dims, str):
+            dims = [dims]
         if colourModes is None or len(colourModes) == 0:
             colourModes = ['orientation', 'vertexData', 'imageData']
         if clipModes is None or len(clipModes) == 0:
             clipModes = ['none', 'vertexData', 'imageData']
-        shaders = [self.shaders[m] for m in colourModes]
-        shaders = it.chain(*[[s[m] for m in clipModes] for s in shaders])
-        return it.chain(*shaders)
+        if dims is None or len(dims) == 0:
+            dims = ['2D', '3D']
+        shaders = [self.shaders[d] for d in dims]
+        shaders = it.chain(*[[s[m] for m in colourModes] for s in shaders])
+        shaders = it.chain(*[[s[m] for m in clipModes]   for s in shaders])
+        return it.chain(*[s.values() for s in shaders])
 
 
     @property
@@ -232,7 +260,7 @@ class GLTractogram(globject.GLObject):
                 self.opts.bounds.getHi())
 
 
-    def normalisedLineWidth(self, canvas, mvp):
+    def normalisedLineWidth(self, canvas, mvp, threedee):
         """Returns :attr:`lineWidth`, scaled so that it is with respect to
         normalised device coordinates. Streamline lines/tubes (in 3D) and
         vertices (in 2D) are drawn such that the width/radius is fixed w.r.t.
@@ -248,14 +276,14 @@ class GLTractogram(globject.GLObject):
         # in terms of NDCs.
         lineWidth =  self.opts.lineWidth / 10
 
-        if self.threedee:
+        if threedee:
             # We don't apply the scene3d rotation, because
             # the projection matrix adds an uneven scaling
             # to the depth axis (see routines.ortho3D),
             # which will affect scaling when rotated to be
             # in line with that axis.  I may revisit this in
             # the future, as the ortho3D function is a bit
-            # nuts in how it handles depth (caused my my
+            # nuts in how it handles depth (caused by my
             # lack of understanding of near/far clipping).
             scaling   = affine.concat(canvas.projectionMatrix,
                                       canvas.viewScale)
@@ -265,6 +293,7 @@ class GLTractogram(globject.GLObject):
         else:
             # return separate scales for each axis
             lineWidth = affine.transform([lineWidth] * 3, mvp, vector=True)
+            lineWidth = np.abs(lineWidth[:2])
 
         return lineWidth
 
@@ -309,9 +338,9 @@ class GLTractogram(globject.GLObject):
         instanced rendering, so a divisor must be set for all vertex
         attributes.
         """
-        if fslgl.GL_COMPATIBILITY != '2.1': return {}
-        if self.threedee:                   return {}
-        else:                               return {'divisor' : 1}
+        if fslgl.GL_COMPATIBILITY != '2.1':     return {}
+        if self.threedee or self.opts.pseudo3D: return {}
+        else:                                   return {'divisor' : 1}
 
 
     def compileShaders(self):
@@ -340,7 +369,7 @@ class GLTractogram(globject.GLObject):
         nverts      = ovl.nvertices
         nstrms      = ovl.nstreamlines
         kwargs      = self.shaderAttributeArgs()
-        threedee    = self.threedee
+        threedee    = self.threedee or opts.pseudo3D
         indices     = None
 
         # randomly select a subset of streamlines
@@ -433,6 +462,7 @@ class GLTractogram(globject.GLObject):
                                        ['vertexData', 'imageData']):
             with shader.loaded():
                 shader.set('invertClip',   opts.invertClipping)
+                shader.set('applyClip',    opts.clipMode is not None)
                 shader.set('clipLow',      opts.clippingRange.xlo)
                 shader.set('clipHigh',     opts.clippingRange.xhi)
 
@@ -445,6 +475,7 @@ class GLTractogram(globject.GLObject):
                 shader.set('cmapScale',     cmapScale)
                 shader.set('cmapOffset',    cmapOffset)
                 shader.set('sameData',      sameData)
+                shader.set('applyClip',     opts.clipMode is not None)
                 shader.set('invertClip',    opts.invertClipping)
                 shader.set('clipLow',       opts.clippingRange.xlo)
                 shader.set('clipHigh',      opts.clippingRange.xhi)
@@ -605,6 +636,11 @@ class GLTractogram(globject.GLObject):
         :func:`.gl33.gltractogram_funcs.draw2D`.
         """
 
+        # Draw 3D tractogram on 2D canvas
+        if self.opts.pseudo3D:
+            self.drawPseudo3D(canvas, zpos, axes, xform)
+            return
+
         if xform is None:
             xform = np.eye(4)
 
@@ -616,32 +652,81 @@ class GLTractogram(globject.GLObject):
         # coordinates within the slice are mapped to
         # the range (-1, +1). Vertices with z outside
         # of that range will be clipped by GL.
-        projmat       = np.array(canvas.projectionMatrix)
-        step          = opts.sliceWidth(zax)
-        zlo           = zpos - step
-        zhi           = zpos + step
-        projmat[2, 2] = 2 / (zhi - zlo)
-        projmat[2, 3] = -(zhi + zlo) / (zhi - zlo)
+        step    = opts.sliceWidth(zax)
+        zmin    = zpos - step
+        zmax    = zpos + step
+        viewmat = canvas.viewMatrix
+        projmat = canvas.calculateViewport(
+            zmin=zmin, zmax=zmax, expandz=False)[1]
 
-        # The routines.show2D function encodes a
-        # -ve scale on the yaxis in the view
-        # matrix.  We need to accommodate it
-        # here.
-        if zax == 1:
+        # Make sure that the scales have the same
+        # sign as the rotations in the view matrix
+        # produced by gl.routines.show2D
+        if np.sign(projmat[2, 2]) != np.sign(viewmat[2, :2].sum()):
             projmat[2, 2] *= -1
 
-        viewmat   = canvas.viewMatrix
-        strm2disp = opts.displayTransform
+        strm2disp = opts.getTransform(to='display')
         mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
 
         fslgl.gltractogram_funcs.draw2D(self, canvas, mvp)
 
 
-    def draw3D(self, *args, **kwargs):
+    def drawPseudo3D(self, canvas, zpos, axes, xform=None):
+        """Draws a 3D rendering of the tractogram onto a 2D canvas.
+
+        Calls :func:`.gl21.gltractogram_funcs.drawPseudo3D` or
+        :func:`.gl33.gltractogram_funcs.drawPseudo3D`.
+        """
+        if xform is None:
+            xform = np.eye(4)
+
+        opts = self.opts
+        zax  = axes[2]
+
+        if   zax == 0: clipdir = opts.xclipdir
+        elif zax == 1: clipdir = opts.yclipdir
+        elif zax == 2: clipdir = opts.zclipdir
+
+        if clipdir != 'none':
+
+            step       = opts.sliceWidth(zax)
+            zmin, zmax = canvas.viewport[zax]
+
+            if   clipdir == 'low':  zmin       = zpos
+            elif clipdir == 'high': zmax       = zpos
+            else:                   zmin, zmax = zpos - step, zpos + step
+
+            # manipulate projection matrix to
+            # clip vertices - see notes in draw2D
+            viewmat = canvas.viewMatrix
+            projmat = canvas.calculateViewport(
+                zmin=zmin, zmax=zmax, expandz=False)[1]
+
+            if np.sign(projmat[2, 2]) != np.sign(viewmat[2, :2].sum()):
+                projmat[2, 2] *= -1
+
+        else:
+            projmat = np.array(canvas.projectionMatrix)
+
+        viewmat   = canvas.viewMatrix
+        strm2disp = opts.getTransform(to='display')
+        mvp       = affine.concat(projmat, viewmat, xform, strm2disp)
+
+        fslgl.gltractogram_funcs.drawPseudo3D(self, canvas, mvp)
+
+
+    def draw3D(self, canvas, xform=None):
         """Calls :func:`.gl21.gltractogram_funcs.draw3D` or
         :func:`.gl33.gltractogram_funcs.draw3D`.
         """
-        fslgl.gltractogram_funcs.draw3D(self, *args, **kwargs)
+        mvp       = canvas.mvpMatrix
+        lighting  = canvas.opts.light
+        lightPos  = affine.transform(canvas.lightPos, mvp)
+        strm2disp = self.opts.getTransform(to='display')
+        mvp       = affine.concat(mvp, strm2disp)
+
+        fslgl.gltractogram_funcs.draw3D(
+            self, canvas, mvp, lighting, lightPos, xform=xform)
 
 
     def postDraw(self):
