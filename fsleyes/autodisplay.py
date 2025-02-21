@@ -87,7 +87,7 @@ def _isPEImage(overlay):
 def _statImageDisplay(overlay,
                       overlayList,
                       displayCtx,
-                      zthres=3.0,
+                      zthres=3.1,
                       posCmap=None,
                       negCmap=None):
     """Configure default display settings for the given statistic
@@ -197,19 +197,25 @@ def _MelodicImageDisplay(overlay, overlayList, displayCtx):
     :class:`.MelodicImage` overlay.
     """
 
-    opts        = displayCtx.getOpts(overlay)
-    dmin, dmax  = np.abs(overlay.dataRange)
+    opts             = displayCtx.getOpts(overlay)
+    datamin, datamax = np.abs(overlay.dataRange)
 
-    # clip low values by default
-    if dmax > 3:
-        dmin = 3
-        dmax = 10
+    # Arbitrarily set display range to 3-10
+    if datamax > 3:
+        dispmin, dispmax = 3, 10
+        modmin,  modmax  = 0, 3
+    else:
+        dispmin, dispmax = datamin, datamax
+        modmin,  modmax  = datamin, datamax
 
-    opts.cmap              = 'Red-Yellow'
-    opts.negativeCmap      = 'Blue-LightBlue'
-    opts.useNegativeCmap   = True
-    opts.displayRange      = [dmin, dmax]
-    opts.clippingRange.xlo =  dmin
+    opts.cmap            = 'Red-Yellow'
+    opts.negativeCmap    = 'Blue-LightBlue'
+    opts.useNegativeCmap = True
+    opts.linkLowRanges   = False
+    opts.modulateAlpha   = True
+    opts.displayRange    = [dispmin, dispmax]
+    opts.clippingRange   = [0,       datamax]
+    opts.modulateRange   = [modmin,  modmax]
 
     # Add the mean as an underlay
     idx      = overlayList.index(overlay)
