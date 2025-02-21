@@ -392,7 +392,7 @@ class ClusterPanel(ctrlpanel.ControlPanel):
             return
 
         log.debug('Adding cluster mask %s to overlay list', mask.name)
-        self.overlayList.append(mask, overlayType='label', outline=True)
+        self.overlayList.append(mask, overlayType='mask', outline=True)
 
 
     def __genClusterGrid(self, overlay, featImage, testidx):
