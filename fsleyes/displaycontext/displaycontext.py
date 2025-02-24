@@ -1115,7 +1115,8 @@ class DisplayContext(props.SyncableHasProperties):
         # More complex overlay list modifications
         # will cause this code to break.
 
-        oldList = self.__overlayList.getLastValue('overlays')[:]
+        oldList  = self.__overlayList.getLastValue('overlays')[:]
+        oldOrder = self.overlayOrder[:]
 
         # If the overlay order was not valid prior
         # to this call (can happen during initialisation),
@@ -1151,8 +1152,6 @@ class DisplayContext(props.SyncableHasProperties):
         # Otherwise, if overlays have been
         # removed from the overlay list ...
         elif len(oldList) > len(self.__overlayList):
-
-            oldOrder = self.overlayOrder[:]
 
             # Remove the corresponding indices
             # from the overlayOrder list

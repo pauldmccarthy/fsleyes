@@ -672,8 +672,10 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
             :attr:`.VectorOpts.clipImage`, and other :class:`.Image`-based
             choice properties.
             """
-            if img is None: return 'None'
-            else:           return self.displayCtx.getDisplay(img).name
+            if (img is None) or (img not in self.overlayList):
+                return 'None'
+            else:
+                return self.displayCtx.getDisplay(img).name
 
         def _pathLabel(p):
             if p is None: return 'None'
@@ -686,7 +688,10 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
             if data is None:
                 return 'None'
             elif isinstance(data, fslimage.Image):
-                return self.displayCtx.getDisplay(data).name
+                if data in self.overlayList:
+                    return self.displayCtx.getDisplay(data).name
+                else:
+                    return 'None'
             else:
                 return op.basename(data)
 
