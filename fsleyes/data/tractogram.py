@@ -81,9 +81,10 @@ class Tractogram:
     def affine(self):
         """Returns an affine transformation matrix which defines the
         voxel->world transformation of the image from which the tractogram
-        was derived. Note that nibabel will typically apply this transformation
-        when loading a ``.trk``/`.tck`` file,so this affine generally shouldn't
-        be needed.
+        was derived. Note that this may not be valid for all tractogram
+        files, and that nibabel will typically apply this transformation
+        when loading a ``.trk``/`.tck`` file, so this affine generally
+        shouldn't be needed.
         """
         return self.tractFile.affine
 
