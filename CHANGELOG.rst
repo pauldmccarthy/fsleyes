@@ -11,6 +11,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.14.1 (Monday 24th February 2025)
+----------------------------------
+
+
+Fixed
+^^^^^
+
+* Fixed some errors which could occur when adding/removing overlays (!469).
+
+
 1.14.0 (Monday 24th February 2025)
 ----------------------------------
 
