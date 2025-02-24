@@ -578,8 +578,10 @@ def _initWidgetSpec_LabelOpts(displayCtx, threedee):
 
 def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
     def imageName(img):
-        if img is None: return 'None'
-        else:           return displayCtx.getDisplay(img).name
+        if (img is None) or (img not in displayCtx.overlayList):
+            return 'None'
+        else:
+            return displayCtx.getDisplay(img).name
 
     return {
         'colourImage'   : props.Widget(
@@ -764,8 +766,10 @@ def _initWidgetSpec_SHOpts(displayCtx, threedee):
 def _initWidgetSpec_MeshOpts(displayCtx, threedee):
 
     def imageName(img):
-        if img is None: return 'None'
-        else:           return displayCtx.getDisplay(img).name
+        if (img is None) or (img not in displayCtx.overlayList):
+            return 'None'
+        else:
+            return displayCtx.getDisplay(img).name
 
     def pathName(vdata):
         if vdata is None: return 'None'
@@ -973,13 +977,18 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         if data is None:
             return 'None'
         elif isinstance(data, fslimage.Image):
-            return displayCtx.getDisplay(data).name
+            if data in displayCtx.overlayList:
+                return displayCtx.getDisplay(data).name
+            else:
+                return 'None'
         else:
             return op.basename(data)
 
     def imageName(img):
-        if img is None: return 'None'
-        else:           return displayCtx.getDisplay(img).name
+        if (img is None) or (img not in displayCtx.overlayList):
+            return 'None'
+        else:
+            return displayCtx.getDisplay(img).name
 
     cmapOpts    = dict(dependencies=['colourMode'],
                        enabledWhen=lambda o, cm: cm != 'orientation')
