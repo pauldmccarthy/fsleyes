@@ -10,8 +10,11 @@ import os
 import os.path as op
 import shutil
 
-from fsl.utils.tempdir import tempdir
-from fsl.data.image import Image
+from   fsl.utils.tempdir      import tempdir
+from   fsl.data.image         import Image
+import fsleyes.overlay        as     fsloverlay
+import fsleyes.displaycontext as     dc
+
 from fsleyes.tests import run_with_fsleyes, realYield
 
 
@@ -36,3 +39,33 @@ def _test_autoNameOverlays(frame, overlayList, displayCtx):
 
         names = sorted(displayCtx.getDisplay(o).name for o in overlayList)
         assert names == expnames
+
+
+def test_overlayOrder():
+    run_with_fsleyes(_test_overlayOrder)
+def _test_overlayOrder(frame, overlayList, displayCtx):
+
+    img1        = Image(op.join(datadir, '3d.nii.gz'))
+    img2        = Image(op.join(datadir, '3d.nii.gz'))
+    img3        = Image(op.join(datadir, '3d.nii.gz'))
+
+    ovlist = fsloverlay.OverlayList()
+    dctx   = dc.DisplayContext(ovlist)
+
+    ovlist.extend((img1, img2))
+    assert dctx.overlayOrder         == [0, 1]
+    assert dctx.getOrderedOverlays() == [img1, img2]
+
+    dctx.overlayOrder                =  [1, 0]
+    assert dctx.getOrderedOverlays() == [img2, img1]
+
+    ovlist.append(img3)
+    assert dctx.overlayOrder         == [1, 0, 2]
+    assert dctx.getOrderedOverlays() == [img2, img1, img3]
+
+    dctx.overlayOrder                =  [2, 1, 0]
+    assert dctx.getOrderedOverlays() == [img3, img2, img1]
+
+    ovlist.remove(img1)
+    assert dctx.overlayOrder         == [1, 0]
+    assert dctx.getOrderedOverlays() == [img3, img2]
