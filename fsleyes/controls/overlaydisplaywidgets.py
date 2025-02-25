@@ -351,6 +351,7 @@ def _initPropertyList_TractogramOpts(threedee):
              'subsample']
 
     if not threedee:
+        plist.append('sliceWidth')
         plist.append('pseudo3D')
         plist.append('custom_zclipping')
 
@@ -1015,6 +1016,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'suppressZ'         : props.Widget('suppressZ',    **orientOpts),
         'suppressMode'      : props.Widget('suppressMode', **orientOpts),
         'lineWidth'         : props.Widget('lineWidth',    **sliderOpts),
+        'sliceWidth'        : props.Widget('sliceWidth',   **sliderOpts),
         'resolution'        : props.Widget('resolution',   **sliderOpts),
         'subsample'         : props.Widget('subsample',    **sliderOpts),
         'pseudo3D'          : props.Widget('pseudo3D'),

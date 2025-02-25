@@ -670,6 +670,7 @@ OPTIONS = td.TypeDict({
                            'colourBy',
                            'clipBy',
                            'lineWidth',
+                           'sliceWidth',
                            'resolution',
                            'subsample',
                            'pseudo3D',
@@ -1043,6 +1044,7 @@ ARGUMENTS = td.TypeDict({
     'TractogramOpts.colourBy'   : ('co',  'colourBy',   True),
     'TractogramOpts.clipBy'     : ('cl',  'clipBy',     True),
     'TractogramOpts.lineWidth'  : ('lw',  'lineWidth',  True),
+    'TractogramOpts.sliceWidth' : ('sw',  'sliceWidth', True),
     'TractogramOpts.resolution' : ('r',   'resolution', True),
     'TractogramOpts.subsample'  : ('s',   'subsample',  True),
     'TractogramOpts.pseudo3D'   : ('p',   'pseudo3D',   False),
@@ -1471,6 +1473,8 @@ HELP = td.TypeDict({
     'within the tractogram file.',
     'TractogramOpts.lineWidth' :
     'Streamline width/diameter',
+    'TractogramOpts.sliceWidth' :
+    '2D only. Slice width when drawing 2D slices.',
     'TractogramOpts.resolution' :
     'Streamline resolution/quality',
     'TractogramOpts.subsample' :
