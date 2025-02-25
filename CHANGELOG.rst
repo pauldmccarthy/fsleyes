@@ -15,6 +15,14 @@ chronological order.
 -------------------------------------
 
 
+Added
+^^^^^
+
+* New *Slice width* option for tractogram overlays (``--sliceWidth`` / ``-sw``
+  on the command-line), which controls the width of the cross-section through
+  the tractogram when drawing 2D slices (!471).
+
+
 Changed
 ^^^^^^^
 
