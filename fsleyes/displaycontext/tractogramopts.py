@@ -56,14 +56,18 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
-    sliceWidth = props.Percentage(default=2)
-    """Width of the slice to draw, when :attr:`pseudo3D` is ``True``,
-    and the ``clipdir`` setting for the axis is ``'slice'``. The width
-    is specified as a percentage of the tractogram bounding box along each
-    axis.
+    sliceWidth = props.Percentage(default=1)
+    """Width of the slice to draw, when drawing 2D slices/cross-sections,
+    either when:
+    - :attr:`pseudo3D` is ``False``, or
+    - :attr:`pseudo3D` is ``True``, and the ``clipdir`` setting for the
+       axis being drawn is is ``'slice'``.
 
-    Use the :meth:`calculateSliceWidth` method to calculate a width in the
-    display coordinate system.
+    When a :attr:`refImage` is set, the width is specified in terms of the
+    reference image voxel size along each axis. Otherwise it is specified as
+    a percentage of the tractogram bounding box along each axis. In either
+    case, use the :meth:`calculateSliceWidth` method to calculate a width in
+    the display coordinate system.
     """
 
 
@@ -280,22 +284,37 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         value.
         """
 
+        ref   = self.refImage
         width = self.sliceWidth
 
-        # The z axis is specified in terms of
-        # the display coordinate system -
-        # identify the corresponding axis in the
-        # tractogram/world coordinate system.
-        codes = [[0, 0], [1, 1], [2, 2]]
-        xform = self.getTransform(from_='display')
-        zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
+        # Clip according the width of the
+        # tractogram bounding box along the
+        # Z axis.
+        if ref is None:
+            # The z axis is specified in terms of
+            # the display coordinate system -
+            # identify the corresponding axis in the
+            # tractogram/world coordinate system.
+            codes = [[0, 0], [1, 1], [2, 2]]
+            xform = self.getTransform(from_='display')
+            zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
 
-        # Calculate <sliceWidth> percent
-        # of the Z axis bounds
-        los, his = self.overlay.bounds
-        zlen     = his[zax] - los[zax]
+            # Calculate <sliceWidth> percent
+            # of the Z axis bounds
+            los, his = self.overlay.bounds
+            zlen     = his[zax] - los[zax]
 
-        return (width * zlen) / 100
+            return (width * zlen) / 200
+
+        # Clip to N voxels in terms of the reference image
+        else:
+            # Identify the voxel axis corresponding
+            # to the requested display axis, and
+            # return a width in terms of its pixdim
+            axes  = ref.axisMapping(self.getTransform('display', 'voxel'))
+            zax   = abs(axes[zax] - 1)
+            zlen  = ref.pixdim[zax]
+            return width * zlen
 
 
     def __colourModeChanged(self):

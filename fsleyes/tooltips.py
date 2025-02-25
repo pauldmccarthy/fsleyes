@@ -459,7 +459,7 @@ properties = TypeDict({
     'when viewing very large tractograms.',
     'TractogramOpts.pseudo3D' :
     'Instead of drawing a 2D cross-section of the tractogram vertices, draw '
-    'the full 3D tractogram, overlaid on the 2D scene.',
+    'a portion of the full 3D tractogram, overlaid on the 2D scene.',
     'TractogramOpts.xclipdir' :
     'Direction of depth clipping along the X axis.',
     'TractogramOpts.yclipdir' :
