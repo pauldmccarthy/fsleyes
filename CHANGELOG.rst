@@ -11,6 +11,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.14.2 (XXX)
+------------
+
+
+Changed
+^^^^^^^
+
+* FEAT ``cluster_mask`` images are now shown as mask outlines when the
+  ``--autoDisplay`` flag is used, or when loaded from the FEAT cluster
+  panel (!471).
+
 
 1.14.1 (Monday 24th February 2025)
 ----------------------------------
