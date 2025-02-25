@@ -13,7 +13,6 @@ new overlays are loaded.
 """
 
 
-import re
 import sys
 import logging
 import os.path as op
@@ -36,160 +35,163 @@ def autoDisplay(overlay, overlayList, displayCtx, **kwargs):
     """
 
     oType = type(overlay).__name__
-    func  = getattr(sys.modules[__name__], '_{}Display'.format(oType), None)
+    func  = getattr(sys.modules[__name__], f'_{oType}Display', None)
 
     if func is None:
-        log.warn('Unknown overlay type: {}'.format(oType))
+        log.warn('Unknown overlay type: %s', oType)
         return
 
-    log.debug('Applying default display arguments for {}'.format(overlay))
+    log.debug('Applying default display arguments for %s', overlay)
     func(overlay, overlayList, displayCtx, **kwargs)
 
 
 def _ImageDisplay(overlay, overlayList, displayCtx, **kwargs):
     """Configure default display settings for the given :class:`.Image`
-    overlay.
+    overlay. If the image looks like it is from a FEAT analysis,
+    some display settings are changed.
     """
 
-    if _isStatImage(overlay):
-        _statImageDisplay(overlay, overlayList, displayCtx, **kwargs)
-    elif _isPEImage(overlay):
-        _peImageDisplay(  overlay, overlayList, displayCtx, **kwargs)
+    displayFuncs = {
+        'zstat'                  : _statImageDisplay,
+        'tstat'                  : _statImageDisplay,
+        'fstat'                  : _statImageDisplay,
+        'zfstat'                 : _statImageDisplay,
+        'rendered_thresh_zstat'  : _renderedStatImageDisplay,
+        'rendered_thresh_zfstat' : _renderedStatImageDisplay,
+        'thresh_zstat'           : _threshStatImageDisplay,
+        'thresh_zfstat'          : _threshStatImageDisplay,
+        'cope'                   : _peImageDisplay,
+        'pe'                     : _peImageDisplay,
+        'varcope'                : _peImageDisplay,
+        'cluster_mask_zfstat'    : _clusterMaskImageDisplay,
+        'cluster_mask_zstat'     : _clusterMaskImageDisplay,
+    }
+    basename    = op.basename(overlay.dataSource)
+    basename    = fslimage.removeExt(basename)
+    imageId     = basename.rstrip('0123456789')
+    displayFunc = displayFuncs.get(imageId, None)
 
-    # Automatically configure nice display range?
-
-
-def _isStatImage(overlay):
-    """Returns ``True`` if the given :class:`.Image` overlay looks like a
-    statistic image, ``False`` otherwise.
-    """
-
-    basename = op.basename(overlay.dataSource)
-    basename = fslimage.removeExt(basename)
-    tokens   = ['zstat', 'tstat', 'fstat', 'zfstat']
-    pattern  = r'({})\d+'.format('|'.join(tokens))
-
-    return re.search(pattern, basename) is not None
-
-
-def _isPEImage(overlay):
-    """Returns ``True`` if the given :class:`.Image` overlay looks like a
-    statistic image, ``False`` otherwise.
-    """
-    basename = op.basename(overlay.dataSource)
-    basename = fslimage.removeExt(basename)
-    tokens   = ['cope', 'pe']
-    pattern  = r'^({})\d+'.format('|'.join(tokens))
-
-    return re.search(pattern, basename) is not None
+    if displayFunc is not None:
+        displayFunc(basename, overlay, displayCtx, **kwargs)
 
 
-def _statImageDisplay(overlay,
-                      overlayList,
+def _getStatImageColourMaps(overlay, posCmap=None, negCmap=None):
+    # Cycle through these colour maps for statistic images
+    cmaps = ['red-yellow',
+             'blue-lightblue',
+             'green',
+             'cool',
+             'hot',
+             'blue',
+             'red',
+             'yellow',
+             'pink',
+             'copper']
+    idx = _getStatImageColourMaps.currentCmap
+
+    if posCmap is None:
+        posCmap = cmaps[idx]
+        idx     = (idx + 1) % len(cmaps)
+        _getStatImageColourMaps.currentCmap = idx
+
+    if negCmap is None:
+        negCmap = posCmap
+
+    return posCmap, negCmap
+
+# Index into the cmaps list, pointing to the
+# next colour map to use for statistic images.
+_getStatImageColourMaps.currentCmap = 0
+
+
+def _statImageDisplay(basename,
+                      overlay,
                       displayCtx,
                       zthres=3.1,
                       posCmap=None,
                       negCmap=None):
-    """Configure default display settings for the given statistic
-    :class:`.Image` overlay.
+    """Configure default display settings for the given FEAT statistic
+    image (e.g. ``zstat1.nii.gz``).
     """
 
-    opts        = displayCtx.getOpts(overlay)
-    basename    = op.basename(overlay.dataSource)
-    basename    = fslimage.removeExt(basename)
+    opts              = displayCtx.getOpts(overlay)
+    posCmap, negCmap  = _getStatImageColourMaps(posCmap, negCmap)
+    opts.cmap         = posCmap
+    opts.negativeCmap = negCmap
 
-    pTokens     = ['p', 'corrp']
-    statTokens  = ['zstat', 'tstat', 'zfstat']
-    fStatTokens = ['fstat']
-
-    # Rendered stat images (e.g.
-    # rendered_thres_zstat1) are
-    # generated specifically for
-    # use with the Render1 colour
-    # map.
-    if 'rendered' in basename:
-        opts.cmap = 'Render1'
-
-    # Give each normal stat image
-    # a different colour map
-    else:
-        cmap = _statImageDisplay.cmaps[_statImageDisplay.currentCmap]
-
-        if posCmap is None: posCmap = cmap
-        if negCmap is None: negCmap = cmap
-
-        _statImageDisplay.currentCmap += 1
-        _statImageDisplay.currentCmap %= len(_statImageDisplay.cmaps)
-        opts.cmap                      = posCmap
-        opts.negativeCmap              = negCmap
-
-    # The order of these tests is
-    # important, due to name overlap
-
-    # P-value image ?
-    if any([token in basename for token in pTokens]):
-        opts.displayRange      = [0.95, 1.0]
-        opts.clippingRange.xlo =  0.95
-
-    # T or Z stat image?
-    elif any([token in basename for token in statTokens]) and \
-       'rendered' not in basename:
-
-        maxVal               = overlay.dataRange[1]
-        opts.useNegativeCmap = True
-
-        if 'thresh' in basename:
-            opts.clippingRange.xlo =  zthres
-            opts.displayRange      = [zthres, min((7.5, maxVal))]
-        # modulate alpha by intensity for regular stat images
-        else:
-            opts.linkLowRanges     = False
-            opts.clippingRange.xlo = 0
-            opts.modulateAlpha     = True
-            opts.modulateRange     = [0, zthres]
-            opts.displayRange      = [zthres, min((7.5, maxVal))]
-
-    # F stat image?
-    elif any([token in basename for token in fStatTokens]):
+    # f-stat image?
+    if basename.startswith('fstat'):
         opts.displayRange = [0, 10]
 
-
-# Colour maps used for statistic images
-_statImageDisplay.cmaps = ['red-yellow',
-                           'blue-lightblue',
-                           'green',
-                           'cool',
-                           'hot',
-                           'blue',
-                           'red',
-                           'yellow',
-                           'pink',
-                           'copper']
+    # modulate alpha by intensity for regular stat images
+    else:
+        maxVal                 = overlay.dataRange[1]
+        opts.useNegativeCmap   = True
+        opts.linkLowRanges     = False
+        opts.clippingRange.xlo = 0
+        opts.modulateAlpha     = True
+        opts.modulateRange     = [0, zthres]
+        opts.displayRange      = [zthres, min((7.5, maxVal))]
 
 
-# Index into the cmaps list, pointing to the
-# next colour map to use for statistic images.
-_statImageDisplay.currentCmap = 0
-
-
-def _peImageDisplay(overlay, overlayList, displayCtx):
-    """Automatically configure display settings for the given PE/COPE
-    :class:`.Image` overlay.
+def _renderedStatImageDisplay(basename, overlay, displayCtx, **kwargs):
+    """Automatically configure display settings for the given FEAT
+    pre-renderered stats image (e.g ``rendered_thresh_zstat1.nii.gz``).
     """
+    opts      = displayCtx.getOpts(overlay)
+    opts.cmap = 'Render1'
+
+
+def _peImageDisplay(basename, overlay, displayCtx, **kwargs):
+    """Automatically configure display settings for the given FEAT PE/COPE
+    image (e.g  ``pe1.nii.gz``).
+    """
+
     opts = displayCtx.getOpts(overlay)
 
-    opts.cmap              = 'Red-Yellow'
-    opts.negativeCmap      = 'Blue-LightBlue'
-    opts.useNegativeCmap   = True
-    opts.displayRange      = [1.0, 100.0]
-    opts.clippingRange.xlo =  1.0
+    if basename.startswith('varcope'):
+        maxVal                 = overlay.dataRange[1]
+        opts.cmap              = 'Red-Yellow'
+        opts.displayRange      = [1.0, np.sqrt(maxVal)]
+        opts.clippingRange.xlo =  1.0
+
+    else:
+        opts.cmap              = 'Red-Yellow'
+        opts.negativeCmap      = 'Blue-LightBlue'
+        opts.useNegativeCmap   = True
+        opts.displayRange      = [1.0, 100.0]
+        opts.clippingRange.xlo =  1.0
 
 
-def _FEATImageDisplay(overlay, overlayList, displayCtx):
-    """Automatically configure display settings for the given
-    :class:`.FEATImage` overlay.
+def _threshStatImageDisplay(basename,
+                            overlay,
+                            displayCtx,
+                            zthres=3.1,
+                            posCmap=None,
+                            negCmap=None,
+                            **kwargs):
+    """Automatically configure display settings for the given FEAT
+    thresholded statistic image (e.g. ``thresh_zstat1.nii.gz``)
     """
-    pass
+    opts                   = displayCtx.getOpts(overlay)
+    posCmap, negCmap       = _getStatImageColourMaps(overlay, posCmap, negCmap)
+    maxVal                 = overlay.dataRange[1]
+    opts.cmap              = posCmap
+    opts.negativeCmap      = negCmap
+    opts.useNegativeCmap   = True
+    opts.clippingRange.xlo =  zthres
+    opts.displayRange      = [zthres, min((7.5, maxVal))]
+
+
+def _clusterMaskImageDisplay(basename, overlay, displayCtx, **kwargs):
+    """Automatically configure display settings for the given FEAT
+    cluster mask image (e.g. ``cluster_mask_zstat1.nii.gz``)
+    """
+    display             = displayCtx.getDisplay(overlay)
+    display.overlayType = 'mask'
+    opts                = displayCtx.getOpts(   overlay)
+    opts.outline        = True
+    opts.outlineWidth   = 2
 
 
 def _MelodicImageDisplay(overlay, overlayList, displayCtx):
