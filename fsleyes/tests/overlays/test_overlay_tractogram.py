@@ -100,6 +100,11 @@ tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -cs pixdim -l
 """
 
 cli_pseudo3d_tests = """
+tractogram/dipy_tracks.trk -lw 5 -sw 1
+tractogram/dipy_tracks.trk -lw 5 -sw 10
+tractogram/dipy_tracks.trk -lw 5 -sw 1  -p -xcl slice -ycl slice  -zcl slice
+tractogram/dipy_tracks.trk -lw 5 -sw 10 -p -xcl slice -ycl slice  -zcl slice
+
 tractogram/dipy_tracks.trk -lw 5 -p -xcl none  -ycl none  -zcl none
 tractogram/dipy_tracks.trk -lw 5 -p -xcl low   -ycl none  -zcl none
 tractogram/dipy_tracks.trk -lw 5 -p -xcl high  -ycl none  -zcl none

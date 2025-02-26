@@ -448,6 +448,9 @@ properties = TypeDict({
     'TractogramOpts.lineWidth' :
     'Controls the thickness of streamline lines/tubes (when viewing in 3D), '
     'or the diameter of streamline vertex points (when viewing in 2D).',
+    'TractogramOpts.sliceWidth' :
+    'Controls the thickness of the slice through the tractogram when drawing '
+    '2D slices/cross-sections.',
     'TractogramOpts.resolution' :
     'Controls the quality when drawing streamline tubes (in 3D) or vertex '
     'points (in 2D).',
@@ -456,7 +459,7 @@ properties = TypeDict({
     'when viewing very large tractograms.',
     'TractogramOpts.pseudo3D' :
     'Instead of drawing a 2D cross-section of the tractogram vertices, draw '
-    'the full 3D tractogram, overlaid on the 2D scene.',
+    'a portion of the full 3D tractogram, overlaid on the 2D scene.',
     'TractogramOpts.xclipdir' :
     'Direction of depth clipping along the X axis.',
     'TractogramOpts.yclipdir' :

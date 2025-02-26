@@ -294,17 +294,9 @@ class OverlayPlotPanel(PlotPanel):
     the same (initial) colour is used for the same overlay, across multiple
     plots.
 
-    See also :attr:`plotStyles`.
-
     Sub-classes should use the :meth:`getOverlayPlotColour` and
     :meth:`getOverlayPlotStyle` methods to retrieve the initial colour and
     linestyle to use for a given overlay.
-    """
-
-
-    plotStyles = {}
-    """This dictionary is used to store a collection of ``{overlay : colour}``
-    mappings - it is used in conjunction with :attr:`plotColours`.
     """
 
 
@@ -316,7 +308,7 @@ class OverlayPlotPanel(PlotPanel):
 
         PlotPanel.__init__(self, *args, **kwargs)
 
-        self.__name = 'OverlayPlotPanel_{}'.format(self.name)
+        self.__name = f'OverlayPlotPanel_{self.name}'
 
         # The dataSeries attribute is a dictionary of
         #
@@ -346,14 +338,19 @@ class OverlayPlotPanel(PlotPanel):
         self.__refreshProps  = {}
         self.__refreshCounts = {}
 
-        # Pre-generated default colours and line
-        # styles to use - see plotColours, plotStyles,
-        # getOverlayPlotColour, and getOverlayPlotStyle
-        lut    = fslcm.getLookupTable('paul_tol_accessible')
-        styles = plotting.DataSeries.lineStyle.getChoices()
-        limit  = min(len(lut), len(styles))
-        self.__defaultColours = [l.colour for l in lut[   :limit]]
-        self.__defaultStyles  = [s        for s in styles[:limit]]
+        # Pre-generated default colours to use -
+        # see plotColours and getOverlayPlotColour
+
+        # the paul_tol_accessible colour map contains
+        # 7 colours. The last one is light grey, which
+        # doesn't work against the default plot
+        # background colour. So we drop that, and also
+        # add darker variants of each for more variety.
+        lut  = fslcm.getLookupTable('paul_tol_accessible')[:-1]
+        lut  = [l.colour[:3] for l in lut]
+        lut += list(fslcm.darken(lut, 0.1))
+
+        self.__defaultColours = [tuple(c) for c in lut]
 
         self.canvas     .addListener('dataSeries',
                                      self.__name,
@@ -458,25 +455,13 @@ class OverlayPlotPanel(PlotPanel):
 
     def getOverlayPlotStyle(self, overlay):
         """Returns an initial line style to use for plots associated with the
-        given overlay. If a colour is present in the  :attr:`plotStyles`
-        dictionary, it is returned. Otherwise a line style is generated,
-        added to ``plotStyles``, and returned.
+        given overlay. Currently always returns ``'-'``. May be overridden
+        by sub-classes.
 
         The format of the returned line style is suitable for use with the
         ``linestyle`` argument of the ``matplotlib`` ``plot`` functions.
         """
-
-        if isinstance(overlay, fsloverlay.ProxyImage):
-            overlay = overlay.getBase()
-
-        style = self.plotStyles.get(overlay)
-
-        if style is None:
-            idx   = len(self.plotStyles) % len(self.__defaultStyles)
-            style = self.__defaultStyles[idx]
-            self.plotStyles[overlay] = style
-
-        return style
+        return '-'
 
 
     @actions.action
