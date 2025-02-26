@@ -56,6 +56,21 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     """
 
 
+    sliceWidth = props.Percentage(default=1)
+    """Width of the slice to draw, when drawing 2D slices/cross-sections,
+    either when:
+    - :attr:`pseudo3D` is ``False``, or
+    - :attr:`pseudo3D` is ``True``, and the ``clipdir`` setting for the
+       axis being drawn is is ``'slice'``.
+
+    When a :attr:`refImage` is set, the width is specified in terms of the
+    reference image voxel size along each axis. Otherwise it is specified as
+    a percentage of the tractogram bounding box along each axis. In either
+    case, use the :meth:`calculateSliceWidth` method to calculate a width in
+    the display coordinate system.
+    """
+
+
     resolution = props.Int(minval=1, maxval=10, default=1, clamped=True)
     """When drawing in 3D as tubes, or in 2D as circles, this setting defines
     the resolution at which the tubes/circles are drawn. In 3D, if
@@ -262,21 +277,20 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         else:                       self.clipMode   = None
 
 
-    def sliceWidth(self, zax, nvoxels=1):
+    def calculateSliceWidth(self, zax):
         """Returns a width along the specified **display** coordinate system
         axis, to be used for drawing a 2D slice through the tractogram on the
-        axis plane.
-
-        If ``refImage is not None``, the width is set to ``nvoxels`` in terms
-        of ``refImage``.
+        axis plane. The width is derived from the current :attr:`sliceWidth`
+        value.
         """
 
-        ref = self.refImage
+        ref   = self.refImage
+        width = self.sliceWidth
 
-        # Arbitrarily clip to 1/200th of the
-        # width of the tractogram bounding box
+        # Clip according the width of the
+        # tractogram bounding box along the
+        # Z axis.
         if ref is None:
-
             # The z axis is specified in terms of
             # the display coordinate system -
             # identify the corresponding axis in the
@@ -285,9 +299,12 @@ class TractogramOpts(fsldisplay.DisplayOpts,
             xform = self.getTransform(from_='display')
             zax   = nib.orientations.aff2axcodes(xform, codes)[zax]
 
+            # Calculate <sliceWidth> percent
+            # of the Z axis bounds
             los, his = self.overlay.bounds
             zlen     = his[zax] - los[zax]
-            return (nvoxels * zlen) / 200
+
+            return (width * zlen) / 200
 
         # Clip to N voxels in terms of the reference image
         else:
@@ -297,7 +314,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
             axes  = ref.axisMapping(self.getTransform('display', 'voxel'))
             zax   = abs(axes[zax] - 1)
             zlen  = ref.pixdim[zax]
-            return nvoxels * zlen
+            return width * zlen
 
 
     def __colourModeChanged(self):

@@ -206,6 +206,8 @@ colours:
    briconToDisplayRange
    briconToScaleOffset
    applyBricon
+   darken
+   brighten
    randomColour
    randomBrightColour
    randomDarkColour
@@ -1099,7 +1101,7 @@ def applyBricon(rgb, brightness, contrast):
 
     :arg contrast:   A contrast level in the range ``[0, 1]``.
     """
-    rgb       = np.array(rgb)
+    rgb       = np.array(rgb, dtype=float)
     oneColour = len(rgb.shape) == 1
     rgb       = rgb.reshape(-1, rgb.shape[-1])
 
@@ -1116,6 +1118,20 @@ def applyBricon(rgb, brightness, contrast):
 
     if oneColour: return rgb[0]
     else:         return rgb
+
+
+def darken(rgb, amount=0.05):
+    """Darken the given rgb colour(s) by the given amount. Short-hand
+    for ``applyBricon(rgb, 0.5 - amount, 0.5)``.
+    """
+    return applyBricon(rgb, 0.5 - amount, 0.5)
+
+
+def brighten(rgb, amount=0.05):
+    """Brighten the given rgb colour(s) by the given amount. Short-hand
+    for ``applyBricon(rgb, 0.5 + amount, 0.5)``.
+    """
+    return applyBricon(rgb, 0.5 + amount, 0.5)
 
 
 def randomColour():
@@ -1142,8 +1158,7 @@ def randomBrightColour():
 
 def randomDarkColour():
     """Generates a random saturated and darkened RGB colour."""
-
-    return applyBricon(randomBrightColour(), 0.35, 0.5)
+    return darken(randomBrightColour(), 0.15)
 
 
 def complementaryColour(rgb):

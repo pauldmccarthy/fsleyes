@@ -128,6 +128,7 @@ class GLTractogram(globject.GLObject):
         opts   .wlisten('colourMode',          name, colour)
         opts   .wlisten('clipMode',            name, clip)
         opts   .wlisten('lineWidth',           name, refresh)
+        opts   .wlisten('sliceWidth',          name, refresh)
         opts   .wlisten('xColour',             name, shader)
         opts   .wlisten('yColour',             name, shader)
         opts   .wlisten('zColour',             name, shader)
@@ -166,6 +167,7 @@ class GLTractogram(globject.GLObject):
         opts   .remove('resolution',          name)
         opts   .remove('subsample',           name)
         opts   .remove('lineWidth',           name)
+        opts   .remove('sliceWidth',          name)
         opts   .remove('colourMode',          name)
         opts   .remove('clipMode',            name)
         opts   .remove('xColour',             name)
@@ -652,7 +654,7 @@ class GLTractogram(globject.GLObject):
         # coordinates within the slice are mapped to
         # the range (-1, +1). Vertices with z outside
         # of that range will be clipped by GL.
-        step    = opts.sliceWidth(zax)
+        step    = opts.calculateSliceWidth(zax)
         zmin    = zpos - step
         zmax    = zpos + step
         viewmat = canvas.viewMatrix
@@ -689,7 +691,7 @@ class GLTractogram(globject.GLObject):
 
         if clipdir != 'none':
 
-            step       = opts.sliceWidth(zax)
+            step       = opts.calculateSliceWidth(zax)
             zmin, zmax = canvas.viewport[zax]
 
             if   clipdir == 'low':  zmin       = zpos
