@@ -56,7 +56,7 @@ class VolumeOpts(cmapopts.ColourMapOpts,
     """
 
 
-    interpolation = props.Choice(('none', 'linear', 'spline'))
+    interpolation = props.Choice(('none', 'linear', 'spline', 'true_spline'))
     """How the value shown at a real world location is derived from the
     corresponding data value(s). ``none`` is equivalent to nearest neighbour
     interpolation.
@@ -120,8 +120,10 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         # spline interpolation
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
-            interp.removeChoice('spline', instance=self)
-            interp.updateChoice('linear', instance=self, newAlt=['spline'])
+            interp.removeChoice('spline',      instance=self)
+            interp.removeChoice('true_spline', instance=self)
+            interp.updateChoice('linear',      instance=self,
+                                newAlt=['spline', 'true_spline'])
 
         # Interpolation cannot be unbound
         # between VolumeOpts instances. This is
@@ -534,8 +536,10 @@ class VolumeRGBOpts(niftiopts.NiftiOpts):
         # spline interpolation
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
-            interp.removeChoice('spline', instance=self)
-            interp.updateChoice('linear', instance=self, newAlt=['spline'])
+            interp.removeChoice('spline',      instance=self)
+            interp.removeChoice('true_spline', instance=self)
+            interp.updateChoice('linear', instance=self,
+                                newAlt=['spline', 'true_spline'])
 
         niftiopts.NiftiOpts.__init__(self,
                                      overlay,

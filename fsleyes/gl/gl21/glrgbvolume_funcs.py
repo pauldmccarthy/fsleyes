@@ -64,6 +64,7 @@ def updateShaderState(self):
     rc, gc, bc  = self.channelColours()
     colourXform = fslcmaps.briconToScaleOffset(brightness, contrast, 1)
     hasAlpha    = not (nvals == 3 or opts.suppressA)
+    useSpline   = opts.interpolation in ('spline', 'true_spline')
 
     if len(texShape) == 2:
         texShape = list(texShape) + [1]
@@ -77,7 +78,7 @@ def updateShaderState(self):
         changed |= shader.set('gcolour',       gc)
         changed |= shader.set('bcolour',       bc)
         changed |= shader.set('colourXform',   colourXform)
-        changed |= shader.set('useSpline',     opts.interpolation == 'spline')
+        changed |= shader.set('useSpline',     useSpline)
         changed |= shader.set('hasAlpha',      hasAlpha)
 
     return changed

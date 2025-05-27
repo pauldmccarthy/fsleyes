@@ -1437,10 +1437,11 @@ choices = TypeDict({
                              'id'          : 'Voxels',
                              'reference'   : 'Reference image'},
 
-    'VolumeOpts.interpolation' : {'none'    : 'No interpolation',
-                                  'nearest' : 'Nearest neighbour interpolation',
-                                  'linear'  : 'Linear interpolation',
-                                  'spline'  : 'Spline interpolation'},
+    'VolumeOpts.interpolation' : {'none'        : 'No interpolation',
+                                  'nearest'     : 'Nearest neighbour interpolation',
+                                  'linear'      : 'Linear interpolation',
+                                  'spline'      : 'Spline interpolation',
+                                  'true_spline' : 'Prefiltered spline interpolation'},
 
     'Volume3DOpts.clipMode' : {'intersection' : 'Intersection',
                                'union'        : 'Union',

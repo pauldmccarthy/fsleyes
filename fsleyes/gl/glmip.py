@@ -9,6 +9,7 @@ maximum-intensity-projections of an :class:`.Image` overlay onto a 2D canvas.
 """
 
 
+from   scipy                import ndimage
 import OpenGL.GL                as gl
 
 import fsl.utils.idle           as idle
@@ -168,6 +169,7 @@ class GLMIP(glimageobject.GLImageObject, globject.GLObject):
         """
 
         opts     = self.opts
+        interp   = opts.interpolation
         texName  = '{}_{}' .format(type(self).__name__, id(self.image))
         unsynced = (opts.getParent() is None or
                     not opts.isSyncedToParent('volume'))
@@ -182,8 +184,11 @@ class GLMIP(glimageobject.GLImageObject, globject.GLObject):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
+        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        else:                       prefilter = None
+
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
 
         self.imageTexture = glresources.get(
             texName,
@@ -191,6 +196,7 @@ class GLMIP(glimageobject.GLImageObject, globject.GLObject):
             texName,
             self.image,
             interp=interp,
+            prefilter=prefilter,
             volume=opts.index()[3:],
             notify=False)
 
@@ -292,9 +298,15 @@ class GLMIP(glimageobject.GLImageObject, globject.GLObject):
         """Called when the :attr:`.MIPOpts.interpolation` changes. Updates the
         image texture.
         """
-        if self.opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                                 interp = gl.GL_LINEAR
-        self.imageTexture.set(interp=interp)
+        interp = self.opts.interpolation
+
+        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        else:                       prefilter = None
+
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
+
+        self.imageTexture.set(interp=interp, prefilter=prefilter)
 
 
     def __imageTextureChanged(self, *a):

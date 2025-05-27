@@ -63,8 +63,10 @@ class MaskOpts(niftiopts.NiftiOpts):
         # spline interpolation
         if float(fslgl.GL_COMPATIBILITY) < 2.1:
             interp = self.getProp('interpolation')
-            interp.removeChoice('spline', instance=self)
-            interp.updateChoice('linear', instance=self, newAlt=['spline'])
+            interp.removeChoice('spline',      instance=self)
+            interp.removeChoice('true_spline', instance=self)
+            interp.updateChoice('linear',      instance=self,
+                                newAlt=['spline', 'true_spline'])
 
         kwargs['nounbind'] = ['interpolation']
 

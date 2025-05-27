@@ -75,6 +75,8 @@ def updateShaderState(self):
     # along the diagonal of a cube
     window = np.sqrt(3) * opts.window / 100.0
 
+    useSpline = opts.interpolation in ('spline', 'true_spline')
+
     with shader.loaded():
         changed = False
         changed |= shader.set('imageTexture',     0)
@@ -83,7 +85,7 @@ def updateShaderState(self):
         changed |= shader.set('textureMax',       textureMax)
         changed |= shader.set('img2CmapXform',    img2CmapXform)
         changed |= shader.set('imageShape',       imageShape)
-        changed |= shader.set('useSpline',        opts.interpolation == 'spline')
+        changed |= shader.set('useSpline',        useSpline)
         changed |= shader.set('clipLow',          clipLow)
         changed |= shader.set('clipHigh',         clipHigh)
         changed |= shader.set('invertClip',       opts.invertClipping)
