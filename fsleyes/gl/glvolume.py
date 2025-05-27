@@ -611,8 +611,13 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        if interp == 'true_spline': prefilter = textures.splineFilter
-        else:                       prefilter = None
+        prefilter = kwargs.pop('prefilter', None)
+
+        if interp == 'true_spline':
+            if prefilter is None:
+                prefilter = textures.splineFilter
+            else:
+                prefilter = lambda d: textures.splineFilter(prefilter(d))
 
         if interp == 'none': interp = gl.GL_NEAREST
         else:                interp = gl.GL_LINEAR
