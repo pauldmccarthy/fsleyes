@@ -32,3 +32,4 @@ from .rendertexture      import (RenderTexture,
 from .rendertexturestack import  RenderTextureStack
 from .manager            import (ColourMapTextureManager,
                                  AuxImageTextureManager)
+from .data               import  splineFilter

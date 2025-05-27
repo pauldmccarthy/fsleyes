@@ -12,7 +12,6 @@ encapsulates the data and logic required to render 2D slice of an
 import logging
 
 import numpy                     as np
-from   scipy                 import ndimage
 import OpenGL.GL                 as gl
 
 import fsl.utils.idle            as idle
@@ -612,7 +611,7 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        if interp == 'true_spline': prefilter = textures.splineFilter
         else:                       prefilter = None
 
         if interp == 'none': interp = gl.GL_NEAREST
@@ -949,7 +948,7 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         if opts.enableOverrideDataRange: normRange = opts.overrideDataRange
         else:                            normRange = None
 
-        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        if interp == 'true_spline': prefilter = textures.splineFilter
         else:                       prefilter = None
 
         if interp == 'none': interp = gl.GL_NEAREST

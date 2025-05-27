@@ -10,7 +10,6 @@ functionality for rendering an :class:`.Image` overlay as a binary mask.
 
 import logging
 
-from   scipy                 import ndimage
 import OpenGL.GL                 as gl
 
 import fsl.utils.idle            as idle
@@ -237,7 +236,7 @@ class GLMask(glimageobject.GLImageObject, globject.GLObject):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        if interp == 'true_spline': prefilter = textures.splineFilter
         else:                       prefilter = None
 
         if interp == 'none': interp = gl.GL_NEAREST
@@ -399,7 +398,7 @@ class GLMask(glimageobject.GLImageObject, globject.GLObject):
         """
         interp = self.opts.interpolation
 
-        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        if interp == 'true_spline': prefilter = textures.splineFilter
         else:                       prefilter = None
 
         if interp == 'none': interp = gl.GL_NEAREST

@@ -10,13 +10,13 @@ vector :class:`.Image` overlays in RGB mode.
 
 
 import numpy               as np
-from   scipy           import ndimage
 import OpenGL.GL           as gl
 
 
 import fsl.data.dtifit     as dtifit
 import fsleyes.gl          as fslgl
 import fsleyes.gl.routines as glroutines
+import fsleyes.gl.textures as textures
 import fsleyes.gl.glvector as glvector
 
 
@@ -97,9 +97,9 @@ class GLRGBVector(glvector.GLVector):
             # Calculate spline coefficients
             # for true spline interpolation
             if self.opts.interpolation == 'true_spline':
-                data[0] = ndimage.spline_filter(data[0])
-                data[1] = ndimage.spline_filter(data[1])
-                data[2] = ndimage.spline_filter(data[2])
+                data[0] = textures.splineFilter(data[0])
+                data[1] = textures.splineFilter(data[1])
+                data[2] = textures.splineFilter(data[2])
 
             return data
 

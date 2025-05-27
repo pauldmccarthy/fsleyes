@@ -9,7 +9,6 @@ RGB(A) :class:`.Image` overlays.
 """
 
 import numpy                    as np
-from   scipy                import ndimage
 import OpenGL.GL                as gl
 
 import fsl.utils.idle           as idle
@@ -154,7 +153,7 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
         nvals   = self.overlay.nvals
         interp  = self.opts.interpolation
 
-        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        if interp == 'true_spline': prefilter = textures.splineFilter
         else:                       prefilter = None
 
         if interp == 'none': interp = gl.GL_NEAREST
@@ -183,7 +182,7 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
 
         interp = self.opts.interpolation
 
-        if interp == 'true_spline': prefilter = ndimage.spline_filter
+        if interp == 'true_spline': prefilter = textures.splineFilter
         else:                       prefilter = None
 
         if interp == 'none': interp = gl.GL_NEAREST

@@ -14,13 +14,15 @@
    oneChannelFormat
    getTextureType
    prepareData
+   splineFilter
 """
 
 
 import logging
 import inspect
 
-import numpy as np
+from   scipy import ndimage
+import numpy     as np
 
 from   fsl.utils       import memoize
 from   fsl.transform   import affine
@@ -407,3 +409,10 @@ def prepareData(data,
         data = data.astype(np.float32)
 
     return data, voxValXform, invVoxValXform
+
+
+def splineFilter(data):
+    """Wrapper for ``scipy.ndimage.spline_filter``. Applies a pre-filter
+    to the given data to make it suitable for spline interpolation.
+    """
+    return ndimage.spline_filter(data, order=3, output=data.dtype)
