@@ -24,6 +24,7 @@ cli_tests = """
 {{makevol('4d', 4)}} -ot rgb
 {{makevol('4d', 3)}} -ot rgb -in linear
 {{makevol('4d', 3)}} -ot rgb -in spline
+{{makevol('4d', 3)}} -ot rgb -in true_spline
 
 {{makevol('4d', 3)}} -ot rgb -rc 1 1 0
 {{makevol('4d', 3)}} -ot rgb -gc 1 1 0

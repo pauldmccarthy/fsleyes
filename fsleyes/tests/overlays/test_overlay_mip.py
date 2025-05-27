@@ -19,6 +19,7 @@ cli_tests = """
                4d.nii.gz     -ot mip
                3d.nii.gz     -ot mip -in linear
                3d.nii.gz     -ot mip -in spline
+               3d.nii.gz     -ot mip -in true_spline
 {{zero_centre('3d.nii.gz')}} -ot mip -m
 {{zero_centre('3d.nii.gz')}} -ot mip -ab
                3d.nii.gz     -ot mip -cm hot
