@@ -15,7 +15,7 @@ FSLeyes
 
 
 `FSLeyes <https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes>`_ is the `FSL
-<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki>`_ image viewer.
+<https://fsl.fmrib.ox.ac.uk/fsl/docs/>`_ image viewer.
 
 
 Installation
@@ -29,7 +29,7 @@ FSLeyes is a GUI application written in Python, and built on `wxPython
 In the majority of cases, you should be able to follow the installation
 instructions outlined at the FSLeyes home page:
 
-https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes.
+https://fsl.fmrib.ox.ac.uk/fsl/docs/#/utilities/fsleyes
 
 
 Dependencies

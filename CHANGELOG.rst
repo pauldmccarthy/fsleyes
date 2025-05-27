@@ -31,7 +31,7 @@ Changed
   ``--autoDisplay`` flag is used, or when loaded from the FEAT cluster
   panel (!471).
 * Plot panels will now use a solid line style by default for all overlays,
-  rather than cycling throughh all possible line styles.  The default line
+  rather than cycling through all possible line styles.  The default line
   colour scheme has also been expanded and improved (!471).
 
 

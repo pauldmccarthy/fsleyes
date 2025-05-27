@@ -2,6 +2,7 @@
 ====================
 
 .. toctree::
+   :hidden:
 
    fsleyes.profiles.histogramprofile
    fsleyes.profiles.lightboxviewprofile
