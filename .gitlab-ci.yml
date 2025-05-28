@@ -179,6 +179,9 @@ build-docker-image-fsleyes-py313-wxpy4-gtk3:
     # Disable MR pipelines
     - if:   '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
+    # Don't run on upstream repo
+    - if:   '$CI_PROJECT_PATH == $UPSTREAM_PROJECT'
+      when: never
     # Set FSLEYES_SKIP_TESTS to skip tests
     - if:   '$FSLEYES_SKIP_TESTS != null'
       when: never
