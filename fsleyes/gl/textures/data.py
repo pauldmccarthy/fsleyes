@@ -200,7 +200,7 @@ def getTextureType(normalise, dtype, nvals):
 
       - it is of type ``float32``, *and* this GL environment has support
         for floating point textures. Support for floating point textures
-        is determined by the :func:`canUseFlotaTextures` function.
+        is determined by the :func:`canUseFloatTextures` function.
 
 
     In all other cases, the data needs to be converted to a supported data
