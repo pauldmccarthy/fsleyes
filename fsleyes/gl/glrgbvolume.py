@@ -8,7 +8,6 @@
 RGB(A) :class:`.Image` overlays.
 """
 
-
 import numpy                    as np
 import OpenGL.GL                as gl
 
@@ -152,9 +151,13 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
 
         texName = '{}_{}' .format(type(self).__name__, id(self.image))
         nvals   = self.overlay.nvals
+        interp  = self.opts.interpolation
 
-        if self.opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                                 interp = gl.GL_LINEAR
+        if interp == 'true_spline': prefilter = textures.splineFilter
+        else:                       prefilter = None
+
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
 
         if nvals == 1:
             nvals = self.overlay.shape[-1]
@@ -166,6 +169,7 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
             self.overlay,
             nvals=nvals,
             interp=interp,
+            prefilter=prefilter,
             notify=False)
 
         self.imageTexture.register(self.name, self.__imageTextureChanged)
@@ -176,12 +180,15 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
         Updates the image texture.
         """
 
-        opts = self.opts
+        interp = self.opts.interpolation
 
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
+        if interp == 'true_spline': prefilter = textures.splineFilter
+        else:                       prefilter = None
 
-        self.imageTexture.set(interp=interp)
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
+
+        self.imageTexture.set(interp=interp, prefilter=prefilter)
 
 
     def __imageTextureChanged(self, *a):

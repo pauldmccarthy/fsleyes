@@ -71,6 +71,7 @@ cli_tests = """
 -xz 750 -yz 750 -zz 750 3d.nii.gz -in none
 -xz 750 -yz 750 -zz 750 3d.nii.gz -in linear
 -xz 750 -yz 750 -zz 750 3d.nii.gz -in spline
+-xz 750 -yz 750 -zz 750 3d.nii.gz -in true_spline
 
 # 4D volume
 4d.nii.gz -v 0 -b 40 -c 90

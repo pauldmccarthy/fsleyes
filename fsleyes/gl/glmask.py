@@ -222,6 +222,7 @@ class GLMask(glimageobject.GLImageObject, globject.GLObject):
 
         opts     = self.opts
         texName  = '{}_{}' .format(type(self).__name__, id(self.image))
+        interp   = opts.interpolation
         unsynced = (opts.getParent() is None or
                     not opts.isSyncedToParent('volume'))
 
@@ -235,8 +236,11 @@ class GLMask(glimageobject.GLImageObject, globject.GLObject):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
+        if interp == 'true_spline': prefilter = textures.splineFilter
+        else:                       prefilter = None
+
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
 
         self.imageTexture = glresources.get(
             texName,
@@ -244,6 +248,7 @@ class GLMask(glimageobject.GLImageObject, globject.GLObject):
             texName,
             self.image,
             interp=interp,
+            prefilter=prefilter,
             volume=opts.index()[3:],
             notify=False)
 
@@ -391,9 +396,15 @@ class GLMask(glimageobject.GLImageObject, globject.GLObject):
         """Called when the :attr:`.MaskOpts.interpolation` changes. Updates the
         image texture.
         """
-        if self.opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                                 interp = gl.GL_LINEAR
-        self.imageTexture.set(interp=interp)
+        interp = self.opts.interpolation
+
+        if interp == 'true_spline': prefilter = textures.splineFilter
+        else:                       prefilter = None
+
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
+
+        self.imageTexture.set(interp=interp, prefilter=prefilter)
 
 
     def __imageTextureChanged(self, *a):

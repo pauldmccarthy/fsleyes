@@ -36,6 +36,13 @@ cli_tests = """
 3d.nii.gz -ot mask -t  0    7450
 3d.nii.gz -ot mask -t  0    7400
 3d.nii.gz -ot mask -t  3200 6100
+3d.nii.gz -ot mask -t  3200 6100         -in linear
+3d.nii.gz -ot mask -t  3200 6100         -in spline
+3d.nii.gz -ot mask -t  3200 6100         -in true_spline
+3d.nii.gz -ot mask -t  3200 6100 -o -w 5
+3d.nii.gz -ot mask -t  3200 6100 -o -w 5 -in linear
+3d.nii.gz -ot mask -t  3200 6100 -o -w 5 -in spline
+3d.nii.gz -ot mask -t  3200 6100 -o -w 5 -in true_spline
 
 {{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -t -1   10
 {{binarise('3d.nii.gz', 3200, 6100)}} -ot mask -t -1   0

@@ -55,13 +55,14 @@ def updateShaderState(self):
     shader     = self.shader
     imageShape = np.array(self.image.shape[:3])
     vvx        = self.imageTexture.voxValXform
+    useSpline  = opts.interpolation in ('spline', 'true_spline')
 
     with shader.loaded():
         changed  = False
         changed |= shader.set('imageTexture',  0)
         changed |= shader.set('voxValXform',   vvx)
         changed |= shader.set('imageShape',    imageShape)
-        changed |= shader.set('useSpline',     opts.interpolation == 'spline')
+        changed |= shader.set('useSpline',     useSpline)
         changed |= shader.set('threshold',     self.getThreshold())
         changed |= shader.set('invert',        opts.invert)
         changed |= shader.set('colour',        self.getColour())

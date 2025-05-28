@@ -77,6 +77,7 @@ cli_splinterp_test = """
 # spline should be default
 -dl               3d
 -dl               3d -in spline
+-dl               3d -in true_spline
 -dl -rot 30 30 30 3d
 -dl -rot 30 30 30 3d -cp 50 90 45
 """

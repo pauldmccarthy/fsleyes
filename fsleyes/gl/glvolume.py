@@ -9,7 +9,6 @@ encapsulates the data and logic required to render 2D slice of an
 :class:`.Image` instance.
 """
 
-
 import logging
 
 import numpy                     as np
@@ -597,6 +596,7 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         """
 
         opts     = self.opts
+        interp   = opts.interpolation
         texName  = self.texName
         unsynced = self.testUnsynced()
 
@@ -611,8 +611,16 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
+        prefilter = kwargs.pop('prefilter', None)
+
+        if interp == 'true_spline':
+            if prefilter is None:
+                prefilter = textures.splineFilter
+            else:
+                prefilter = lambda d: textures.splineFilter(prefilter(d))
+
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
 
         if opts.enableOverrideDataRange: normRange = opts.overrideDataRange
         else:                            normRange = None
@@ -623,6 +631,7 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
             texName,
             self.image,
             interp=interp,
+            prefilter=prefilter,
             channel=opts.channel,
             volume=opts.index()[3:],
             normaliseRange=normRange,
@@ -938,18 +947,23 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         called when other properties, which require a texture refresh, change.
         """
         opts       = self.opts
+        interp     = opts.interpolation
         volRefresh = kwa.pop('volRefresh', False)
-
-        if opts.interpolation == 'none': interp = gl.GL_NEAREST
-        else:                            interp = gl.GL_LINEAR
 
         if opts.enableOverrideDataRange: normRange = opts.overrideDataRange
         else:                            normRange = None
+
+        if interp == 'true_spline': prefilter = textures.splineFilter
+        else:                       prefilter = None
+
+        if interp == 'none': interp = gl.GL_NEAREST
+        else:                interp = gl.GL_LINEAR
 
         self.imageTexture.set(volume=opts.index()[3:],
                               channel=opts.channel,
                               interp=interp,
                               volRefresh=volRefresh,
+                              prefilter=prefilter,
                               normaliseRange=normRange)
 
         self.clipTexture    .set(interp=interp, volRefresh=False)

@@ -205,7 +205,7 @@ class ColourMapOpts:
     """
 
 
-    modulateRange = props.Bounds(ndims=1)
+    modulateRange = props.Bounds(ndims=1, clamped=False)
     """Range used to determine how much to modulate :attr:`.Display.alpha`
     by, when :attr:`modulateAlpha` is active.
     """

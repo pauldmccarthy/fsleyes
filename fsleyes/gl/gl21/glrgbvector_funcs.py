@@ -61,7 +61,7 @@ def updateShaderState(self):
         return
 
     opts      = self.opts
-    useSpline = opts.interpolation == 'spline'
+    useSpline = opts.interpolation in ('spline', 'true_spline')
 
     with self.shader.loaded():
         changed = glvector_funcs.updateShaderState(self, useSpline=useSpline)

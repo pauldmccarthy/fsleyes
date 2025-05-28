@@ -21,6 +21,7 @@ dti/dti_V1 -ot rgbvector
 dti/dti_V1 -ot rgbvector -in none
 dti/dti_V1 -ot rgbvector -in linear
 dti/dti_V1 -ot rgbvector -in spline
+dti/dti_V1 -ot rgbvector -in true_spline
 
 dti/dti_V1 -ot rgbvector            -b 75 -c 75
 dti/dti_V1 -ot rgbvector -in none   -b 75 -c 75
@@ -42,7 +43,7 @@ dti/dti_V1 -ot rgbvector -in spline -b 25 -c 25
 # Images with intent code 2003 should be
 # automaticallt shown as RGB vectors, so
 # there shouldn't be any need to specify
-# The overlay type at the command-line.
+# the overlay type at the command-line.
 {{mul('dti/dti_V1', 3.0)}} -in spline -nr
 """
 
@@ -58,7 +59,12 @@ def test_overlay_rgbvector():
 
 def test_overlay_rgbvector_nofloattextures():
     texdata.canUseFloatTextures.invalidate()
+
+    # true_spline doesn't work with integer types
+    tests = cli_tests.split('\n')
+    tests = [t for t in tests if 'true_spline' not in t]
+    tests = '\n'.join(tests)
+
     with mock.patch('fsleyes.gl.textures.data.canUseFloatTextures',
                     return_value=(False, None, None)):
-        run_cli_tests('test_overlay_rgbvector',
-                      cli_tests, extras=extras)
+        run_cli_tests('test_overlay_rgbvector', tests, extras=extras)

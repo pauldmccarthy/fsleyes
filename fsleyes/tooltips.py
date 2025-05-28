@@ -130,7 +130,8 @@ properties = TypeDict({
     'VolumeOpts.interpolation' :
     'Interpolate the image data on the display. You can choose no  '
     'interpolation (equivalent to nearest neighbour interpolation), linear '
-    'interpolation, or third-order spline (cubic) interpolation.',
+    'interpolation, third-order spline (cubic) interpolation, or prefiltered '
+    'spline interpolation.',
 
     'VolumeOpts.enableOverrideDataRange' :
     'Override the actual data range of an image with a user-specified '

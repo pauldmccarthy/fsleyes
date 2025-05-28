@@ -286,9 +286,15 @@ The following settings are available for volume overlays:
 - **Interpolation** You can interpolate the image data (resampled to the
   resolution of your display). This is useful for generating figures, and to
   smooth over voxel or slice boundaries for oblique images (images which are
-  not orthogonal to the display coordinate system). You can choose between no
-  interpolation (equivalent to nearest-neighbour), tri-linear, or spline [*]_
-  interpolation.
+  not orthogonal to the display coordinate system). You can choose between the
+  following options [*]_:
+
+   - no interpolation (equivalent to nearest-neighbour),
+   - tri-linear interpolation,
+   - cubic spline interpolation, or
+   - pre-filtered cubic spline interpolation. This applies a pre-fitlering
+     function to the image data to ensure that the interpolated data has the
+     same intensity at the voxel centres as the underlying image data.
 
   .. [*] Spline interpolation may not be available if you are using
          FSLeyes over a SSH/X11 connection, in a VNC session, on an
@@ -500,8 +506,8 @@ Mask overlays have the following settings:
   the range are excluded.
 
 
-- **Interpolation** This setting allows to interpolate the mask overaly on the
-  display.
+- **Interpolation** This setting allows you to interpolate the mask overlay on
+  the display.
 
 
 - **Show outline only** This setting will cause only the mask outline to be

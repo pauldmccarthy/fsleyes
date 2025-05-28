@@ -11,6 +11,28 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.15.0 (Thursday 29th May 2025)
+-------------------------------
+
+
+Added
+^^^^^
+
+
+* New *Prefiltered spline interpolation* option for volume interpolation
+  (``-in true_spline`` on the command-line), which applies a pre-filter to
+  image data. This results in less smooth interpolation, but which is equal
+  to the underlying image data at voxel centres (!473).
+
+
+Changed
+^^^^^^^
+
+
+* The volume *Modulate range* limits can now be set to values smaller/greater
+  than the minimum/maximum image voxel intensities (!473).
+
+
 1.14.2 (Wednesday 26th February 2025)
 -------------------------------------
 
@@ -31,7 +53,7 @@ Changed
   ``--autoDisplay`` flag is used, or when loaded from the FEAT cluster
   panel (!471).
 * Plot panels will now use a solid line style by default for all overlays,
-  rather than cycling throughh all possible line styles.  The default line
+  rather than cycling through all possible line styles.  The default line
   colour scheme has also been expanded and improved (!471).
 
 

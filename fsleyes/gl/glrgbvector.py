@@ -12,9 +12,11 @@ vector :class:`.Image` overlays in RGB mode.
 import numpy               as np
 import OpenGL.GL           as gl
 
+
 import fsl.data.dtifit     as dtifit
 import fsleyes.gl          as fslgl
 import fsleyes.gl.routines as glroutines
+import fsleyes.gl.textures as textures
 import fsleyes.gl.glvector as glvector
 
 
@@ -90,7 +92,16 @@ class GLRGBVector(glvector.GLVector):
             # We must make the vector values absolute,
             # otherwise we cannot perform interpolation
             # on the texture when displaying it.
-            return np.abs(data)
+            data = np.abs(data)
+
+            # Calculate spline coefficients
+            # for true spline interpolation
+            if self.opts.interpolation == 'true_spline':
+                data[0] = textures.splineFilter(data[0])
+                data[1] = textures.splineFilter(data[1])
+                data[2] = textures.splineFilter(data[2])
+
+            return data
 
         def prefilterRange(dmin, dmax):
             return max((0, dmin)), max((abs(dmin), abs(dmax)))
@@ -160,7 +171,7 @@ class GLRGBVector(glvector.GLVector):
         if opts.interpolation == 'none': interp = gl.GL_NEAREST
         else:                            interp = gl.GL_LINEAR
 
-        self.imageTexture   .set(interp=interp)
+        self.imageTexture   .set(interp=interp, refresh=True)
         self.modulateTexture.set(interp=interp)
         self.clipTexture    .set(interp=interp)
         self.colourTexture  .set(interp=interp)
