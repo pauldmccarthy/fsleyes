@@ -11,8 +11,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.15.0 (Wednesday 28th May 2025)
---------------------------------
+1.15.0 (Thursday 29th May 2025)
+-------------------------------
 
 
 Added
