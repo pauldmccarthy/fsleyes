@@ -176,17 +176,17 @@ build-docker-image-fsleyes-py313-wxpy4-gtk3:
 
 .test_rules: &test_rules
   rules:
+    # Disable MR pipelines
+    - if:   '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
     # Set FSLEYES_SKIP_TESTS to skip tests
     - if:   '$FSLEYES_SKIP_TESTS != null'
       when: never
-    # Don't test if  "[skip-tests]"
+    # Don't test if "[skip-tests]"
     # is in the commit message
     - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
       when: never
-    - if:   '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: on_success
-    - if:   '$CI_PIPELINE_SOURCE == "web"'
-      when: on_success
+    - when: on_success
 
 # some test jobs are only run on the upstream repo
 .test_rules_upstream: &test_rules_upstream
@@ -195,17 +195,20 @@ build-docker-image-fsleyes-py313-wxpy4-gtk3:
     # branch, so we don't need to test them.
     - if:   '$CI_COMMIT_TAG != null'
       when: never
-    # Don't test if  "[skip-tests]"
+    # Don't test if "[skip-tests]"
     # is in the commit message
     - if:   '$CI_COMMIT_MESSAGE =~ /\[skip-tests\]/'
       when: never
     # Set FSLEYES_SKIP_TESTS to skip tests
     - if:   '$FSLEYES_SKIP_TESTS != null'
       when: never
+    # Only run on upstream repo
     - if:   '$CI_PROJECT_PATH != $UPSTREAM_PROJECT'
       when: never
+    # Only run on release branches
     - if:   $CI_PROJECT_PATH == $UPSTREAM_PROJECT && $CI_COMMIT_BRANCH =~ /^v.+$/
       when: on_success
+    # Allow manual pipeline creation
     - if:   '$CI_PIPELINE_SOURCE == "web"'
       when: on_success
 
