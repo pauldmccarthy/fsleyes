@@ -303,7 +303,7 @@ class Scene3DViewProfile(profiles.Profile):
             xyz = affine.transform([x, y, z], screen2Display)
             self.displayCtx.location.xyz = xyz
 
-        else:
+        elif isinstance(ovl, Mesh):
             opts      = self.displayCtx.getOpts(ovl)
             rayOrigin = canvasPos
             rayDir    = affine.normalise(farPos - canvasPos)
