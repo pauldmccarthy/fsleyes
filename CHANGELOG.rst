@@ -11,6 +11,21 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+X.X.X (Under Development)
+-------------------------
+
+
+Fixed
+^^^^^
+
+
+* FSLeyes can now load tractogram (``.trk``/``.tck``) files which contain
+  "degenerate" streamlines that only have one vertex (!477).
+* Avoid a (harmless) error being printed when a tractogram overlay is
+  selected, and the user shift+clicks on a 3D view (which would select the
+  nearest vertex/voxel when an image/mesh overlay is selected) (!477).
+
+
 1.15.0 (Thursday 29th May 2025)
 -------------------------------
 
