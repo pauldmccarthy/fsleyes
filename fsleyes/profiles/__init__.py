@@ -235,15 +235,13 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
     where ``modeName`` is an identifier for the profile mode (see the
     :meth:`__init__` method), and ``eventName`` is one of the following:
 
-      - ``LeftMouseMove``
+      - ``MouseMove``
       - ``LeftMouseDown``
       - ``LeftMouseDrag``
       - ``LeftMouseUp``
-      - ``RightMouseMove``
       - ``RightMouseDown``
       - ``RightMouseDrag``
       - ``RightMouseUp``
-      - ``MiddleMouseMove``
       - ``MiddleMouseDown``
       - ``MiddleMouseDrag``
       - ``MiddleMouseUp``
@@ -568,7 +566,7 @@ class Profile(props.SyncableHasProperties, actions.ActionProvider):
         # After the first event, it
         # will be a tuple of strings
         # containing the (mode, event),
-        # e.g. ('nav', 'LeftMouseMove').
+        # e.g. ('nav', 'MouseMove').
         # This is set in the __getHandler
         # method.
         #
