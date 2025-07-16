@@ -172,9 +172,17 @@ class Tractogram:
         offsets = self.offsets
         orients = np.zeros(verts.shape, dtype=np.float32)
 
-        diffs               = verts[1:, :] - verts[:-1, :]
-        orients[1:,      :] = affine.normalise(diffs)
-        orients[offsets, :] = orients[offsets + 1, :]
+        diffs          = verts[1:, :] - verts[:-1, :]
+        orients[1:, :] = affine.normalise(diffs)
+
+        # Handle invalid streamlines (of length 1)
+        valid = self.lengths > 1
+
+        # Set orientation of first vertex to that of the second.
+        orients[offsets[valid], :] = orients[offsets[valid] + 1, :]
+
+        # Set orientations of invalid streamlines to 0
+        orients[offsets[~valid], :] = 0
 
         return orients
 
