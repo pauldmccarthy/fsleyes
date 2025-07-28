@@ -462,8 +462,10 @@ class FSLeyesFrame(wx.Frame):
     def addViewPanel(
             self,
             panelCls      : Type[viewpanel.ViewPanel],
-            title         : str  = None,
-            defaultLayout : bool = True,
+            title         : str   = None,
+            defaultLayout : bool  = True,
+            location      : int   = None,
+            size          : float = None,
             **kwargs) -> viewpanel.ViewPanel:
         """Adds a new :class:`.ViewPanel` to the centre of the frame, and a
         menu item allowing the user to configure the view.
@@ -478,13 +480,29 @@ class FSLeyesFrame(wx.Frame):
                             :meth:`viewPanelDefaultLayout` is called, to add
                             a default set of control panels to the view.
 
+        :arg location:      View location - one of ``wx.TOP``, ``wx.BOTTOM``,
+                            ``wx.LEFT``, or ``wx.RIGHT``. If not provided, the
+                            static :meth:`.ViewPanel.defaultLocation` method
+                            is called. If that method returns ``None``, a
+                            default layout strategy is used. This argument is
+                            ignored if there are no view panels already open,
+                            in which case the view is placed in the centre of
+                            the frame.
+
+        :arg size:          View size, as a proportion between 0 and 1 of the
+                            current frame size. Interpreted as width/height
+                            depending on the view location, and handled in
+                            the same manner as ``location``.
+
         :returns: The newly created ``ViewPanel``.
 
         All other arguments are passed to the ``__init__`` method of the child
         :class:`.DisplayContext` that is created for the new view.
         """
-        import fsleyes.views.plotpanel  as plotpanel
-        import fsleyes.views.shellpanel as shellpanel
+        if location not in (None, wx.TOP, wx.BOTTOM, wx.LEFT, wx.RIGHT):
+            raise ValueError(f'Invalid value for location: {location}')
+        if (size is not None) and (not 0 < size <= 1):
+            raise ValueError(f'Invalid value for size: {size}')
 
         if title is None:
             title = panelCls.title()
@@ -544,41 +562,16 @@ class FSLeyesFrame(wx.Frame):
         # If this is not the first view panel,
         # give it a sensible initial size.
         if panelId > 1:
-            width, height = self.GetClientSize().Get()
-            defaultLoc    = panelCls.defaultLocation()
 
-            # If the class implements ViewPanel.defaultLocation,
-            # use it
-            if defaultLoc is not None:
-                loc, prop = defaultLoc
-                if   loc in (wx.TOP, wx.BOTTOM): height = int(height * prop)
-                elif loc in (wx.LEFT, wx.RIGHT): width  = int(width  * prop)
-
-            # Otherwise use the following defaults...
-            # PlotPanels are initially placed along
-            # the bottom
-            elif isinstance(panel, plotpanel.PlotPanel):
-                loc    = wx.BOTTOM
-                height = height // 3
-
-            # As are ShellPanels, albeit
-            # a bit smaller
-            elif isinstance(panel, shellpanel.ShellPanel):
-                loc    = wx.BOTTOM
-                height = height // 5
-
-            # Other panels (e.g. CanvasPanels)
-            # are placed on the right
-            else:
-                loc   = wx.RIGHT
-                width = width // 2
+            width, height      = self.GetClientSize().Get()
+            loc, width, height = self.viewPanelLocationAndSize(
+                panelCls, width, height, location, size)
 
             if   loc == wx.TOP:    paneInfo.Top()
             elif loc == wx.BOTTOM: paneInfo.Bottom()
             elif loc == wx.LEFT:   paneInfo.Left()
             elif loc == wx.RIGHT:  paneInfo.Right()
             paneInfo.BestSize(width, height)
-
 
         self.__viewPanels.append(panel)
         self.__viewPanelDCs[     panel] = childDC
@@ -598,6 +591,64 @@ class FSLeyesFrame(wx.Frame):
             self.viewPanelDefaultLayout(panel)
 
         return panel
+
+
+    @staticmethod
+    def viewPanelLocationAndSize(
+            panelCls      : Type[viewpanel.ViewPanel],
+            width         : int   = None,
+            height        : int   = None,
+            location      : int   = None,
+            size          : float = None):
+        """Called by :meth:`addViewPanel`. Calculates the width, height, and
+        location to be used for the new view.
+
+        :arg panelCls: The :class:`.ViewPanel` type being added.
+        :arg width:    Current frame width.
+        :arg height:   Current frame height.
+        :arg location: View location, passed to ``addViewPanel``.
+        :arg size:     View size, passed to ``addViewPanel``.
+
+        :returns:      A tuple containing
+                        - the location code (e.g. ``wx.TOP``, etc)
+                        - Width in pixels
+                        - Height in pixels
+        """
+
+        import fsleyes.views.plotpanel  as plotpanel
+        import fsleyes.views.shellpanel as shellpanel
+
+        # Get the panel's default location/size
+        # if not specified by caller
+        defaultLoc = panelCls.defaultLocation()
+
+        # Use a default strategy for views that
+        # don't implement defaultLocation
+        if defaultLoc is None:
+            # PlotPanels are initially placed along
+            # the bottom
+            if issubclass(panelCls, plotpanel.PlotPanel):
+                defaultLoc = (wx.BOTTOM, 0.333)
+
+            # As are ShellPanels, albeit
+            # a bit smaller
+            elif issubclass(panelCls, shellpanel.ShellPanel):
+                defaultLoc = (wx.BOTTOM, 0.2)
+
+            # Other panels (e.g. CanvasPanels)
+            # are placed on the right
+            else:
+                defaultLoc = (wx.RIGHT, 0.5)
+
+        # If the caller specified location/
+        # proportion, use them over the default
+        if location is None: location = defaultLoc[0]
+        if size     is None: size     = defaultLoc[1]
+
+        if   location in (wx.TOP, wx.BOTTOM): height = int(height * size)
+        elif location in (wx.LEFT, wx.RIGHT): width  = int(width  * size)
+
+        return location, width, height
 
 
     def viewPanelDefaultLayout(self, viewPanel : viewpanel.ViewPanel):
