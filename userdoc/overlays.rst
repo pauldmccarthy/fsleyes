@@ -292,7 +292,7 @@ The following settings are available for volume overlays:
    - no interpolation (equivalent to nearest-neighbour),
    - tri-linear interpolation,
    - cubic spline interpolation, or
-   - pre-filtered cubic spline interpolation. This applies a pre-fitlering
+   - pre-filtered cubic spline interpolation. This applies a pre-filtering
      function to the image data to ensure that the interpolated data has the
      same intensity at the voxel centres as the underlying image data.
 
