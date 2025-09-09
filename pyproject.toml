@@ -96,7 +96,7 @@ render = "fsleyes.render:main"
 
 
 [tool.setuptools_scm]
-
+version_scheme = "release-branch-semver"
 
 [tool.setuptools.packages.find]
 include = ["fsleyes*"]
