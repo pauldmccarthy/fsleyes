@@ -161,6 +161,12 @@ class Action(props.HasProperties):
         """
         return self.__instance
 
+    @instance.setter
+    def instance(self, instance):
+        """Set the instance that owns the function that this ``Action``
+        invokes.
+        """
+        self.__instance = instance
 
     @property
     def function(self):

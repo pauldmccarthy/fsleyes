@@ -53,7 +53,7 @@ class CorrelateAction(base.Action):
     @staticmethod
     def ignoreTool():
         """Tells the FSLeyes plugin system not to add the ``CorrelateAction``
-        class as an option to the FSLeyes toolsmenu.  Instead, the
+        class as an option to the FSLeyes tools menu.  Instead, the
         :class:`PearsonCorrelateAction` action (and other potential future
         sub-classes) is added.
         """
