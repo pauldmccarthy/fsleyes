@@ -1417,7 +1417,8 @@ choices = TypeDict({
                                      'alpha'       : 'Transparency'},
     'LineVectorOpts.modulateMode' : {'brightness'  : 'Brightness',
                                      'alpha'       : 'Transparency',
-                                     'lineLength'  : 'Line length'},
+                                     'lineLength'  : 'Line length',
+                                     'lineWidth'   : 'Line width'},
 
     'RefImageOpts.refImage.none'  : 'No reference image',
 

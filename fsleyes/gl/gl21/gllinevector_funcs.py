@@ -134,6 +134,8 @@ def updateShaderState(self):
 
     modLength = (opts.modulateMode == 'lineLength' and
                  opts.modulateImage is not None)
+    modWidth  = (opts.modulateMode == 'lineWidth' and
+                 opts.modulateImage is not None)
 
     with shader.loaded():
         changed  = glvector_funcs.updateShaderState(self)
@@ -145,6 +147,7 @@ def updateShaderState(self):
         changed |= shader.set('xFlip',           xFlip)
         changed |= shader.set('unitLength',      opts.unitLength)
         changed |= shader.set('modulateLength',  modLength)
+        changed |= shader.set('modulateWidth',   modWidth)
 
     return changed
 

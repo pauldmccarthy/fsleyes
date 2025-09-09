@@ -11,8 +11,25 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-X.X.X (Under Development)
--------------------------
+1.16.0 (Tuesday 9th September 2025)
+-----------------------------------
+
+
+Added
+^^^^^
+
+* The width of line vectors can now be modulated by another image. This
+  is achieved by setting the *Modulation mode* to *Line width*, and on
+  the command-line via ``--modulateMode lineWidth`` (!479).
+
+
+Changed
+^^^^^^^
+
+
+* The :meth:`FSLeyesFrame.addViewPanel` method now allows the caller to
+  specify the location (top/bottom/left/right) and proportional size of
+  newly added views (!478).
 
 
 Fixed

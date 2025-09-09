@@ -1371,7 +1371,7 @@ HELP = td.TypeDict({
     'LineVectorOpts.lengthScale'  : 'Scale line length by this '
                                     'percentage (10-500, default: 100)',
     'LineVectorOpts.modulateMode' : 'Modulate vector \'brightness\' (default), '
-                                   '\'alpha\', or \'lineLength\'.',
+                                   '\'alpha\', \'lineLength\', or \'lineWidth\'.',
     'RGBVectorOpts.interpolation' : 'Interpolation',
     'RGBVectorOpts.unitLength'    : 'Alias for --normaliseColour.',
 

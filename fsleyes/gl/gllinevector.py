@@ -215,7 +215,10 @@ class GLLineVertices:
                     ``GLLineVertices`` instance.
         """
 
-        self.__hash = None
+        self.vertices  = None
+        self.modData   = None
+        self.voxCoords = None
+        self.__hash    = None
         self.refresh(glvec)
 
 
@@ -224,6 +227,7 @@ class GLLineVertices:
         longer needed. Clears references to cached vertices/coordinates.
         """
         self.vertices  = None
+        self.modData   = None
         self.voxCoords = None
 
 
@@ -251,15 +255,16 @@ class GLLineVertices:
         call to :meth:`refresh`).
         """
         opts    = glvec.opts
-        hashval = (hash(opts.transform)                    ^
-                   hash(opts.orientFlip)                   ^
-                   hash(opts.directed)                     ^
-                   hash(opts.unitLength)                   ^
-                   hash(opts.modulateMode == 'lineLength') ^
-                   hash(opts.lengthScale))
+        hashval = (hash(opts.transform)    ^
+                   hash(opts.orientFlip)   ^
+                   hash(opts.directed)     ^
+                   hash(opts.unitLength)   ^
+                   hash(opts.lengthScale)  ^
+                   hash(opts.modulateMode in ('lineLength', 'lineWidth')))
 
-        if opts.modulateMode == 'lineLength':
+        if opts.modulateMode in ('lineLength', 'lineWidth'):
             hashval = (hashval                      ^
+                       hash(opts.modulateImage)     ^
                        hash(opts.modulateRange.xlo) ^
                        hash(opts.modulateRange.xhi))
 
@@ -327,8 +332,9 @@ class GLLineVertices:
             pixdim    = np.abs(image.pixdim[:3])
             vertices /= (pixdim / np.min(pixdim))
 
-        # Modulate vector line length
-        if (opts.modulateMode == 'lineLength' and
+        # Extract/prepare modulate data
+        modData = None
+        if (opts.modulateMode in ('lineLength', 'lineWidth') and
             opts.modulateImage is not None):
 
             # Get modulate image data
@@ -352,9 +358,15 @@ class GLLineVertices:
             modData = modData.reshape(shape[:3], order='F')
             modData = (modData + modLow) / (modHigh - modLow)
 
-            vertices[..., 0] *= modData
-            vertices[..., 1] *= modData
-            vertices[..., 2] *= modData
+            # We can apply length modulation now,
+            # but width modulation has to be applied
+            # at display time. In that case a ref to
+            # the mdoulation data is saved below.
+            if opts.modulateMode == 'lineLength':
+                vertices[..., 0] *= modData
+                vertices[..., 1] *= modData
+                vertices[..., 2] *= modData
+                modData           = None
 
         # Scale the vectors by the length scaling factor
         vertices *= opts.lengthScale / 100.0
@@ -376,6 +388,7 @@ class GLLineVertices:
                                      2,
                                      3))
 
+        self.modData  = modData
         self.vertices = vertices
         self.__hash   = self.calculateHash(glvec)
 
@@ -418,7 +431,15 @@ class GLLineVertices:
 
         # Convert line segments into rectangles so
         # we can draw lines at arbitrary widths.
-        lineWidth         = glvec.normalisedLineWidth(canvas)
+        lineWidth = glvec.normalisedLineWidth(canvas)
+
+        # Modulate width in each voxel
+        if ((opts.modulateMode == 'lineWidth') and
+            (opts.modulateImage is not None)   and
+            (self.modData       is not None)):
+            modData   = self.modData[coords[0], coords[1], coords[2]]
+            lineWidth = lineWidth * modData
+
         vertices, indices = glroutines.lineAsPolygon(vertices,
                                                      lineWidth,
                                                      zax,

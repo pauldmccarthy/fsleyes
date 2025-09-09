@@ -205,13 +205,12 @@ And an equivalent Singularity definition file::
   %help
     FSLeyes Singularity image
 
-  %environment
+
+  %post
     export MMURL=https://micro.mamba.pm/api/micromamba/linux-64/latest
     export MAMBA_ROOT_PREFIX=/micromamba
     export TZ="Europe/London"
     export DEBIAN_FRONTEND="noninteractive"
-
-  %post
     apt update
     apt install -y curl bzip2 tar libgl1 libegl1
     mkdir ${MAMBA_ROOT_PREFIX}
