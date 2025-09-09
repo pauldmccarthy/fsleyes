@@ -299,6 +299,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 act = toolType(self.overlayList, self.displayCtx, self)
                 setattr(self, name, act)
 
+                # This ViewPanel effectively owns this
+                # action.  Set ourselves as the action
+                # instance to ensure that the FSLeyesFrame
+                # doesn't delete it on refreshes.
+                act.instance = self
+
 
     def destroy(self):
         """Removes some property listeners, destroys all child panels,
