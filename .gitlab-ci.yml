@@ -340,13 +340,9 @@ build-pypi-dist:
   tags:
     - docker
 
-  # Make sure that the version in the code is
-  # up to date (i.e. equal to the tag name).
-  before_script:
-    - bash ./.ci/check_version.sh
-
   script:
    - bash ./.ci/build_pypi_dist.sh
+   - bash ./.ci/check_version.sh
 
   artifacts:
     expire_in: 1 day
