@@ -41,6 +41,8 @@ Fixed
 * Avoid a (harmless) error being printed when a tractogram overlay is
   selected, and the user shift+clicks on a 3D view (which would select the
   nearest vertex/voxel when an image/mesh overlay is selected) (!477).
+* Fixed a bug where opening a new view would cause *Tools* menu items from
+  already existing views to break (!480).
 
 
 1.15.0 (Thursday 29th May 2025)
