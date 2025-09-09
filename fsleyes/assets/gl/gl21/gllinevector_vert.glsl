@@ -42,12 +42,15 @@ uniform mat4 clipCoordXform;
 uniform mat4 modCoordXform;
 
 /*
- * Modulate the vector length by values in the
- * modulate image texture. modLow and modHigh
- * contain scaling values for converting from
- * the texture value to the original data range
+ * Modulate the vector length or width by values
+ * in the modulate image texture. modLow and
+ * modHigh * contain scaling values for converting
+ * from the texture value to the original data
+ * range. It is assumed that only one of
+ * modulateLength or modulateWidth is true.
  */
 uniform bool  modulateLength;
+uniform bool  modulateWidth;
 uniform float modLow;
 uniform float modHigh;
 
@@ -122,6 +125,7 @@ void main(void) {
   vec3  offset;
   vec3  voxCoord;
   float modValue;
+  float finalWidth = lineWidth;
 
   /*
    * Normalise the voxel coordinates to [0.0, 1.0],
@@ -144,7 +148,7 @@ void main(void) {
    */
   vector = texture3D(vectorTexture, texCoord).xyz;
 
-  if (modulateLength) {
+  if (modulateLength || modulateWidth) {
     modValue = texture3D(modulateTexture, fragModTexCoord).x;
     modValue = (modValue + modLow) / (modHigh - modLow);
   }
@@ -188,9 +192,13 @@ void main(void) {
     vector = vector * modValue;
   }
 
+  if (modulateWidth) {
+    finalWidth = finalWidth * modValue;
+  }
+
   vertex = vector * lengthScale;
   vector = vector - (camera * dot(vector, camera));
-  offset = normalize(cameraRotation * vector) * lineWidth / 2;
+  offset = normalize(cameraRotation * vector) * finalWidth / 2;
 
   /*
    * Vertices are coming in as corners of
