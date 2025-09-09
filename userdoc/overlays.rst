@@ -647,7 +647,8 @@ The following settings are available on vector overlays:
   relative to the selected *Modulate by* image.
 
 - **Modulation mode** This setting allows you to choose between modulating
-  either brightness or transparency, of the vector overlay by another image.
+  one of brightness, transparency, line width, or line length of the vector
+  overlay, by another image.
 
 - **X Colour** The colour to be used for the X vector component.
 
