@@ -1522,7 +1522,9 @@ def lineAsPolygon(vertices,
     :arg vertices: A ``(N, 3)`` array containing the line coordinates
 
     :arg width:    Line width, in units proportional to the coordinate system
-                   that ``vertices`` are defined in.
+                   that ``vertices`` are defined in. Can be either a scalar
+                   value applied to all lines, or an array of length ``N`` with
+                   a per-line width.
 
     :arg axis:     Depth axis, if the line is being drawn on a plane orthogonal
                    to the display coordinate system.
@@ -1557,6 +1559,9 @@ def lineAsPolygon(vertices,
                    set of ``(m, 3)`` indices defining the triangles to be
                    drawn.
     """
+
+    if axis is None and camera is None:
+        raise ValueError('One of axis or camera must be provided')
 
     if axis is not None:
         camera       = np.zeros(3)
@@ -1612,7 +1617,8 @@ def lineAsPolygon(vertices,
     # width, and create a rectangular region
     # representing the line.
     offset = affine.transform((projend - projstart), rot, vector=True)
-    offset = affine.normalise(offset) * width / 2
+    offset = affine.normalise(offset)
+    offset = ((offset.T) * width / 2).T
 
     # Each rectangle is drawn with two triangles.
     #
