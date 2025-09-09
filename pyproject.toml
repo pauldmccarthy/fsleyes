@@ -1,5 +1,5 @@
 [build-system]
-requires      = ["setuptools"]
+requires      = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 
@@ -90,8 +90,12 @@ style = [
 fsleyes            = "fsleyes.filtermain:main"
 fsleyes_unfiltered = "fsleyes.main:main"
 
+
 [project.scripts]
 render = "fsleyes.render:main"
+
+
+[tool.setuptools_scm]
 
 
 [tool.setuptools.packages.find]
@@ -101,10 +105,6 @@ exclude = ["fsleyes.tests*"]
 
 [tool.setuptools.package-data]
 fsleyes = ["assets/*", "tests/*"]
-
-
-[tool.setuptools.dynamic]
-version = {attr = "fsleyes.version.__version__"}
 
 
 [tool.coverage.run]
