@@ -23,9 +23,11 @@ with FSL may be slightly out of date, but it is straightforward to update
 using ``conda``.
 
 If you have an older version of FSL, it is recommended to update to the latest
-available version - you can do this by downloading and running the
-`fslinstaller.py` script, available on the `FSL website
-<https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_.
+available version. If you have a recent version of FSL, try running
+``update_fsl_release`. If this command is not available, or prints an error,
+just delete and re-install FSL following the instructions in the `FSL
+documentation <https://fsl.fmrib.ox.ac.uk/fsl/docs/#/install/index>`_.
+
 
 
 FSL 6.0.7 or newer
@@ -35,6 +37,11 @@ If you have FSL 6.0.7 or newer, you can update to the latest version of FSLeyes
 by running the following command::
 
     update_fsl_package fsleyes
+
+.. note:: If you have trouble running the ``update_fsl_package`` command, try
+          updating FSL first using the ``update_fsl_release`` command, or
+          just deleting your FSL installation and reinstalling the latest
+          version.
 
 
 FSL 6.0.6 or newer
@@ -106,7 +113,7 @@ Install from PyPi (advanced)
 
 
 FSLeyes is available on `PyPi <https://pypi.org/project/fsleyes/>`_, and
-should work with Python 3.8 and newer. The best way to install FSLeyes from
+should work with Python 3.9 and newer. The best way to install FSLeyes from
 PyPi is to create an isolated `virtual environment
 <https://docs.python.org/3/library/venv.html>`_, and install FSLeyes into it.
 
