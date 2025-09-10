@@ -18,7 +18,7 @@ chronological order.
 Fixed
 ^^^^^
 
-* Fixes to API and user documentation generation (!485).
+* Fixes to API and user documentation generation (!484).
 
 
 1.16.0 (Tuesday 9th September 2025)
