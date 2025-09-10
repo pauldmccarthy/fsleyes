@@ -11,6 +11,16 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.16.1 (Wednesday 10th September 2025)
+--------------------------------------
+
+
+Fixed
+^^^^^
+
+* Fixes to API and user documentation generation (!484).
+
+
 1.16.0 (Tuesday 9th September 2025)
 -----------------------------------
 
