@@ -12,9 +12,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import os.path as op
-import sys
 import datetime
+
+from importlib import metadata as impmeta
 
 date = datetime.date.today()
 
@@ -66,15 +66,12 @@ copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
 # built documents.
 def get_fsleyes_version():
     """Returns the current FSLeyes version number. """
-    version = {}
-    basedir = op.join(op.dirname(__file__), '..')
-    with open(op.join(basedir, "fsleyes", "version.py")) as f:
-        for line in f:
-            if line.startswith('__version__'):
-                exec(line, version)
-                break
-
-    return version.get('__version__')
+    try:
+        version = impmeta.version("fsleyes")
+    except Exception as e:
+        print(f'Cannot identify installed FSLeyes version: {e}')
+        version = '<unknown>'
+    return version
 
 
 version = get_fsleyes_version()

@@ -378,7 +378,7 @@ deploy-zenodo:
   <<: *setup_ssh
   stage: deploy
   when:  manual
-  image: python:3.11
+  image: pauldmccarthy/fsleyes-py311-wxpy4-gtk3
 
   tags:
     - docker

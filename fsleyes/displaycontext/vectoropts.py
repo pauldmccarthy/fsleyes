@@ -376,12 +376,13 @@ class LineVectorOpts(NiftiVectorOpts):
     the vector data is assumed to be undirected.
     """
 
+
     modulateMode = props.Choice(('brightness', 'alpha',
                                  'lineLength', 'lineWidth'))
     """Overwrites :attr:`NiftiVectorOpts.modulateMode`.
 
     Modulate the brightness, transparency, line length, or line width by the
-     modulation image.  When set to ``'lineLength'``, this is applied after
+    modulation image.  When set to ``'lineLength'``, this is applied after
     the :attr:`unitLength` and before the :attr:`lengthScale` properties.
     """
 

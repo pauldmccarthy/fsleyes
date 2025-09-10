@@ -74,7 +74,12 @@ def make_meta(templatefile, version, date):
         'DATE'    : date,
     }
 
-    return json.loads(template.render(**env))
+    meta = template.render(**env)
+
+    print('Filled out metadata:')
+    print(meta)
+
+    return json.loads(meta)
 
 
 if __name__ == '__main__':

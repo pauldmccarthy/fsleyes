@@ -44,7 +44,7 @@ a frame from being created::
 You now have references to an :class:`.OverlayList`, the master
 :class:`.DisplayContext`, and the :class:`.FSLeyesFrame` (unless you set
 ``mkFrame=False``), and can use their programming interfaces to interact with
-FSLeyes. For example, to open an ortho view, and add an image::
+FSLeyes [*]_. For example, to open an ortho view, and add an image::
 
     import os.path as op
     from fsleyes.views.orthopanel import OrthoPanel
@@ -71,6 +71,11 @@ to free up resources::
 
     frame.Close()
     fsleyes.shutdown()
+
+
+.. [*] See also the ``--runscript`` :ref:`command line option
+       <command_line_run_script>`.
+
 
 
 Starting Jupyter Notebook from FSLeyes
@@ -123,10 +128,6 @@ menu item
 The remainder of this page contains a very brief overview of the FSLeyes
 programming interface. Refer to the :ref:`links below
 <fsleyes_api_further_reading>` for more comprehensive documentation.
-
-
-.. [*] See also the ``--runscript`` :ref:`command line option
-       <command_line_run_script>`.
 
 
 .. warning:: The FSLeyes programming API is subject to change. The developers
