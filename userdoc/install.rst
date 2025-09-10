@@ -24,7 +24,7 @@ using ``conda``.
 
 If you have an older version of FSL, it is recommended to update to the latest
 available version. If you have a recent version of FSL, try running
-``update_fsl_release`. If this command is not available, or prints an error,
+``update_fsl_release``. If this command is not available, or prints an error,
 just delete and re-install FSL following the instructions in the `FSL
 documentation <https://fsl.fmrib.ox.ac.uk/fsl/docs/#/install/index>`_.
 

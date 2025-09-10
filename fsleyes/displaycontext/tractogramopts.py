@@ -59,9 +59,10 @@ class TractogramOpts(fsldisplay.DisplayOpts,
     sliceWidth = props.Percentage(default=1)
     """Width of the slice to draw, when drawing 2D slices/cross-sections,
     either when:
-    - :attr:`pseudo3D` is ``False``, or
-    - :attr:`pseudo3D` is ``True``, and the ``clipdir`` setting for the
-       axis being drawn is is ``'slice'``.
+
+     - :attr:`pseudo3D` is ``False``, or
+     - :attr:`pseudo3D` is ``True``, and the ``clipdir`` setting for the
+        axis being drawn is is ``'slice'``.
 
     When a :attr:`refImage` is set, the width is specified in terms of the
     reference image voxel size along each axis. Otherwise it is specified as
