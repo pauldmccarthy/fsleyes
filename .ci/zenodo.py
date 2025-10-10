@@ -18,49 +18,51 @@ import requests
 
 def deposit(zenodo_url, access_token, dep_id, upload_file, meta):
 
-    urlbase = '{}/api/deposit/depositions'.format(zenodo_url)
-    headers = {'Content-Type': 'application/json'}
-    params  = {'access_token' : access_token}
+    urlbase = f'{zenodo_url}/api/deposit/depositions'
+    tknhdr  = {'Authorization' : f'Bearer {access_token}'}
+    jhdr    = {'Content-Type'  : 'application/json'}
+
 
     # Create a new deposit
-    url = '{}/{}/actions/newversion'.format(urlbase, dep_id)
-    print('Creating new deposit: {}'.format(url))
-    r   = requests.post(url, params=params)
+    url = f'{urlbase}/{dep_id}/actions/newversion'
+    print(f'Creating new deposit: {url}')
+    r   = requests.post(url, json={}, headers=tknhdr | jhdr)
     if r.status_code != 201:
-        raise RuntimeError('POST {} failed: {}'.format(url, r.status_code))
+        raise RuntimeError(f'POST {url} failed: {r.status_code}')
 
-    newurl = r.json()['links']['latest_draft']
-    dep_id = newurl.split('/')[-1]
+    r = r.json()
 
-    print("New deposition ID: {}".format(dep_id))
+    dep_id     = r['id']
+    bucket_url = r['links']['bucket']
+
+    print(f"New deposition ID: {dep_id}")
 
     # Upload the file
-    data   = {'filename': op.basename(upload_file)}
-    files  = {'file': open(upload_file, 'rb')}
-    url    = '{}/{}/files'.format(urlbase, dep_id)
-    print('Uploading file: {}'.format(url))
-    r   = requests.post(url, params=params, data=data, files=files)
+    with open(upload_file, 'rb') as f:
+        fname = op.basename(upload_file)
+        url   = f'{bucket_url}/{fname}'
+        print(f'Uploading file: {url}')
+        r = requests.post(url, headers=tknhdr, data=f)
 
     if r.status_code != 201:
-        raise RuntimeError('POST {} failed: {}'.format(url, r.status_code))
+        raise RuntimeError(f'POST {url} failed: {r.status_code}')
 
     # Upload the metadata
-
-    url  = '{}/{}?access_token={}'.format(urlbase, dep_id, access_token)
-    print('Uploading metadata: {}'.format(url))
-    r = requests.put(url, data=json.dumps(meta), headers=headers)
+    url = f'{urlbase}/{dep_id}'
+    print(f'Uploading metadata: {url}')
+    r = requests.put(url, data=json.dumps(meta), headers=tknhdr | jhdr)
 
     if r.status_code != 200:
         print(r.json())
-        raise RuntimeError('PUT {} failed: {}'.format(url, r.status_code))
+        raise RuntimeError(f'PUT {url} failed: {r.status_code}')
 
     # Publish
-    url = '{}/{}/actions/publish'.format(urlbase, dep_id)
-    print('Publishing: {}'.format(url))
-    r = requests.post(url, params=params)
+    url = f'{urlbase}/{dep_id}/actions/publish'
+    print(f'Publishing: {url}')
+    r = requests.post(url, headers=tknhdr)
 
     if r.status_code != 202:
-        raise RuntimeError('POST {} failed: {}'.format(url, r.status_code))
+        raise RuntimeError(f'POST {url} failed: {r.status_code}')
 
 
 def make_meta(templatefile, version, date):
