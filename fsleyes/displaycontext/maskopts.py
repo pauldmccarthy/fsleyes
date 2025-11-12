@@ -74,6 +74,8 @@ class MaskOpts(niftiopts.NiftiOpts):
         # this before __init__, in case we need to
         # inherit settings from the parent instance
         dmin, dmax = overlay.dataRange
+        dmin       = float(dmin)
+        dmax       = float(dmax)
         dlen       = dmax - dmin
         doff       = dlen / 100.0
 

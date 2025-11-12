@@ -53,6 +53,8 @@ def updateShaderState(self):
     shader = self.shader
 
     vmin, vmax = self.overlay.dataRange
+    vmin       = float(vmin)
+    vmax       = float(vmax)
 
     # Convert clipping values from voxel value
     # range totexture value range (0.0 - 1.0).
