@@ -389,7 +389,8 @@ class AuxImageTextureManager:
             image          = fslimage.Image(textureData)
             norm           = None
         else:
-            norm = image.dataRange
+            dmin, dmax = image.dataRange
+            norm       = (float(dmin), float(dmax))
 
         # by default we use a name which
         # is not coupled to the aux opts

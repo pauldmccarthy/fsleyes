@@ -296,6 +296,8 @@ class NiftiVectorOpts(niftiopts.NiftiOpts, VectorOpts):
         if image is None: minval, maxval = 0, 1
         else:             minval, maxval = image.dataRange
 
+        minval = float(minval)
+        maxval = float(maxval)
 
         # Clipping works with <= and >=, so
         # we add an offset allowing the user

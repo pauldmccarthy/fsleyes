@@ -93,7 +93,8 @@ class MIPOpts(cmapopts.ColourMapOpts, niftiopts.NiftiOpts):
         """Overrides :meth:`.ColourMapOpts.getDataRange`. Returns the
         :attr:`.Image.dataRange` of the image.
         """
-        return self.overlay.dataRange
+        dmin, dmax = self.overlay.dataRange
+        return float(dmin), float(dmax)
 
 
     def calculateRayCastSettings(self, viewmat):
