@@ -331,6 +331,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         dmin       = float(dmin)
         dmax       = float(dmax)
 
+        return dmin, dmax
+
 
     def getClippingRange(self):
         """Overrides :meth:`.ColourMapOpts.getClippingRange`.
