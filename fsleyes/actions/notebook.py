@@ -60,7 +60,7 @@ try:
     from ipykernel                import iostream
     from ipykernel                import zmqshell
     from ipykernel                import heartbeat
-    from IPython.display          import display
+    from IPython                  import display
 
     ENABLED = True
 
@@ -76,8 +76,7 @@ except ImportError:
     ipkernel                     = mock()
     ipkernel.IPythonKernel       = mock
     AsyncMappingKernelManager    = mock
-
-    ENABLED = False
+    ENABLED                      = False
 
 
 FORWARD_SERVER_STDOUT = False
@@ -443,7 +442,12 @@ class BackgroundIPythonKernel:
             view = self.__frame.viewPanels[0]
         with tempdir.tempdir():
             screenshot.screenshot(view, 'screenshot.png')
-            return display.Image('screenshot.png')
+            # The IPython.display module was
+            # refactored at some point
+            if hasattr(display, 'Image'):
+                return display.Image('screenshot.png')
+            else:
+                return display.display.Image('screenshot.png')
 
 
     def start(self):
@@ -475,10 +479,17 @@ class BackgroundIPythonKernel:
         """Wrapper around IpythonKernel.do_one_iteration, to work around
         https://github.com/ipython/ipykernel/issues/763
         """
-        try:
-            await self.__kernel.do_one_iteration()
-        except tornado.queues.QueueEmpty:
-            pass
+
+        kernel = self.__kernel
+
+        # do_one_iteration removed in ipykernel 7.x
+        if hasattr(kernel, 'do_one_iteration'):
+            try:
+                await self.__kernel.do_one_iteration()
+            except tornado.queues.QueueEmpty:
+                pass
+        else:
+            self.__kernel.shell_stream.flush(limit=1)
 
 
     def __kernelDispatch(self):
