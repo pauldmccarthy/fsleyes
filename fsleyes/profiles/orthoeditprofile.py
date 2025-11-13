@@ -1051,6 +1051,8 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         # Set sensible initial values
         if limit is None or limit == 0:
             dmin, dmax = overlay.dataRange
+            dmin       = float(dmin)
+            dmax       = float(dmax)
             limit      = (dmax - dmin) / 2.0
 
         if thres is None: thres = 0
@@ -2093,9 +2095,10 @@ class OrthoEditProfile(orthoviewprofile.OrthoViewProfile):
         the mouse wheel direction. If the mouse button is down,
         select-by-intensity is re-run at the current mouse location.
         """
-        overlay   = self.displayCtx.getSelectedOverlay()
-        dataRange = overlay.dataRange[1] - overlay.dataRange[0]
-        step      = 0.01 * dataRange
+        overlay    = self.displayCtx.getSelectedOverlay()
+        dmin, dmax = overlay.dataRange
+        dataRange  = float(dmax) - float(dmin)
+        step       = 0.01 * dataRange
 
         if   wheel > 0: offset =  step
         elif wheel < 0: offset = -step

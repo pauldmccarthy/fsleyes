@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.16.3 (Thursday 13th November 2025)
+------------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an error which could occur when opening edit mode on an image with
+  fixed-width integer type (!488).
+
+
 1.16.2 (Friday 10th October 2025)
 ---------------------------------
 

@@ -324,8 +324,14 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         :attr:`.Image.dataRange` of the image, or the
         :attr:`overrideDataRange` if it is active.
         """
-        if self.enableOverrideDataRange: return self.overrideDataRange
-        else:                            return self.overlay.dataRange
+        if self.enableOverrideDataRange:
+            return self.overrideDataRange
+
+        dmin, dmax = self.overlay.dataRange
+        dmin       = float(dmin)
+        dmax       = float(dmax)
+
+        return dmin, dmax
 
 
     def getClippingRange(self):
@@ -341,6 +347,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             return cmapopts.ColourMapOpts.getClippingRange(self)
 
         dmin, dmax = self.clipImage.dataRange
+        dmin       = float(dmin)
+        dmax       = float(dmax)
 
         # If negcmap is enabled, we modulate according
         # to the absolute value of the clip image.
@@ -363,6 +371,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
             return cmapopts.ColourMapOpts.getModulateRange(self)
 
         dmin, dmax = self.modulateImage.dataRange
+        dmin       = float(dmin)
+        dmax       = float(dmax)
 
         if self.useNegativeCmap:
             dmin, dmax = 0, np.max(np.abs((dmin, dmax)))

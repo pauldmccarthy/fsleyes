@@ -92,6 +92,8 @@ def updateShaderState(self):
 
     l1           = self.l1
     l1min, l1max = l1.dataRange
+    l1min        = float(l1min)
+    l1max        = float(l1max)
     eigValNorm   = 0.5 / max((abs(l1min), abs(l1max)))
     eigValNorm  *= tensorScale / 100.0
 

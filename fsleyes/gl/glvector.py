@@ -622,6 +622,10 @@ class GLVector(GLVectorBase):
         vecImage       = self.vectorImage
         texName        = '{}_{}'.format(type(self).__name__, id(vecImage))
 
+        dmin, dmax = vecImage.dataRange
+        dmin       = float(dmin)
+        dmax       = float(dmax)
+
         if self.imageTexture is not None:
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
@@ -633,7 +637,7 @@ class GLVector(GLVectorBase):
             vecImage,
             nvals=3,
             interp=interp,
-            normaliseRange=vecImage.dataRange,
+            normaliseRange=(dmin, dmax),
             prefilter=prefilter,
             prefilterRange=prefilterRange,
             notify=False)
