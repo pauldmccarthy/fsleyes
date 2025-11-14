@@ -60,7 +60,7 @@ try:
     from ipykernel                import iostream
     from ipykernel                import zmqshell
     from ipykernel                import heartbeat
-    from IPython.display          import display
+    from IPython                  import display
 
     ENABLED = True
 
@@ -76,8 +76,7 @@ except ImportError:
     ipkernel                     = mock()
     ipkernel.IPythonKernel       = mock
     AsyncMappingKernelManager    = mock
-
-    ENABLED = False
+    ENABLED                      = False
 
 
 FORWARD_SERVER_STDOUT = False
@@ -350,16 +349,11 @@ class BackgroundIPythonKernel:
             iopubport   = iopubsock  .bind_to_random_port(addr)
             hbport      = self.__heartbeat.port
 
-            # Create the kernel. On ipykernel <=5.*, we
-            # pass the shell/control streams via the
-            # shell_streams argument.  On ipykernel
-            # >=6.*, we pass them as separate arguments.
+            # Create the kernel.
             self.__kernel = FSLeyesIPythonKernel.instance(
                 stdout,
                 stderr,
-                shell_class=FSLeyesIPythonShell,
                 session=session,
-                shell_streams=[shellstrm, controlstrm],
                 shell_stream=shellstrm,
                 control_stream=controlstrm,
                 iopub_socket=iopubsock,
@@ -443,7 +437,12 @@ class BackgroundIPythonKernel:
             view = self.__frame.viewPanels[0]
         with tempdir.tempdir():
             screenshot.screenshot(view, 'screenshot.png')
-            return display.Image('screenshot.png')
+            # The IPython.display module was
+            # refactored at some point
+            if hasattr(display, 'Image'):
+                return display.Image('screenshot.png')
+            else:
+                return display.display.Image('screenshot.png')
 
 
     def start(self):
@@ -475,10 +474,17 @@ class BackgroundIPythonKernel:
         """Wrapper around IpythonKernel.do_one_iteration, to work around
         https://github.com/ipython/ipykernel/issues/763
         """
-        try:
-            await self.__kernel.do_one_iteration()
-        except tornado.queues.QueueEmpty:
-            pass
+
+        kernel = self.__kernel
+
+        # do_one_iteration removed in ipykernel 7.x
+        if hasattr(kernel, 'do_one_iteration'):
+            try:
+                await self.__kernel.do_one_iteration()
+            except tornado.queues.QueueEmpty:
+                pass
+        else:
+            self.__kernel.shell_stream.flush()
 
 
     def __kernelDispatch(self):
@@ -513,10 +519,9 @@ class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
     """
 
     def __init__(self, stdout, stderr, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.__stdout = stdout
         self.__stderr = stderr
-        super(FSLeyesIPythonKernel, self).__init__(*args, **kwargs)
-
 
     @contextlib.contextmanager
     def __patch_streams(self):
@@ -525,43 +530,25 @@ class FSLeyesIPythonKernel(ipkernel.IPythonKernel):
         stderr     = sys.stderr
         sys.stdout = self.__stdout
         sys.stderr = self.__stderr
-
         try:
             yield
         finally:
-
             sys.stdout = stdout
             sys.stderr = stderr
             self.__stdout.flush()
             self.__stderr.flush()
 
-    def execute_request(self, *args, **kwargs):
+    async def execute_request(self, *args, **kwargs):
         with self.__patch_streams():
-            return super(FSLeyesIPythonKernel, self).execute_request(
-                *args, **kwargs)
+            return await super().execute_request(*args, **kwargs)
 
-    def dispatch_control(self, *args, **kwargs):
+    async def dispatch_control(self, *args, **kwargs):
         with self.__patch_streams():
-            return super(FSLeyesIPythonKernel, self).dispatch_control(
-                *args, **kwargs)
+            return await super().dispatch_control(*args, **kwargs)
 
-    def dispatch_shell(self, *args, **kwargs):
+    async def dispatch_shell(self, *args, **kwargs):
         with self.__patch_streams():
-            return super(FSLeyesIPythonKernel, self).dispatch_shell(
-                *args, **kwargs)
-
-
-class FSLeyesIPythonShell(zmqshell.ZMQInteractiveShell):
-    """Custom IPython shell class used by FSLeyes. """
-
-    def enable_gui(self, gui):
-        """Overrides  ``ipykernel.zmqshell.ZMQInteractiveShell.enable_gui``.
-
-        The default implementation will attempt to change the IPython GUI
-        integration event loop, which will conflict with our own event loop
-        in the :class:`BackgroundIPythonKernel`. So this implementation
-        does nothing.
-        """
+            return await super().dispatch_shell(*args, **kwargs)
 
 
 class NotebookServer(threading.Thread):

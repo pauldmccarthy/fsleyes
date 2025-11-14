@@ -11,14 +11,15 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.16.3 (Thursday 13th November 2025)
-------------------------------------
+1.16.3 (Friday 14th November 2025)
+----------------------------------
 
 
 Fixed
 ^^^^^
 
 
+* Fixed some compatibility issues with recent versions of IPython (!489).
 * Fixed an error which could occur when opening edit mode on an image with
   fixed-width integer type (!488).
 
