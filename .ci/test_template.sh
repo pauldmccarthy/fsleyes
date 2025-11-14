@@ -20,7 +20,7 @@ else
   rsync -rv "fsldownload:$FSL_ATLAS_DIR"    "$FSLDIR/data/atlases/"
   rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
 
-  source /test.venv/bin/activate
+  micromamba activate /test.env
   pip install --upgrade pip setuptools wheel build
 fi
 
