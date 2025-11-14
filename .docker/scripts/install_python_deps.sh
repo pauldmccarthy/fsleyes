@@ -2,21 +2,31 @@
 
 set -e
 
-source /test.venv/bin/activate
+MMDIR=${MAMBA_ROOT_PREFIX}
 
-pip install --upgrade pip setuptools
+MMURL=https://micro.mamba.pm/api/micromamba/linux-64/latest
+mkdir ${MMDIR}
+cd ${MMDIR}
+curl -Ls ${MMURL} | tar -xvj bin/micromamba
+mmbin=${MMDIR}/bin/micromamba
 
-$INSTALL_WX
+eval "$(${mmbin} shell hook --shell posix)"
 
-pip install \
-    numpy \
-    scipy \
-    matplotlib \
-    sphinx \
-    sphinx-rtd-theme \
-    coverage \
-    pytest \
-    pytest-cov \
-    coverage \
-    pylint \
-    flake8
+micromamba create -y \
+  -c conda-forge \
+  -p /test.env \
+  "python=${PYTHON_VERSION}" \
+  "wxpython=${WXPYTHON_VERSION}" \
+  pip \
+  setuptools \
+  numpy \
+  scipy \
+  matplotlib \
+  sphinx \
+  sphinx-rtd-theme \
+  coverage \
+  pytest \
+  pytest-cov \
+  coverage \
+  pylint \
+  flake8

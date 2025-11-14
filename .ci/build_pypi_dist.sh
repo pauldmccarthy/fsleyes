@@ -4,7 +4,7 @@ set -e
 
 projdir=$(pwd)
 
-source /test.venv/bin/activate
+micromamba activate /test.env
 
 pip install --upgrade pip wheel setuptools setuptools-scm twine build packaging
 python -m build

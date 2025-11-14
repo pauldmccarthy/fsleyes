@@ -2,7 +2,7 @@
 
 thisdir=$(cd $(dirname $0) && pwd)
 
-source /test.venv/bin/activate
+micromamba activate /test.env
 
 pip install requests jinja2 setuptools-scm
 pip install .
