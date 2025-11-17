@@ -10,10 +10,11 @@ ENV MAMBA_ROOT_PREFIX="/mamba/"
 ADD scripts/install_system_deps.sh /scripts/install_system_deps.sh
 ADD scripts/install_python_deps.sh /scripts/install_python_deps.sh
 ADD scripts/install_dcm2niix.sh    /scripts/install_dcm2niix.sh
+ADD scripts/init.sh                /scripts/init.sh
 
 RUN /bin/bash /scripts/install_system_deps.sh
 RUN /bin/bash /scripts/install_python_deps.sh
 RUN /bin/bash /scripts/install_dcm2niix.sh
+RUN chmod a+x /scripts/init.sh
 
-ENV PATH=/dcm2niix:$PATH
-CMD eval "$(/mamba/bin/micromamba shell hook --shell posix)"
+ENTRYPOINT ["/scripts/init.sh"]
