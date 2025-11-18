@@ -118,14 +118,11 @@ variables:
   image: docker:latest
   tags:
     - docker_build
-  services:
-    - docker:dind
   when: manual
   allow_failure: true
 
   script:
     - mkdir -p $HOME/.docker/
-    - echo $DOCKER_AUTH_CONFIG > $HOME/.docker/config.json
     - TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
     - IMAGE="pauldmccarthy/$(basename $BUILDDIR)"
     - DOCKERFILE=${BUILDDIR}/Dockerfile
