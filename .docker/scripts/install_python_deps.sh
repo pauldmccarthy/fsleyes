@@ -4,7 +4,16 @@ set -e
 
 MMDIR=${MAMBA_ROOT_PREFIX}
 
-MMURL=https://micro.mamba.pm/api/micromamba/linux-64/latest
+if [[ $(uname -a) == *x86_64* ]]; then
+  MMURL=https://micro.mamba.pm/api/micromamba/linux-64/latest
+elif  [[ $(uname -a) == *aarch64* ]]; then
+  MMURL=https://micro.mamba.pm/api/micromamba/linux-aarch64/latest
+else
+  echo "unknown platform"
+  exit 1
+fi
+
+
 mkdir ${MMDIR}
 cd ${MMDIR}
 curl -Ls ${MMURL} | tar -xvj bin/micromamba
@@ -29,4 +38,5 @@ micromamba create -y \
   pytest-cov \
   coverage \
   pylint \
+  dcm2niix \
   flake8
