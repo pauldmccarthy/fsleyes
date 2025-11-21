@@ -4,8 +4,6 @@ set -e
 
 projdir=$(pwd)
 
-micromamba activate /test.env
-
 pip install --upgrade pip wheel setuptools setuptools-scm twine build packaging
 python -m build
 twine check dist/*

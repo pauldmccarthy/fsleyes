@@ -22,9 +22,6 @@ set -e
 
 if [[ -f /.dockerenv ]]; then
 
-  apt-get update -y                           || yum -y check-update                     || true;
-  apt-get install -y git rsync openssh-client || yum install -y git rsync openssh-client || true;
-
   eval $(ssh-agent -s);
   mkdir -p $HOME/.ssh;
 
@@ -47,9 +44,4 @@ if [[ -f /.dockerenv ]]; then
 
   git config --global user.name  "Gitlab CI";
   git config --global user.email "gitlabci@localhost";
-
-  if [[ `git remote -v` == *"upstream"* ]]; then
-      git remote remove upstream;
-  fi;
-  git remote add upstream "$UPSTREAM_URL:$UPSTREAM_PROJECT";
 fi

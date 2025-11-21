@@ -122,7 +122,6 @@ variables:
   allow_failure: true
 
   script:
-    - mkdir -p $HOME/.docker/
     - TAG="$(date +%Y%m%d).${CI_COMMIT_SHORT_SHA}"
     - IMAGE="pauldmccarthy/$(basename $BUILDDIR)"
     - DOCKERFILE=${BUILDDIR}/Dockerfile
@@ -274,7 +273,6 @@ test:build-pypi-dist:
     - docker
 
   script:
-   - source /test.venv/bin/activate
    - bash ./.ci/build_pypi_dist.sh
 
 

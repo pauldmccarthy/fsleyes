@@ -2,8 +2,6 @@
 
 thisdir=$(cd $(dirname $0) && pwd)
 
-micromamba activate /test.env
-
 pip install requests jinja2 setuptools-scm
 pip install .
 
