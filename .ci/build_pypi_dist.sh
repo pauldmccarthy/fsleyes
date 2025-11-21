@@ -4,7 +4,8 @@ set -e
 
 projdir=$(pwd)
 
-source /test.venv/bin/activate
+# TODO install mesalib in docker image
+/mamba/bin/micromamba install -y -p /test.env mesalib
 
 pip install --upgrade pip wheel setuptools setuptools-scm twine build packaging
 python -m build

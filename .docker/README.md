@@ -8,16 +8,18 @@ https://hub.docker.com/u/pauldmccarthy/
 These images are no longer in use:
  - `fsleyes-py37-wxpy4-gtk3`
  - `fsleyes-py38-wxpy4-gtk3`
+ - `fsleyes-py39-wxpy4-gtk3`
+ - `fsleyes-py310-wxpy4-gtk3`
 
 These images can be re-built via CI jobs on the fsl/fsleyes/fsleyes GitLab
 repository. To build/update an image by hand, follow these steps:
 
 
 ```sh
-cd .docker/fsleyes-py310-wxpy4-gtk3
-docker build -t pauldmccarthy/fsleyes-py310-wxpy4-gtk3 -f Dockerfile ..
+cd .docker/fsleyes-py313-wxpy4-gtk3
+docker build -t pauldmccarthy/fsleyes-py313-wxpy4-gtk3 -f Dockerfile ..
 docker login
-docker push pauldmccarthy/fsleyes-py310-wxpy4-gtk3
+docker push pauldmccarthy/fsleyes-py313-wxpy4-gtk3
 ```
 
 

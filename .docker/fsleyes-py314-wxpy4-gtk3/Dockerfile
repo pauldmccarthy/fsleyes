@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 LABEL org.opencontainers.image.authors="Paul McCarthy pauldmccarthy@gmail.com"
 
-ENV PYTHON_VERSION="3.12"
+ENV PYTHON_VERSION="3.14"
 ENV WXPYTHON_VERSION="4.2.4"
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV LANG="en_GB.UTF-8"
