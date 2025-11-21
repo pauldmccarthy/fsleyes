@@ -194,7 +194,9 @@ class ImageTextureBase:
         if image.nvals      == 1: channel = None
 
         if normRange is None:
-            normRange = image.dataRange
+            dmin, dmax = image.dataRange
+            normRange  = (float(dmin), float(dmax))
+
 
         if ndims == 3 or nvals > 1:
             volume = None

@@ -2,8 +2,6 @@
 
 set -e
 
-
-source /test.venv/bin/activate
 pip install  dist/*.whl
 
 exp=${CI_COMMIT_REF_NAME}

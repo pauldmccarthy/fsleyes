@@ -8,7 +8,7 @@ set -e
 if [[ "$MACOS_OVERLAY_TEST" == "1" ]]; then
   export FSLDIR=~/fsl/fsl-for-fsleyes-tests/
   eval "$(~/micromamba/bin/micromamba shell hook --shell $(basename ${SHELL}))"
-  micromamba create -y -c conda-forge -p ./test.env python=3.11 zstd mesalib wget libiconv
+  micromamba create -y -c conda-forge -p ./test.env python=3.12 zstd mesalib wget libiconv
   micromamba activate ./test.env
   pip install --upgrade pip
 else
@@ -19,9 +19,9 @@ else
   mkdir -p $FSLDIR/data/
   rsync -rv "fsldownload:$FSL_ATLAS_DIR"    "$FSLDIR/data/atlases/"
   rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
-
-  source /test.venv/bin/activate
   pip install --upgrade pip setuptools wheel build
+  # TODO install mesalib in docker image
+  /mamba/bin/micromamba install -y -p /test.env mesalib
 fi
 
 PIPARGS=" --retries 10 "
