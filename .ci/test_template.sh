@@ -20,6 +20,8 @@ else
   rsync -rv "fsldownload:$FSL_ATLAS_DIR"    "$FSLDIR/data/atlases/"
   rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
   pip install --upgrade pip setuptools wheel build
+  # TODO install mesalib in docker image
+  /mamba/bin/micromamba install -y -p /test.env mesalib
 fi
 
 PIPARGS=" --retries 10 "
