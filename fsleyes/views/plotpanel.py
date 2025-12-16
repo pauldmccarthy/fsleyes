@@ -117,7 +117,7 @@ class PlotPanel(viewpanel.ViewPanel):
                                        elistbox.ELB_NO_REMOVE    |
                                        elistbox.ELB_NO_MOVE),
                         location=wx.LEFT,
-                        filterFunc=listFilter)
+                        disableFilter=listFilter)
 
 
     def __init__(self,

@@ -76,7 +76,8 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
                  showSave=True,
                  propagateSelect=True,
                  elistboxStyle=None,
-                 filterFunc=None):
+                 disableFilter=None,
+                 hideFilter=None):
         """Create an ``OverlayListPanel``.
 
         :arg parent:          The :mod:`wx` parent object.
@@ -108,18 +109,27 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
         :arg elistboxStyle:   Style flags passed through to the
                               :class:`.EditableListBox`.
 
-        :arg filterFunc:      Function which must accept an overlay as its
+        :arg disableFilter:   Function which must accept an overlay as its
                               sole argument, and return ``True`` or ``False``.
                               If this function returns ``False`` for an
                               overlay, the :class:`ListItemWidget` for that
                               overlay will be disabled.
+
+        :arg hideFilter:      Function which must accept an overlay as its
+                              sole argument, and return ``True`` or ``False``.
+                              If this function returns ``False`` for an
+                              overlay, the :class:`ListItemWidget` for that
+                              overlay will be hidden.
         """
 
         def defaultFilter(o):
             return True
 
-        if filterFunc is None:
-            filterFunc = defaultFilter
+        if disableFilter is None:
+            disableFilter = defaultFilter
+
+        if hideFilter is None:
+            hideFilter = defaultFilter
 
         ctrlpanel.ControlPanel.__init__(
             self, parent, overlayList, displayCtx, viewPanel)
@@ -128,7 +138,8 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
         self.__showGroup       = showGroup
         self.__showSave        = showSave
         self.__propagateSelect = propagateSelect
-        self.__filterFunc      = filterFunc
+        self.__disableFilter   = disableFilter
+        self.__hideFilter      = hideFilter
 
         if elistboxStyle is None:
             elistboxStyle = (elistbox.ELB_REVERSE      |
@@ -139,6 +150,9 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
         # is populated in the _overlayListChanged method
         self.__listBox = elistbox.EditableListBox(self, style=elistboxStyle)
 
+        # apply the hideFilter to the list box
+        self.__listBox.ApplyFilter(self.__hideFilter)
+        
         # listeners for when the user does
         # something with the list box
         self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT,   self.__lbSelect)
@@ -204,7 +218,8 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
             display = self.displayCtx.getDisplay(overlay)
             display.removeListener('name', self.name)
 
-        self.__filterFunc = None
+        self.__disableFilter = None
+        self.__hideFilter = None
         self.__listBox.Clear()
 
         ctrlpanel.ControlPanel.destroy(self)
@@ -261,7 +276,7 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
                                     showSave=self.__showSave,
                                     propagateSelect=self.__propagateSelect)
 
-            if not self.__filterFunc(overlay):
+            if not self.__disableFilter(overlay):
                 widget.Disable()
 
             self.__listBox.SetItemWidget(i, widget)
@@ -275,6 +290,9 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
                                 self.name,
                                 self.__overlayNameChanged,
                                 overwrite=True)
+
+        # apply the hideFilter to the list box
+        self.__listBox.ApplyFilter(self.__hideFilter)
 
         if len(self.overlayList) > 0:
             self.__listBox.SetSelection(
