@@ -200,14 +200,12 @@ TODO
 
 import os.path as op
 import            os
-import            sys
 import            logging
 import            warnings
 
 import fsl.utils.settings as fslsettings
 import fsl.version        as fslversion
 import fsleyes.version    as version
-import fsleyes_widgets    as fwidgets
 
 
 # The logger is assigned in
@@ -291,17 +289,6 @@ def _hacksAndWorkarounds():
     import nibabel as nib
     if fslversion.compareVersions(nib.__version__, '5.1.0') < 0:
         nib.Nifti1Header.quaternion_threshold = -1e5
-
-    # OSX sometimes sets the local environment
-    # variables to non-standard values, which
-    # breaks the python locale module.
-    #
-    # http://bugs.python.org/issue18378
-    try:
-        import locale
-        locale.getdefaultlocale()
-    except ValueError:
-        os.environ['LC_ALL'] = 'C.UTF-8'
 
     # Patches to third party libs
     import fsleyes.patches as patches
