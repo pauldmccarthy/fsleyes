@@ -9,7 +9,6 @@ control* panel which displays settings for a :class:`.CanvasPanel`.
 """
 
 
-import platform
 import collections
 
 import wx
@@ -18,7 +17,6 @@ import fsl.data.image                        as fslimage
 import fsleyes_props                         as props
 import fsleyes.controls.controlpanel         as ctrlpanel
 import fsleyes.views.canvaspanel             as canvaspanel
-import fsleyes.gl                            as fslgl
 import fsleyes.plugins                       as plugins
 import fsleyes.tooltips                      as fsltooltips
 import fsleyes.strings                       as strings
@@ -87,6 +85,7 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
                                          canvasPanel,
                                          kbFocus=True)
 
+        self.__destroyActions = []
         self.__makeTools()
 
 
@@ -95,6 +94,10 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
         needed. Clears references and calls the base class ``destroy`` method.
         """
         super(CanvasSettingsPanel, self).destroy()
+
+        for d in self.__destroyActions:
+            if d is not None:
+                d()
 
 
     def __makeTools(self):
@@ -279,7 +282,8 @@ class CanvasSettingsPanel(ctrlpanel.SettingsPanel):
         for propName, dispProp in panelProps.items():
 
             if callable(dispProp):
-                widget = dispProp(canvasPanel, widgets, opts)
+                widget, destroy = dispProp(canvasPanel, widgets, opts)
+                self.__destroyActions.append(destroy)
             else:
                 widget = props.buildGUI(widgets, opts, dispProp)
 
@@ -311,7 +315,7 @@ def _genLightPosWidget(canvasPanel, parent, opts):
     sizer.Add(px, flag=wx.EXPAND)
     sizer.Add(py, flag=wx.EXPAND)
     sizer.Add(pz, flag=wx.EXPAND)
-    return sizer
+    return sizer, None
 
 
 def _genLightboxSampleWidget(canvasPanel, parent, opts):
@@ -341,4 +345,4 @@ def _genLightboxSampleWidget(canvasPanel, parent, opts):
     sizer.Add(sample, flag=wx.EXPAND, proportion=1)
     sizer.Add(btn,    flag=wx.EXPAND)
 
-    return sizer
+    return sizer, action.destroy
