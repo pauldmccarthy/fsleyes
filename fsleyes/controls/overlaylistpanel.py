@@ -10,10 +10,8 @@ displays a list of all overlays currently in the :class:`.OverlayList`.
 
 
 import logging
-import colorsys
 
-import          wx
-import numpy as np
+import wx
 
 import fsl.data.image                as fslimage
 import fsl.utils.idle                as idle
@@ -150,9 +148,6 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
         # is populated in the _overlayListChanged method
         self.__listBox = elistbox.EditableListBox(self, style=elistboxStyle)
 
-        # apply the hideFilter to the list box
-        self.__listBox.ApplyFilter(self.__hideFilter)
-        
         # listeners for when the user does
         # something with the list box
         self.__listBox.Bind(elistbox.EVT_ELB_SELECT_EVENT,   self.__lbSelect)
@@ -291,8 +286,14 @@ class OverlayListPanel(ctrlpanel.ControlPanel):
                                 self.__overlayNameChanged,
                                 overwrite=True)
 
-        # apply the hideFilter to the list box
-        self.__listBox.ApplyFilter(self.__hideFilter)
+        # The hideFilter causes overlays that meet
+        # some condition to be hidden from the list.
+        # The function passed to elistbox.ApplyFilter
+        # must accept the item label and client data.
+        def hideFilterWrapper(label, overlay):
+            return self.__hideFilter(overlay)
+
+        self.__listBox.ApplyFilter(hideFilterWrapper)
 
         if len(self.overlayList) > 0:
             self.__listBox.SetSelection(
