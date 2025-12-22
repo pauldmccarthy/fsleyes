@@ -11,6 +11,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.17.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+
+* Added the programmatic ability for overlays to be hidden from the overlay
+  list (!492).
+
+
 1.16.3 (Friday 21st November 2025)
 ----------------------------------
 
