@@ -5,3 +5,6 @@
 apidoc/html
 userdoc/html
 dist
+build
+*.egg-info
+.DS_Store
