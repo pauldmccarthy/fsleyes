@@ -20,7 +20,7 @@ Changed
 ^^^^^^^
 
 
-* Added the programmatic ability for overlays to be hidden from the overlay
+* Added the ability for overlays to be programmatically hidden from the overlay
   list (!492).
 
 
