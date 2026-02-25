@@ -20,8 +20,11 @@ else
   rsync -rv "fsldownload:$FSL_ATLAS_DIR"    "$FSLDIR/data/atlases/"
   rsync -rv "fsldownload:$FSL_STANDARD_DIR" "$FSLDIR/data/standard/"
   pip install --upgrade pip setuptools wheel build
-  # TODO install mesalib in docker image
-  /mamba/bin/micromamba install -y -p /test.env mesalib
+  # TODO mesalib 25.1 removed support for osmesa; this
+  # will have to change in the future. Perhaps build my
+  # own mesalib in the test docker images.
+  # https://github.com/conda-forge/mesalib-feedstock/pull/123
+  /mamba/bin/micromamba install -y -p /test.env "mesalib=25.0.*"
 fi
 
 PIPARGS=" --retries 10 "

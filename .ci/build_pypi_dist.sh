@@ -4,8 +4,10 @@ set -e
 
 projdir=$(pwd)
 
-# TODO install mesalib in docker image
-/mamba/bin/micromamba install -y -p /test.env mesalib
+# TODO mesalib 25.1 removed support for osmesa; this
+# will have to change in the future
+# https://github.com/conda-forge/mesalib-feedstock/pull/123
+/mamba/bin/micromamba install -y -p /test.env "mesalib=25.0.*"
 
 pip install --upgrade pip wheel setuptools setuptools-scm twine build packaging
 python -m build
