@@ -42,7 +42,7 @@ def deposit(zenodo_url, access_token, dep_id, upload_file, meta):
         fname = op.basename(upload_file)
         url   = f'{bucket_url}/{fname}'
         print(f'Uploading file: {url}')
-        r = requests.post(url, headers=tknhdr, data=f)
+        r = requests.put(url, headers=tknhdr, data=f)
 
     if r.status_code != 201:
         raise RuntimeError(f'POST {url} failed: {r.status_code}')
