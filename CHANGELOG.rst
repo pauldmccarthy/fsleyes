@@ -12,8 +12,15 @@ chronological order.
 
 
 
-1.17.0 (Under development)
---------------------------
+1.17.0 (Wednesday 25th February 2026)
+-------------------------------------
+
+
+Added
+^^^^^
+
+* New *Copy coordinates* button on the location panel, which copies the
+  currently displayeed world/voxel coordinates to the system clipboard (!493).
 
 
 Changed

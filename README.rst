@@ -29,7 +29,7 @@ FSLeyes is a GUI application written in Python, and built on `wxPython
 In the majority of cases, you should be able to follow the installation
 instructions outlined at the FSLeyes home page:
 
-https://fsl.fmrib.ox.ac.uk/fsl/docs/#/utilities/fsleyes
+https://fsl.fmrib.ox.ac.uk/fsl/docs/utilities/fsleyes.html
 
 
 Dependencies
