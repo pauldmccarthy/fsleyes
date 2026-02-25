@@ -99,36 +99,36 @@ def getDeclarations(code):
     # Callable expression
     EXPRESSION  = pp.Forward()
     ARG         = pp.Group(EXPRESSION) | IDENTIFIER | FLOAT | INT
-    ARGS        = pp.delimitedList(ARG)
+    ARGS        = pp.DelimitedList(ARG)
     EXPRESSION << IDENTIFIER + pp.Group(LPAREN + pp.Optional(ARGS) + RPAREN)
 
     # Value
     VALUE = (EXPRESSION |
-             pp.Word(pp.alphanums + '_()+-/*')).setParseAction(
+             pp.Word(pp.alphanums + '_()+-/*')).set_parse_action(
                  pp.originalTextFor)
 
     # Single declaration
-    VARIABLE = (IDENTIFIER.setResultsName('name') +
+    VARIABLE = (IDENTIFIER.set_results_name('name') +
                 pp.Optional(LBRACK +
-                            (INT | IDENTIFIER).setResultsName('size') +
+                            (INT | IDENTIFIER).set_results_name('size') +
                             RBRACK) +
                 pp.Optional(pp.Literal("=").suppress() +
-                            VALUE.setResultsName('value')))
+                            VALUE.set_results_name('value')))
 
     # Several declarations at once
-    DECLARATION = (STORAGE.setResultsName('storage') +
-                   pp.Optional(PRECISION).setResultsName('precision') +
-                   TYPE.setResultsName('type') +
-                   pp.delimitedList(
-                       VARIABLE.setResultsName('variable',
-                                               listAllMatches=True)) +
+    DECLARATION = (STORAGE.set_results_name('storage') +
+                   pp.Optional(PRECISION).set_results_name('precision') +
+                   TYPE.set_results_name('type') +
+                   pp.DelimitedList(
+                       VARIABLE.set_results_name('variable',
+                                                 list_all_matches=True)) +
                    END)
     DECLARATION.ignore(pp.cStyleComment)
 
     decs = {'uniform'   : [],
             'attribute' : []}
 
-    for (tokens, _, _) in DECLARATION.scanString(code):
+    for (tokens, _, _) in DECLARATION.scan_string(code):
         for _ in tokens.variable:
 
             size = tokens.size.strip()
