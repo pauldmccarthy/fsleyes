@@ -22,7 +22,7 @@ dependencies = [
   "matplotlib >=3.5",
   "nibabel >=2.3",
   "numpy >=1.14",
-  "pyparsing >=2",
+  "pyparsing >=3",
   "scipy >=0.18",
   "wxpython >=4"
 ]
