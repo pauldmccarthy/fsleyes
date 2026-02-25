@@ -628,6 +628,8 @@ labels = TypeDict({
     'LocationInfoPanel.noData'                : 'No data',
     'LocationInfoPanel.outOfBounds'           : 'Out of bounds',
     'LocationInfoPanel.notAvailable'          : 'N/A',
+    'LocationInfoPanel.copy'                  : 'Copy coordinates',
+    'LocationInfoPanel.copied'                : 'Copied!',
     'LocationHistoryPanel.load'               : 'Load',
     'LocationHistoryPanel.save'               : 'Save',
     'LocationHistoryPanel.clear'              : 'Clear',
