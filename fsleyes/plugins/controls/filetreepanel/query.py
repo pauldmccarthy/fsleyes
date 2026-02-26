@@ -26,10 +26,11 @@ import functools          as ft
 import                       logging
 import importlib.metadata as impmeta
 
-
 import numpy     as np
-import pandas    as pd
 
+from fsleyes.utils import lazyimport
+
+pd = lazyimport('pandas')
 
 log = logging.getLogger(__name__)
 
