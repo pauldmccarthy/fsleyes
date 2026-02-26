@@ -21,14 +21,38 @@ defined in this module:
 """
 
 
-import              logging
-import              collections
-import functools as ft
+import                       collections
+import functools          as ft
+import                       logging
+import importlib.metadata as impmeta
+
 
 import numpy     as np
+import pandas    as pd
 
 
 log = logging.getLogger(__name__)
+
+
+@ft.cache
+def missing_value():
+    """Returns the value used by pandas/file-tree to represent missing values,
+    for optional components of filename paths.
+
+    This may be ``None`` or ``np.nan``, depending on the installed
+    pandas/file-tree versions.
+    """
+    try:
+        pdver = impmeta.version('pandas')
+        major = int(pdver.split('.')[0])
+
+        if major >= 3:
+            return np.nan
+
+    except Exception:
+        pass
+
+    return None
 
 
 class FileTreeQuery:
@@ -112,7 +136,19 @@ class FileTreeQuery:
         for template in templates:
             matches = self.__matcharrays[template]
             for axis in matches.dims:
+
+                # The way that optional path elements
+                # are encoded differs depending on the
+                # pandas/file-tree version.
+                #
+                # For file-tree <=1.6.1:
+                #
+                #  - In pandas 2.x, missing values are None
+                #  - In pandas 3.x, they are nan
+                #
+                # In FSLeyes, we use None
                 axisvals        = set(matches.coords[axis].data)
+                axisvals        = [None if pd.isna(v) else v for v in axisvals]
                 variables[axis] = variables[axis].union(axisvals)
 
         # Variable values will usually be strings,
@@ -160,6 +196,15 @@ class FileTreeQuery:
 
         :returns: A list  of ``Match`` objects
         """
+
+        # Replace any instances of None with a
+        # suitable value depending on the installed
+        # pandas/file-tree versions
+        missing   = missing_value()
+        variables = {
+            k : missing if v is None else v
+            for k, v in variables.items()
+        }
 
         # Build a slice containing a value for
         # every axis of the template array

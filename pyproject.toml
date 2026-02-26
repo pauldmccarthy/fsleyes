@@ -62,9 +62,6 @@ extra = [
   "ipython >=5",
   "jupyter_client >=5.3.1",
   "nbclassic",
-  # Temporarily pin pandas at 2.x until
-  # compatibility issues are fixed in file-tree
-  "pandas ==2.*",
   "pyzmq >=17.0",
   "rtree >=0.8.3",
   "tornado >=5.0",
