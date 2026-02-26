@@ -31,6 +31,13 @@ Changed
   list (!492).
 
 
+Fixed
+^^^^^
+
+
+* Minor updates to the File Tree panel to work with pandas 3.x (!493).
+
+
 1.16.3 (Friday 21st November 2025)
 ----------------------------------
 
