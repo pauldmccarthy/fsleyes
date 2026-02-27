@@ -12,8 +12,15 @@ chronological order.
 
 
 
-1.17.0 (Under development)
---------------------------
+1.17.0 (Friday 27th February 2026)
+----------------------------------
+
+
+Added
+^^^^^
+
+* New *Copy coordinates* button on the location panel, which copies the
+  currently displayeed world/voxel coordinates to the system clipboard (!493).
 
 
 Changed
@@ -22,6 +29,13 @@ Changed
 
 * Added the ability for overlays to be programmatically hidden from the overlay
   list (!492).
+
+
+Fixed
+^^^^^
+
+
+* Minor updates to the File Tree panel to work with pandas 3.x (!493).
 
 
 1.16.3 (Friday 21st November 2025)

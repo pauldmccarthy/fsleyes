@@ -21,14 +21,60 @@ defined in this module:
 """
 
 
-import              logging
-import              collections
-import functools as ft
+import                       collections
+import functools          as ft
+import                       logging
+import importlib.metadata as impmeta
 
 import numpy     as np
 
+from fsleyes.utils import lazyimport
+
+pd         = lazyimport('pandas')
+file_tree  = lazyimport('file_tree')
+
 
 log = logging.getLogger(__name__)
+
+
+@ft.cache
+def possible_missing_values():
+    """Returns values that might be used by file-tree/pandas to represent
+    missing values, for optional components of filename paths. For example,
+    e.g.  the value of `session` in the file tree entry
+    `sub-{subject}/[ses-{session}/T1w.nii.gz`` for a path
+    ``sub-01/T1w.nii.gz``.
+
+    The value used may be ``None``, ``np.nan``, or ``file_tree.MISSING``,
+    depending on the installed pandas/file-tree versions.
+
+    This function returns a list of all possible values, with the first entry
+    in the list the value that is expected by the ``file-tree`` API.
+    """
+
+    values = []
+
+    # Newer versions of file_tree use a special
+    # attribute MISSING to represent missing values.
+    # Older versions expect None or nan, depending
+    # on the version of pandas that is installed.
+    try:
+        if hasattr(file_tree, 'MISSING'):
+            values.append(file_tree.MISSING)
+    except Exception:
+        pass
+
+    try:
+        pdver = impmeta.version('pandas')
+        major = int(pdver.split('.')[0])
+
+        if major >= 3: values.extend([np.nan, None])
+        else:          values.extend([None, np.nan])
+
+    except Exception:
+        values.append(None)
+
+    return values
 
 
 class FileTreeQuery:
@@ -108,11 +154,19 @@ class FileTreeQuery:
             templates = self.__matcharrays.keys()
 
         variables = collections.defaultdict(set)
+        missing   = possible_missing_values()
 
         for template in templates:
             matches = self.__matcharrays[template]
             for axis in matches.dims:
-                axisvals        = set(matches.coords[axis].data)
+
+                # The way that optional path elements
+                # are encoded differs depending on the
+                # pandas/file-tree version. In FSLEyes,
+                # we replace missing values with None
+                axisvals = set(matches.coords[axis].data)
+                axisvals = [None if v in missing else v for v in axisvals]
+
                 variables[axis] = variables[axis].union(axisvals)
 
         # Variable values will usually be strings,
@@ -160,6 +214,15 @@ class FileTreeQuery:
 
         :returns: A list  of ``Match`` objects
         """
+
+        # Replace any instances of None with a
+        # suitable value depending on the installed
+        # pandas/file-tree versions
+        missing   = possible_missing_values()[0]
+        variables = {
+            k : missing if v is None else v
+            for k, v in variables.items()
+        }
 
         # Build a slice containing a value for
         # every axis of the template array

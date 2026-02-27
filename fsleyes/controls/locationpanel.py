@@ -24,6 +24,7 @@ import fsl.data.mesh                  as fslmesh
 import fsl.data.constants             as constants
 
 import fsleyes_props                  as props
+import fsleyes_widgets.dialog         as fsldlg
 import fsleyes_widgets.floatspin      as floatspin
 import fsleyes_widgets.notebook       as notebook
 import fsleyes_widgets.elistbox       as elistbox
@@ -248,7 +249,8 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         self.__worldLabel = wx.StaticText(
             self.__column1, label=strings.labels[self, 'worldLocation'])
         self.__volumeLabel = wx.StaticText(
-            self.__column1, label=strings.labels[self, 'volume'])
+            self.__column1, label=strings.labels[self, 'volume'],
+            style=wx.ALIGN_RIGHT)
         self.__voxelLabel = wx.StaticText(
             self.__column2, label=strings.labels[self, 'voxelLocation'])
 
@@ -271,26 +273,39 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
             showLimits=False,
             mousewheel=True)
 
-        self.__worldX = worldX
-        self.__worldY = worldY
-        self.__worldZ = worldZ
-        self.__voxelX = voxelX
-        self.__voxelY = voxelY
-        self.__voxelZ = voxelZ
-        self.__volume = floatspin.FloatSpinCtrl(
+        # Button which copies currently
+        # displayed coords to clipboard
+        copyBtn = wx.Button(self.__column1, label=strings.labels[self, 'copy'])
+        copyBtn.Bind(wx.EVT_BUTTON, self.__onCopy)
+
+        self.__worldX  = worldX
+        self.__worldY  = worldY
+        self.__worldZ  = worldZ
+        self.__voxelX  = voxelX
+        self.__voxelY  = voxelY
+        self.__voxelZ  = voxelZ
+        self.__copyBtn = copyBtn
+        self.__volume  = floatspin.FloatSpinCtrl(
             self.__column2,
             width=7,
             style=floatspin.FSC_MOUSEWHEEL | floatspin.FSC_INTEGER)
 
-        self.__column1Sizer = wx.BoxSizer(wx.VERTICAL)
-        self.__column2Sizer = wx.BoxSizer(wx.VERTICAL)
-        self.__sizer        = wx.BoxSizer(wx.HORIZONTAL)
+        self.__column1Sizer    = wx.BoxSizer(wx.VERTICAL)
+        self.__column2Sizer    = wx.BoxSizer(wx.VERTICAL)
+        self.__volumeCopySizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__sizer           = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.__column1Sizer.Add(self.__worldLabel,  flag=wx.EXPAND)
-        self.__column1Sizer.Add(self.__worldX,      flag=wx.EXPAND)
-        self.__column1Sizer.Add(self.__worldY,      flag=wx.EXPAND)
-        self.__column1Sizer.Add(self.__worldZ,      flag=wx.EXPAND)
-        self.__column1Sizer.Add(self.__volumeLabel, flag=wx.ALIGN_RIGHT)
+        # The copy coords button and volume label
+        # are positioned next to each other
+        self.__volumeCopySizer.Add(self.__copyBtn,     flag=wx.EXPAND)
+        self.__volumeCopySizer.Add((1, 1),             flag=wx.EXPAND, proportion=1)
+        self.__volumeCopySizer.Add(self.__volumeLabel, flag=wx.ALIGN_CENTER_VERTICAL)
+
+        self.__column1Sizer.Add(self.__worldLabel,      flag=wx.EXPAND)
+        self.__column1Sizer.Add(self.__worldX,          flag=wx.EXPAND)
+        self.__column1Sizer.Add(self.__worldY,          flag=wx.EXPAND)
+        self.__column1Sizer.Add(self.__worldZ,          flag=wx.EXPAND)
+        self.__column1Sizer.Add(self.__volumeCopySizer, flag=wx.EXPAND)
 
         self.__column2Sizer.Add(self.__voxelLabel, flag=wx.EXPAND)
         self.__column2Sizer.Add(self.__voxelX,     flag=wx.EXPAND)
@@ -380,6 +395,25 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         """Returns the best size for this ``LocationInfoPanel``.
         """
         return self.__minSize
+
+
+    def __onCopy(self, ev):
+        """Called when the "copy coordinates" button is pressed. Copies the
+        currently displayed world/voxel coordinates to the system clipboard.
+        """
+        wldx   = self.__worldX.textCtrl.GetValue()
+        wldy   = self.__worldY.textCtrl.GetValue()
+        wldz   = self.__worldZ.textCtrl.GetValue()
+        voxx   = self.__voxelZ.textCtrl.GetValue()
+        voxy   = self.__voxelY.textCtrl.GetValue()
+        voxz   = self.__voxelZ.textCtrl.GetValue()
+        coords = f'{wldx} {wldy} {wldz} {voxx} {voxy} {voxz}'
+        cb = wx.TheClipboard
+        if cb.Open():
+            cb.SetData(wx.TextDataObject(coords))
+            cb.Close()
+            fsldlg.TimeoutDialog(self.GetTopLevelParent(),
+                                 strings.labels[self, 'copied']).Show()
 
 
     def __calcWorldLabelMinSize(self):
