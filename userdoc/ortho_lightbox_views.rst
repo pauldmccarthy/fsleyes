@@ -345,7 +345,8 @@ space.
 
 You can use the coordinate controls to change the currently displayed location
 and, for 4D NIFTI images, use the volume control to change the currently
-displayed volume.
+displayed volume. Clicking on the *Copy coordinates* button will copy the
+current world and voxel coordinates to the system clipboard.
 
 
 .. warning:: Note that FSLeyes starts counting volumes from **0**, not **1**.
