@@ -404,7 +404,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         wldx   = self.__worldX.textCtrl.GetValue()
         wldy   = self.__worldY.textCtrl.GetValue()
         wldz   = self.__worldZ.textCtrl.GetValue()
-        voxx   = self.__voxelZ.textCtrl.GetValue()
+        voxx   = self.__voxelX.textCtrl.GetValue()
         voxy   = self.__voxelY.textCtrl.GetValue()
         voxz   = self.__voxelZ.textCtrl.GetValue()
         coords = f'{wldx} {wldy} {wldz} {voxx} {voxy} {voxz}'
