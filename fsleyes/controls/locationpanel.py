@@ -140,6 +140,22 @@ class LocationPanel(ctrlpanel.ControlPanel):
         self.Layout()
 
 
+    @property
+    def infoPanel(self):
+        """Returns the :class:`LocationInfoPanel` contained in this
+        ``LocationPanel``.
+        """
+        return self.__info
+
+
+    @property
+    def historyPanel(self):
+        """Returns the :class:`LocationHistoryPanel` contained in this
+        ``LocationPanel``, or ``None`` if created with ``showHistory=False``.
+        """
+        return self.__history
+
+
     def destroy(self):
         """Must be called when this ``LocationPanel`` is no longer needed. """
 
@@ -364,6 +380,12 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
 
         self.__minSize = self.__sizer.GetMinSize()
         self.SetMinSize(self.__minSize)
+
+
+    @property
+    def copyButton(self):
+        """Return the "copy coordinates" button. """
+        return self.__copyBtn
 
 
     def destroy(self):
