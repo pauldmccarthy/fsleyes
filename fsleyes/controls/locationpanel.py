@@ -140,6 +140,22 @@ class LocationPanel(ctrlpanel.ControlPanel):
         self.Layout()
 
 
+    @property
+    def infoPanel(self):
+        """Returns the :class:`LocationInfoPanel` contained in this
+        ``LocationPanel``.
+        """
+        return self.__info
+
+
+    @property
+    def historyPanel(self):
+        """Returns the :class:`LocationHistoryPanel` contained in this
+        ``LocationPanel``, or ``None`` if created with ``showHistory=False``.
+        """
+        return self.__history
+
+
     def destroy(self):
         """Must be called when this ``LocationPanel`` is no longer needed. """
 
@@ -366,6 +382,12 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         self.SetMinSize(self.__minSize)
 
 
+    @property
+    def copyButton(self):
+        """Return the "copy coordinates" button. """
+        return self.__copyBtn
+
+
     def destroy(self):
         """Must be called when this ``LocationInfoPanel`` is no longer needed.
         Removes property listeners and calls :meth:`.FSLeyesPanel.destroy`.
@@ -404,7 +426,7 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         wldx   = self.__worldX.textCtrl.GetValue()
         wldy   = self.__worldY.textCtrl.GetValue()
         wldz   = self.__worldZ.textCtrl.GetValue()
-        voxx   = self.__voxelZ.textCtrl.GetValue()
+        voxx   = self.__voxelX.textCtrl.GetValue()
         voxy   = self.__voxelY.textCtrl.GetValue()
         voxz   = self.__voxelZ.textCtrl.GetValue()
         coords = f'{wldx} {wldy} {wldz} {voxx} {voxy} {voxz}'

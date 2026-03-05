@@ -12,6 +12,18 @@ chronological order.
 
 
 
+
+1.17.1 (Thursday 5th March 2026)
+--------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed a bug in the new *Copy coordinates* location panel feature (!495).
+
+
 1.17.0 (Friday 27th February 2026)
 ----------------------------------
 
