@@ -16,8 +16,7 @@ import logging
 import contextlib
 from collections import defaultdict
 
-import numpy        as np
-import numpy.linalg as npla
+import numpy as np
 
 import fsl.data.image               as fslimage
 import fsl.utils.path               as fslpath
@@ -633,7 +632,7 @@ class DisplayContext(props.SyncableHasProperties):
             if ref is not None:
                 opts  = self.getOpts(space)
                 xform = opts.getTransform(srcSpace, 'display')
-                return npla.det(xform) > 0
+                return np.linalg.det(xform) > 0
 
         # no nifti overlays loaded
         return False
@@ -900,8 +899,8 @@ class DisplayContext(props.SyncableHasProperties):
         # with the overlay list.
         self.__updateDisplaySpaceOptions()
 
-        # Make sure each overlay has a unique name
-        if self.autoNameOverlays:
+        # Make sure each overlay has a unique name.
+        if (not self.__child) and self.autoNameOverlays:
             self.__renameOverlays()
 
         # The rest of the stuff only
@@ -1011,11 +1010,18 @@ class DisplayContext(props.SyncableHasProperties):
         """
 
         # Only rename on-disk overlays
-        ondisk = [o for o in self.overlayList if o.dataSource is not None]
+        overlays = [o for o in self.overlayList if o.dataSource is not None]
+
+        # Don't rename overlays that have been
+        # explicitly renamed. Comparing
+        # overlay.name with Display.name isn't
+        # foolproof, but should catch most
+        # cases.
+        overlays = [o for o in overlays if o.name == self.getDisplay(o).name]
 
         # Group overlays by name
         groups = defaultdict(list)
-        for o in ondisk:
+        for o in overlays:
             display = self.getDisplay(o)
             groups[dsutils.overlayName(o)].append(o)
 
@@ -1026,7 +1032,7 @@ class DisplayContext(props.SyncableHasProperties):
         # unique location in the file system
         for groupname, group in groups.items():
 
-            ondiskpaths = [op.abspath(o.dataSource) for o in ondisk]
+            ondiskpaths = [op.abspath(o.dataSource) for o in overlays]
             ondiskbase  = fslpath.commonBase(ondiskpaths)
 
             for ovl in group:

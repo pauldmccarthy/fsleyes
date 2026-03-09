@@ -2588,7 +2588,7 @@ def _applyArgs(args,
 
     for name in list(propNames):
         applied   = False
-        specified = getattr(args, longArgs[name])
+        specified = getattr(args, longArgs[name], None)
 
         # If not provided, and a _appylDefault_<target>_<propname>
         # function is defined, call it to generate a default
@@ -2747,29 +2747,6 @@ def applySceneArgs(args, overlayList, displayCtx, sceneOpts):
 
     def apply():
 
-        # Load standard underlays next,
-        # as they will affect the display
-        # space/location stuff below.
-        fsldir = fslplatform.fsldir
-        if any((args.standard,
-                args.standard_brain,
-                args.standard1mm,
-                args.standard1mm_brain)) and fsldir is None:
-            log.warning('$FSLDIR not set: -std/-stdb/-std1mm/-std1mmb '
-                        'arguments will be ignored')
-
-        if fslplatform.fsldir is not None:
-            stds = []
-            if args.standard:          stds.append('MNI152_T1_2mm')
-            if args.standard_brain:    stds.append('MNI152_T1_2mm_brain')
-            if args.standard1mm:       stds.append('MNI152_T1_1mm')
-            if args.standard1mm_brain: stds.append('MNI152_T1_1mm_brain')
-
-            for std in stds:
-                std = op.join(fslplatform.fsldir, 'data', 'standard', std)
-                std = fslimage.Image(std)
-                overlayList.insert(0, std)
-
         # First apply all command line options
         # related to the display context...
 
@@ -2918,6 +2895,27 @@ def applyOverlayArgs(args,
 
     overlayArgs = args.overlays
     paths       = [ns.overlay for ns in overlayArgs]
+
+    # Inject any requested standard templates
+    fsldir = fslplatform.fsldir
+    if any((args.standard,
+            args.standard_brain,
+            args.standard1mm,
+            args.standard1mm_brain)) and fsldir is None:
+        log.warning('$FSLDIR not set: -std/-stdb/-std1mm/-std1mmb '
+                    'arguments will be ignored')
+
+    if fslplatform.fsldir is not None:
+        stds = []
+        if args.standard:          stds.append('MNI152_T1_2mm')
+        if args.standard_brain:    stds.append('MNI152_T1_2mm_brain')
+        if args.standard1mm:       stds.append('MNI152_T1_1mm')
+        if args.standard1mm_brain: stds.append('MNI152_T1_1mm_brain')
+
+        for std in stds:
+            std = op.join(fslplatform.fsldir, 'data', 'standard', std)
+            paths      .insert(0, std)
+            overlayArgs.insert(0, argparse.Namespace())
 
     if len(paths) == 0:
         return
@@ -3157,7 +3155,7 @@ def _applySpecialOption(args,
             'Could not find apply function for special '
             'argument {} to {}'.format(optName, cls.__name__))
 
-    if getattr(args, longArg) is None:
+    if getattr(args, longArg, None) is None:
         return
 
     log.debug('Applying special argument %s to %s',
@@ -3398,7 +3396,7 @@ def _applyDefault_LightBoxOpts_zrange(args, overlayList, displayCtx, target):
     #     and DisplayContext.location has
     #     been configured (as these are
     #     applied before SceneOpts arguments
-    #     in _applySceneArgs)
+    #     in applySceneArgs)
     #
     #   - LightBoxOpts.zax has already been
     #     configured (as it comes before

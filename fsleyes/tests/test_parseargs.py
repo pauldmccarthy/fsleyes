@@ -6,14 +6,15 @@ import os.path as op
 import numpy as np
 import pytest
 
-from fsl.utils.tempdir import tempdir
-
 from fsleyes.colourmaps import LookupTable
 
 from fsleyes.tests import run_cli_tests, discretise
 
 
 pytestmark = pytest.mark.clitest
+
+
+datadir = op.join(op.dirname(__file__), 'testdata')
 
 
 def cmap(fname):

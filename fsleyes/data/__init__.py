@@ -73,9 +73,9 @@ def overlayName(overlay):
     """Returns a default name for the given overlay. """
 
     path = overlay.dataSource
-    base = op.basename(path)
 
     if path is not None:
+        base = op.basename(path)
         if isinstance(overlay, fslimage.Nifti):
             return fslimage.removeExt(base)
         elif isinstance(overlay, fslgifti.GiftiMesh):
