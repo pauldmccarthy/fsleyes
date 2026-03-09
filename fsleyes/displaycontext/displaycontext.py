@@ -899,14 +899,14 @@ class DisplayContext(props.SyncableHasProperties):
         # with the overlay list.
         self.__updateDisplaySpaceOptions()
 
+        # Make sure each overlay has a unique name.
+        if (not self.__child) and self.autoNameOverlays:
+            self.__renameOverlays()
+
         # The rest of the stuff only
         # needs to be done on child DCs
         if not self.__child:
             return
-
-        # Make sure each overlay has a unique name
-        if self.autoNameOverlays:
-            self.__renameOverlays()
 
         # Limit the selectedOverlay property
         # so it cannot take a value greater
