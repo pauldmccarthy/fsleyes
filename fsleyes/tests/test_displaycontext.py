@@ -29,13 +29,16 @@ def _test_autoNameOverlays(frame, overlayList, displayCtx):
     expnames = []
 
     with tempdir():
+        images = []
         for dirname in 'abcde':
             imagefile = op.join(dirname, 'T1.nii.gz')
             expnames.append(op.join(dirname, 'T1'))
             os.mkdir(dirname)
             shutil.copy(baseimage, imagefile)
-            overlayList.append(Image(imagefile))
-            realYield()
+            images.append(Image(imagefile))
+
+        overlayList.extend(images)
+        realYield()
 
         names = sorted(displayCtx.getDisplay(o).name for o in overlayList)
         assert names == expnames
