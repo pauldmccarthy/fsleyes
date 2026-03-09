@@ -3,13 +3,14 @@
 import os.path as op
 import warnings
 
+from unittest import mock
+
 import numpy as np
 
 import wx
 
 from fsl.data.image import Image
 
-from fsleyes.views.orthopanel import OrthoPanel
 from fsleyes.controls.locationpanel import LocationPanel
 
 from fsleyes.tests import run_with_orthopanel, realYield, simclick
@@ -45,8 +46,11 @@ def _test_LocationPanel_copy_coordinates(ortho, overlayList, displayCtx):
     displayCtx.location = expdsp
     realYield()
 
-    simclick(sim, location.infoPanel.copyButton)
-    realYield()
+    # disable the "Copied!" popup, as it may linger after
+    # the test completes, and cause subsequent problems
+    with mock.patch('fsleyes_widgets.dialog.TimeoutDialog'):
+        simclick(sim, location.infoPanel.copyButton)
+        realYield()
 
     if cb.Open():
         dataobj = wx.TextDataObject()
