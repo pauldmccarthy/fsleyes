@@ -11,6 +11,16 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+X.X.X (Unreleased)
+------------------
+
+
+Fixed
+^^^^^
+
+
+* Prevent the ``--autoName`` option from renaming overlays that have already
+  been given an explicit name by the user (!497).
 
 
 1.17.1 (Thursday 5th March 2026)
