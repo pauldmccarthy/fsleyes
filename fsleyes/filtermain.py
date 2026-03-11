@@ -189,6 +189,14 @@ def main(args=None):
     output/error streams, then calls :func:`fsleyes.main.main`.
     """
 
+    if args is None:
+        args = sys.argv[1:]
+
+    # Short-circuit if user has asked for help
+    if len(args) == 1 and args[0] in ('-h', '--help', '-fh', '--fullhelp'):
+        import fsleyes.main as fm
+        sys.exit(fm.main())
+
     warnings.filterwarnings('ignore', module='matplotlib')
     warnings.filterwarnings('ignore', module='xnat')
     warnings.filterwarnings('ignore', module='mpl_toolkits')

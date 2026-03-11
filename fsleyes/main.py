@@ -681,20 +681,22 @@ def parseArgs(argv):
 
     # We include the list of available
     # layouts in the help description
-    allLayouts  = list(layouts.BUILT_IN_LAYOUTS.keys()) + \
+    layouts     = list(layouts.BUILT_IN_LAYOUTS.keys()) + \
                   list(layouts.getAllLayouts())
+    layouts     = ', '.join(layouts)
     name        = 'fsleyes'
     prolog      = 'FSLeyes version {}\n'.format(version.__version__)
-    description = textwrap.dedent("""\
-        FSLeyes - the FSL image viewer.
-
-        Use the '--scene' option to load a saved layout ({layouts}).
-
-        If no '--scene' is specified, a default layout is shown or the
-        previous layout is restored. If a script is provided via
-        the '--runscript' argument, it is assumed that the script sets
-        up the scene.
-        """.format(layouts=', '.join(allLayouts)))
+    description = [
+        'FSLeyes - the FSL image viewer.',
+        '',
+        f'Use the "--scene" option to load a saved layout ({layouts})',
+        '',
+        'If no "--scene" is specified, a default layout is shown or the '
+        'previous layout is restored. If a script is provided via the '
+        '"--runscript" argument, it is assumed that the script sets up '
+        'the scene.']
+    description = [textwrap.fill(ln, 80) for ln in description]
+    description = '\n'.join(description)
 
     exclude = {'LightBoxOpts' : ['nrows', 'ncols']}
 
