@@ -58,6 +58,9 @@ To print the version of FSLeyes you are using::
   fsleyes  -V
 
 
+See :ref:`below <command_line_fullhelp>` for the full FSLeyes help text.
+
+
 Useful command line options
 ---------------------------
 
@@ -433,3 +436,8 @@ between generating a screenshot with an :ref:`orthographic
   fsleyes render --scene ortho    --outfile outfile file [displayOpts] ...
   fsleyes render --scene lightbox --outfile outfile file [displayOpts] ...
   fsleyes render --scene 3d       --outfile outfile file [displayOpts] ...
+
+
+.. _command_line_fullhelp:
+
+.. include:: command_line_reference.rst
