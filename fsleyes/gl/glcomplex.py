@@ -69,6 +69,9 @@ class GLComplex(glvolume.GLVolume):
         current component. Used as the prefilterRange function by the
         :class:`.ImageTexture`.
         """
+        # The ComplexOpts class updates its data range
+        # on component changes, so we can just re-use
+        # its work here.
         def pr(*a):
             return self.opts.getDataRange()
         return pr

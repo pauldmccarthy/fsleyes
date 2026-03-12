@@ -611,17 +611,13 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
                       skipIfQueued=True)
 
 
-    def refreshImageTexture(self, *args, **kwargs):
+    def refreshImageTexture(self):
         """Refreshes the :class:`.ImageTexture` used to store the
         :class:`.Image` data. This is performed through the :mod:`.resources`
         module, so the image texture can be shared between multiple
         ``GLVolume`` instances.
-
-        :arg force: Must be passed as a keyword argument. All other arguments
-                    are ignored.
         """
 
-        force    = kwargs.pop('force', False)
         opts     = self.opts
         interp   = opts.interpolation
         texName  = self.texName
@@ -632,7 +628,7 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
 
         if self.imageTexture is not None:
 
-            if (not force) and (self.imageTexture.name == texName):
+            if self.imageTexture.name == texName:
                 return
 
             self.imageTexture.deregister(self.name)
