@@ -355,6 +355,32 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         return self.auxmgr.texture('modulate')
 
 
+    def prefilterFunc(self):
+        """Returns a "prefiltering" function used by the :class:`.ImageTexture`
+        class managing the image data.
+
+        May be overridden by sub-classes. If overriding, the sub-class prefilter
+        function should take the output of this function as its input.
+        """
+        if self.opts.interpolation == 'true_spline':
+            return textures.splineFilter
+        else:
+            return None
+
+
+    def prefilterRangeFunc(self):
+        """Returns a function which calculates the prefiltered data range,
+        used by the :class:`.ImageTexture` class managing the image data.
+
+        May be overridden by sub-classes.
+        """
+        # We should provide a true_spline prefilter
+        # range function, but it won't change the
+        # data range that much, so not bothering for
+        # the time being.
+        return None
+
+
     def addDisplayListeners(self):
         """Called by :meth:`__init__`.
 
@@ -585,16 +611,17 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
                       skipIfQueued=True)
 
 
-    def refreshImageTexture(self, **kwargs):
+    def refreshImageTexture(self, *args, **kwargs):
         """Refreshes the :class:`.ImageTexture` used to store the
         :class:`.Image` data. This is performed through the :mod:`.resources`
         module, so the image texture can be shared between multiple
         ``GLVolume`` instances.
 
-        All keyword arguments are passed through to the :class:`.ImageTexture`
-        constructor.
+        :arg force: Must be passed as a keyword argument. All other arguments
+                    are ignored.
         """
 
+        force    = kwargs.pop('force', False)
         opts     = self.opts
         interp   = opts.interpolation
         texName  = self.texName
@@ -605,19 +632,14 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
 
         if self.imageTexture is not None:
 
-            if self.imageTexture.name == texName:
-                return None
+            if (not force) and (self.imageTexture.name == texName):
+                return
 
             self.imageTexture.deregister(self.name)
             glresources.delete(self.imageTexture.name)
 
-        prefilter = kwargs.pop('prefilter', None)
-
-        if interp == 'true_spline':
-            if prefilter is None:
-                prefilter = textures.splineFilter
-            else:
-                prefilter = lambda d: textures.splineFilter(prefilter(d))
+        prefilter      = self.prefilterFunc()
+        prefilterRange = self.prefilterRangeFunc()
 
         if interp == 'none': interp = gl.GL_NEAREST
         else:                interp = gl.GL_LINEAR
@@ -632,11 +654,11 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
             self.image,
             interp=interp,
             prefilter=prefilter,
+            prefilterRange=prefilterRange,
             channel=opts.channel,
             volume=opts.index()[3:],
             normaliseRange=normRange,
-            notify=False,
-            **kwargs)
+            notify=False)
 
         self.imageTexture.register(self.name, self.__texturesChanged)
 
@@ -953,8 +975,8 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
         if opts.enableOverrideDataRange: normRange = opts.overrideDataRange
         else:                            normRange = None
 
-        if interp == 'true_spline': prefilter = textures.splineFilter
-        else:                       prefilter = None
+        prefilter      = self.prefilterFunc()
+        prefilterRange = self.prefilterRangeFunc()
 
         if interp == 'none': interp = gl.GL_NEAREST
         else:                interp = gl.GL_LINEAR
@@ -964,6 +986,7 @@ class GLVolume(glimageobject.GLImageObject, globject.GLObject):
                               interp=interp,
                               volRefresh=volRefresh,
                               prefilter=prefilter,
+                              prefilterRange=prefilterRange,
                               normaliseRange=normRange)
 
         self.clipTexture    .set(interp=interp, volRefresh=False)

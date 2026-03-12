@@ -39,37 +39,33 @@ class GLComplex(glvolume.GLVolume):
         return glvolume.GLVolume.removeDisplayListeners(self)
 
 
-    def refreshImageTexture(self):
-        """Overrides :meth:`.GLVolume.refreshImageTexture`. Calls that
-        method, passing it a prefilter function to extract the complex
-        component from the image data.
-        """
-        pfunc  = self.getPrefilterFunc()
-        prfunc = self.getPrefilterRangeFunc()
-        glvolume.GLVolume.refreshImageTexture(self,
-                                              prefilter=pfunc,
-                                              prefilterRange=prfunc)
+    def prefilterFunc(self):
+        """Overrides :func:`.GLVolume.prefilterFunc`.
 
-
-    def getPrefilterFunc(self):
-        """Returns a function which extracts the component to be displayed
+        Returns a function which extracts the component to be displayed
         from the image data. Used as the prefilter function by the
         :class:`.ImageTexture`
 
         See the :attr:`ComplexOpts.component` property.
         """
 
-        opts      = self.opts
-        component = opts.component
+        opts          = self.opts
+        component     = opts.component
+        basePrefilter = super().prefilterFunc()
 
-        if   component == 'real':  return opts.getReal
-        elif component == 'imag':  return opts.getImaginary
-        elif component == 'mag':   return opts.getMagnitude
-        elif component == 'phase': return opts.getPhase
+        if   component == 'real':  prefilter = opts.getReal
+        elif component == 'imag':  prefilter = opts.getImaginary
+        elif component == 'mag':   prefilter = opts.getMagnitude
+        else:                      prefilter = opts.getPhase
+
+        if basePrefilter is None: return prefilter
+        else:                     return lambda d: prefilter(basePrefilter(d))
 
 
-    def getPrefilterRangeFunc(self):
-        """Returns a function which returns the minimum/maximum of the
+    def prefilterRangeFunc(self):
+        """Overrides :func:`.GLVolume.prefilterRangeFunc`.
+
+        Returns a function which returns the minimum/maximum of the
         current component. Used as the prefilterRange function by the
         :class:`.ImageTexture`.
         """
@@ -78,28 +74,10 @@ class GLComplex(glvolume.GLVolume):
         return pr
 
 
-    def __componentChanged(self, *a):
-        """Called when the :attr:`component` changes. Updates the image texture
-        data.
+    def __componentChanged(self):
+        """Called when the :func:`.ComplexOpts.component` changes.
+        Updates the image texture.
         """
-        # We only want the image texture data
-        # to be updated once, despite multiple
-        # calls to set() (e.g. from three
-        # GLComplex objects in an ortho panel).
-        #
-        # The ComplexOpts class has static
-        # methods for obtaining the real/imag/
-        # mag/phase components from the data.
-        # We can use these as the texture
-        # prefilter function - the image
-        # texture will only refresh its data
-        # when the prefilter function changes,
-        # which will only be on the first call
-        # (the prefilter functions are static,
-        # so subsequent calls will pass in the
-        # same function object)
-        pfunc  = self.getPrefilterFunc()
-        prfunc = self.getPrefilterRangeFunc()
-        self.imageTexture.set(prefilter=pfunc,
-                              prefilterRange=prfunc,
-                              volRefresh=False)
+        self.imageTexture.set(
+            prefilter=self.prefilterFunc(),
+            prefilterRange=self.prefilterRangeFunc())
