@@ -11,7 +11,8 @@ used throughout FSLeyes.
 import string
 
 # Made available at the package level
-from fsleyes.utils.lazyimporter import lazyimport  # noqa
+from fsleyes.utils.lazyimporter import lazyimport   # noqa
+from fsleyes.utils.robustrange  import robustRange  # noqa
 
 
 def makeValidMapKey(name):

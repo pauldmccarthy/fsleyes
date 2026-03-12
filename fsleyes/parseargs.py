@@ -271,6 +271,7 @@ import fsleyes.colourmaps     as colourmaps
 import fsleyes.data           as dutils
 import fsleyes.displaycontext as fsldisplay
 import fsleyes.plugins        as plugins
+import fsleyes.utils          as fslutils
 
 
 log = logging.getLogger(__name__)
@@ -435,6 +436,7 @@ OPTIONS = td.TypeDict({
                        'standard1mm',
                        'standard1mm_brain',
                        'initialDisplayRange',
+                       'robustRange',
                        'cmapCycle',
                        'bigmem',
                        'fontSize',
@@ -838,6 +840,7 @@ ARGUMENTS = td.TypeDict({
     'Main.standard1mm'             : ('std1mm',  'standard1mm',             False),
     'Main.standard1mm_brain'       : ('std1mmb', 'standard1mm_brain',       False),
     'Main.initialDisplayRange'     : ('idr',     'initialDisplayRange',     True),
+    'Main.robustRange'             : ('rr',      'robustRange',             False),
     'Main.cmapCycle'               : ('cy',      'cmapCycle',               False),
     'Main.bigmem'                  : ('b',       'bigmem',                  False),
     'Main.fontSize'                : ('fs',      'fontSize',                True),
@@ -1122,6 +1125,11 @@ HELP = td.TypeDict({
     'Initial display range to use for volume overlays, expressed as '
     '(low, high) intensity values. The values can be expresseed as '
     'percentiles by appending a "%%" to the high value.',
+    'Main.robustRange' :
+    'Set the initial display range for volume overlays to the "robust range" '
+    'as calculated by fslstats. Ignored if --initialDisplayRange is also '
+    'specified. For 4D images, the robust range is calculated on the first '
+    'volume. If fslstats is not available, the image data range is used.',
     'Main.cmapCycle' :
     'Automatically assign a different colour map to each volume overlay '
     '(unless one is explicitly specified).',
@@ -1850,6 +1858,7 @@ def _configMainParser(mainParser, exclude=None):
         'standard1mm_brain'       : {'action'  : 'store_true'},
         'initialDisplayRange'     : {'metavar' : ('LO', 'HI'),
                                      'nargs'   : 2},
+        'robustRange'             : {'action'  : 'store_true'},
         'cmapCycle'               : {'action'  : 'store_true'},
         'bigmem'                  : {'action'  : 'store_true'},
         'fontSize'                : {'type'    : int},
@@ -2694,8 +2703,13 @@ def applyMainArgs(args, overlayList, displayCtx):
     from fsleyes.displaycontext import (VolumeOpts, Volume3DOpts)
 
     if args.initialDisplayRange is not None:
+        # --initialDisplayRange takes precedence over --robustRange
+        args.robustRange = False
         idr, percentiles = _parseDisplayRange(args.initialDisplayRange)
         VolumeOpts.setInitialDisplayRange(idr, percentiles)
+
+    elif args.robustRange:
+        VolumeOpts.setInitialDisplayRange(fslutils.robustRange, False)
 
     Volume3DOpts.enableInterpolation = not args.no3DInterp
 

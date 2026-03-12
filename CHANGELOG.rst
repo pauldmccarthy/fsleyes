@@ -11,8 +11,17 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.17.2 (Thursday 12th March 2026)
+1.18.0 (Thursday 12th March 2026)
 ---------------------------------
+
+
+Added
+^^^^^
+
+
+* New ``--robustRange``/``-rr`` option, which uses ``fslstats -r`` to set the
+  initial display range for ``volume`` overlays. This is a global option
+  applied to all loaded images (!499).
 
 
 Fixed

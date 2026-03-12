@@ -5,16 +5,20 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 
+import os
 import os.path as op
+
+import contextlib
+import textwrap as tw
+from unittest import mock
 
 import pytest
 
 import numpy   as np
-import nibabel as nib
 
-import fsl.data.image as fslimage
+from fsl.utils.tempdir import tempdir
 
-from fsleyes.tests import run_cli_tests, zero_centre, haveFSL
+from fsleyes.tests import run_cli_tests, zero_centre, haveFSL # noqa
 
 
 pytestmark = pytest.mark.clitest
@@ -87,6 +91,9 @@ fsl_cli_tests = """
 -idr 50   100% -stdb
 -idr 50   100% -std1mm
 -idr 50   100% -std1mmb
+-rr            3d.nii.gz
+-rr            -std
+-rr            -stdb
 """
 
 
@@ -138,20 +145,39 @@ def test_render_sceneopts_3d():
                   scene='3d')
 
 
+# mock version of fslstats which returns
+# a specific robust range, for the tests
+# that use -rr
+@contextlib.contextmanager
+def mock_fslstats(dmin, dmax, *args, **kwargs):
+    with tempdir(changeto=False) as td:
+        fslstats = op.join(td, 'fslstats')
+        with open(fslstats, 'wt') as f:
+            f.write(tw.dedent(f"""
+            #!/usr/bin/env bash
+            echo "{dmin} {dmax}"
+            """).strip())
+        os.chmod(fslstats, 0o755)
+        with mock.patch('fsl.utils.run.FSL_PREFIX', td):
+            yield
+
+
 @pytest.mark.skipif('not haveFSL()')
 def test_render_fsl_sceneopts_ortho():
-    run_cli_tests('test_render_fsl_sceneopts_ortho',
-                  fsl_cli_tests,
-                  extras=extras,
-                  scene='ortho')
+    with mock_fslstats(3000, 5000):
+        run_cli_tests('test_render_fsl_sceneopts_ortho',
+                      fsl_cli_tests,
+                      extras=extras,
+                      scene='ortho')
 
 
 @pytest.mark.skipif('not haveFSL()')
 def test_render_fsl_sceneopts_lightbox():
-    run_cli_tests('test_render_fsl_sceneopts_lightbox',
-                  fsl_cli_tests,
-                  extras=extras,
-                  scene='lightbox')
+    with mock_fslstats(3000, 5000):
+        run_cli_tests('test_render_fsl_sceneopts_lightbox',
+                      fsl_cli_tests,
+                      extras=extras,
+                      scene='lightbox')
 
 
 @pytest.mark.skipif('not haveFSL()')
@@ -160,7 +186,8 @@ def test_render_fsl_sceneopts_3d():
     tests = [t for t in tests if (t != '') and (t[0] != '#')]
     tests = '\n'.join(['-dl {}'.format(t) for t in tests])
 
-    run_cli_tests('test_render_fsl_sceneopts_3d',
-                  tests,
-                  extras=extras,
-                  scene='3d')
+    with mock_fslstats(3000, 5000):
+        run_cli_tests('test_render_fsl_sceneopts_3d',
+                      tests,
+                      extras=extras,
+                      scene='3d')
