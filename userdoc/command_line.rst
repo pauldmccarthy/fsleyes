@@ -70,6 +70,7 @@ you can access through the command line interface. For full details, refer to
 the :ref:`command line help <command_line_help>`.
 
 - :ref:`Auto display <command_line_auto_display>`
+- :ref:`Initial display range <command_line_initial_display_range>`
 - :ref:`Add standard <command_line_add_standard>`
 - :ref:`Layouts <command_line_layouts>`
 - :ref:`Font size <command_line_font_size>`
@@ -100,6 +101,35 @@ value on the images.
 As another example, loading a :ref:`MELODIC analysis <ic_classification>` with
 ``--autoDisplay`` enabled will cause FSLeyes to load a background image, and
 to configure positive and negative colour maps on the ``melodic_IC`` image.
+
+
+.. _command_line_initial_display_range>:
+
+Initial display range
+^^^^^^^^^^^^^^^^^^^^^
+
+::
+   fsleyes --initialDisplayRange 0 1000 files ...
+   fsleyes -idr 0 1000                  files ...
+   fsleyes -idr 25 75%                  files ...
+   fsleyes --robustRange                files ...
+   fsleyes -rr                          files ...
+
+
+The ``--initialDisplayRange`` option tells FSLeyes to set the display range
+for all loaded images to the specified minimum/maximum values.  If the maximum
+value ends with a percent sign (``%``), the values are interpreted as
+percentiles.
+
+
+The ``--robustRange`` option tells FSLeyes to set the display range for all
+loaded images to their "robust range", as calculated by the ``fslstats -r``
+flag. If both the ``--initialDisplayRange`` and ``--robustRange`` options are
+specified, only ``--initialDisplayRange`` will be applied.
+
+
+Both the ``--initialDisplayRange`` and ``--robustRange`` options are only
+applied to normal :ref:`volume <overlays_volume>` overlays.
 
 
 .. _command_line_add_standard:

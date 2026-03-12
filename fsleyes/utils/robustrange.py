@@ -5,7 +5,8 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :func:`robustRange` function, which calculates
-the "robust range" range of an :class:`.Image`, as implemented by ``fslstats``.
+the "robust range" range of an :class:`.Image`, as implemented by the
+``fslstats -r`` option.
 """
 
 import logging
