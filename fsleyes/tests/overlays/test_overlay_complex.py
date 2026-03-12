@@ -27,6 +27,17 @@ cli_tests = """
 # don't need to specify it on the
 # command-line.
 {{complex()}}             -co phase
+
+# check that volume/component are
+# honoured, for 4D volumes
+{{complex((10, 10, 10, 5))}} -co real  -v 2
+{{complex((10, 10, 10, 5))}} -co imag  -v 2
+{{complex((10, 10, 10, 5))}} -co mag   -v 2
+{{complex((10, 10, 10, 5))}} -co phase -v 2
+{{complex((10, 10, 10, 5))}} -co real  -v 4
+{{complex((10, 10, 10, 5))}} -co imag  -v 4
+{{complex((10, 10, 10, 5))}} -co mag   -v 4
+{{complex((10, 10, 10, 5))}} -co phase -v 4
 """
 
 
