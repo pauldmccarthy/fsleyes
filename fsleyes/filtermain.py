@@ -195,7 +195,7 @@ def main(args=None):
     # Short-circuit if user has asked for help
     if len(args) == 1 and args[0] in ('-h', '--help', '-fh', '--fullhelp'):
         import fsleyes.main as fm
-        sys.exit(fm.main())
+        sys.exit(fm.main(args))
 
     warnings.filterwarnings('ignore', module='matplotlib')
     warnings.filterwarnings('ignore', module='xnat')
