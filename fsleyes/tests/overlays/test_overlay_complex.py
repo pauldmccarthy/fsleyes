@@ -80,7 +80,7 @@ def _test_complex_4D_component_refresh(ortho, overlayList, displayCtx, imgfile):
     overlayList.append(img)
     opts = displayCtx.getOpts(img)
 
-    realYield()
+    realYield(30)
 
     globj = ortho.getXCanvas().getGLObject(img)
 
@@ -89,39 +89,39 @@ def _test_complex_4D_component_refresh(ortho, overlayList, displayCtx, imgfile):
     assert np.all(np.isclose(texdata, expdata))
 
     opts.component = "imag"
-    realYield()
+    realYield(30)
     texdata = globj.imageTexture.preparedData
     expdata = opts.getImaginary(img[..., 0])
     assert np.all(np.isclose(texdata, expdata))
 
     opts.volume = 1
-    realYield()
+    realYield(30)
     texdata = globj.imageTexture.preparedData
     expdata = opts.getImaginary(img[..., 1])
     assert np.all(np.isclose(texdata, expdata))
 
     opts.component = "mag"
     opts.volume = 3
-    realYield()
+    realYield(30)
     texdata = globj.imageTexture.preparedData
     expdata = opts.getMagnitude(img[..., 3])
     assert np.all(np.isclose(texdata, expdata))
 
     opts.volume = 4
-    realYield()
+    realYield(30)
     texdata = globj.imageTexture.preparedData
     expdata = opts.getMagnitude(img[..., 4])
     assert np.all(np.isclose(texdata, expdata))
 
     opts.component = 'phase'
     opts.volume = 5
-    realYield()
+    realYield(30)
     texdata = globj.imageTexture.preparedData
     expdata = opts.getPhase(img[..., 5])
     assert np.all(np.isclose(texdata, expdata))
 
     opts.volume = 6
-    realYield()
+    realYield(30)
     texdata = globj.imageTexture.preparedData
     expdata = opts.getPhase(img[..., 6])
     assert np.all(np.isclose(texdata, expdata))
