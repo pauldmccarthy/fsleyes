@@ -880,15 +880,23 @@ def zero_centre(infile):
     return outfile
 
 
-def complex():
+def complex(shape=(10, 10, 10)):
 
-    data =      np.linspace(0, 1, 1000).reshape((10, 10, 10)) + \
-           1j * np.linspace(1, 0, 1000).reshape((10, 10, 10))
-    data = np.array(data, dtype=np.complex64)
-    img  = fslimage.Image(data, xform=np.eye(4))
-    img.save('complex.nii.gz')
+    shape = np.array(shape)
+    nelem = np.prod(shape)
+    data  = np.linspace(0, 1, nelem) + \
+            np.linspace(1, 0, nelem) * 1j
 
-    return 'complex.nii.gz'
+    # Make sure we can visually differentiate
+    # volumes i.e. the last dim is slowest
+    # changing w.r.t.  flattened linspace data
+    data  = data.reshape(shape[::-1]).transpose()
+    data  = np.array(data, dtype=np.complex64)
+    img   = fslimage.Image(data, xform=np.eye(4))
+    fname = 'complex_' + '_'.join(str(s) for s in shape) + '.nii.gz'
+    img.save(fname)
+
+    return fname
 
 
 def invert(infile):
