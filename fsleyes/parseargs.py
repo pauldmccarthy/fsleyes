@@ -1396,7 +1396,7 @@ HELP = td.TypeDict({
     'MeshOpts.modulateData' :
     'Vertex data file by which to modulate transparency by.',
     'MeshOpts.useLut' :
-    'Use a lookup table instead of colour map(S) when colouring the mesh '
+    'Use a lookup table instead of colour map(s) when colouring the mesh '
     'with vertex data.',
     'MeshOpts.lut' : 'Lookup table to use  (see -ul/--useLut).',
     'MeshOpts.discardClipped' :
@@ -1480,7 +1480,9 @@ HELP = td.TypeDict({
     'TractogramOpts.subsample' :
     'Draw a randomly selected subsample of streamlines.',
     'TractogramOpts.pseudo3D' :
-    '2D only. Draw the full 3D tractogram, overlaid on the 2D scene.',
+    '2D only. Draw the full 3D tractogram, overlaid on the 2D scene. The '
+    'default behaviour is to draw a cross-section of the tractogram at the '
+    'current depth.',
     'TractogramOpts.xclipdir' :
     '2D only. Direction in which to clip (hide) areas below/above the current '
     'X location.',

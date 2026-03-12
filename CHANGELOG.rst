@@ -11,8 +11,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-X.X.X (Unreleased)
-------------------
+1.17.2 (Thursday 12th March 2026)
+---------------------------------
 
 
 Fixed
@@ -21,6 +21,9 @@ Fixed
 
 * Prevent the ``--autoName`` option from renaming overlays that have already
   been given an explicit name by the user (!497).
+* Fixed a bug in the display of 4D complex-valued NIfTI images - when the
+  volume was changed, the real values would be displayed regardless of the
+  selected component (!498).
 
 
 1.17.1 (Thursday 5th March 2026)
