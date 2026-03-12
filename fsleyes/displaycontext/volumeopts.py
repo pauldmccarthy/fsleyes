@@ -69,10 +69,8 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         to set the initial values for the :attr:`.ColourMapOpts.displayRange`
         and :attr:`.ColourMapOpts.clippingRange` properties.
 
-        The returned tuple contains:
-         - The low and high display range values (as a tuple)
-         - ``True`` if the values should be interpreted as percentiles,
-           or ``False`` if they should be interpreted as raw intensities.
+        The returned tuple simply contains the value that were passed to
+        :func:`setInitialDisplayRange`.
 
         If the initial display range has not yet been set (via the
         :meth:`setInitialDisplayRange` method), ``None`` is returned.
@@ -89,9 +87,17 @@ class VolumeOpts(cmapopts.ColourMapOpts,
         and :attr:`.ColourMapOpts.clippingRange` to be used for new
         :class:`VolumeOpts` instances.
 
-        :arg drange:      A tuple containing ``(low, high)`` display range
-                          values. May be ``None``, in which case the initial
-                          display range will be set to the image data range.
+        :arg drange:      One of the following:
+
+                           - A tuple containing ``(low, high)`` display range
+                             values or percentiles.
+
+                           - A callable which is passed the :class:`.Image`
+                             object as its input, and returns a ``(low, high)``
+                             tuple. In this case, ``percentiles`` is ignored.
+
+                           - ``None``, in which case the initial display range
+                             will be set to the image data range.
 
         :arg percentiles: If ``True``, interpret ``drange`` as percentiles of
                           the data range of each image, rather than raw
@@ -202,7 +208,14 @@ class VolumeOpts(cmapopts.ColourMapOpts,
 
             drange, percentiles = drange
 
-            if percentiles:
+            # Initial display range might be a function
+            # which calculates the display range for us
+            if callable(drange):
+                drange = drange(overlay)
+
+            # Or might be percentiles, or (if percentiles
+            # is False) are actual display range values
+            elif percentiles:
                 if   overlay.ndim == 3: sample = overlay[:]
                 elif overlay.ndim == 4: sample = overlay[..., 0]
                 drange = np.clip(drange, 0, 100)
