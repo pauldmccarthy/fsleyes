@@ -103,12 +103,13 @@ As another example, loading a :ref:`MELODIC analysis <ic_classification>` with
 to configure positive and negative colour maps on the ``melodic_IC`` image.
 
 
-.. _command_line_initial_display_range>:
+.. _command_line_initial_display_range:
 
 Initial display range
 ^^^^^^^^^^^^^^^^^^^^^
 
 ::
+
    fsleyes --initialDisplayRange 0 1000 files ...
    fsleyes -idr 0 1000                  files ...
    fsleyes -idr 25 75%                  files ...
