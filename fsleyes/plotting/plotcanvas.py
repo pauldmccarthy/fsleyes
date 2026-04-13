@@ -772,10 +772,11 @@ class PlotCanvas(props.HasProperties):
             else:            axis.set_ylim((ymin, ymax))
 
         # legend
-        labelledSeries = [ds for ds in dataSeries if ds.label is not None]
-        labels         = [ds.label for ds in labelledSeries]
-        if len(labels) > 0 and self.legend:
+        labelledSeries = [ds for ds in self.__drawnDataSeries
+                          if ds.label is not None]
+        if len(labelledSeries) > 0 and self.legend:
 
+            labels  = [ds.label for ds in labelledSeries]
             artists = [self.__drawnDataSeries[ds] for ds in labelledSeries]
             legend  = axis.legend(
                 artists,
