@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.18.1 (Monday 13th April 2026)
+-------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Make sure that overlays with a name starting with an underscore (``_``)
+  appear in plot legends (!500).
+
+
 1.18.0 (Thursday 12th March 2026)
 ---------------------------------
 
