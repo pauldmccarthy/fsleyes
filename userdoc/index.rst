@@ -8,12 +8,8 @@ FSLeyes
 
 
 This is the user documentation for *FSLeyes* [*]_, the `FSL
-<http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/>`_ image viewer. This documentation
+<http://fsl.fmrib.ox.ac.uk/fsl/docs/>`_ image viewer. This documentation
 pertains to FSLeyes |version|.
-
-You can download the latest version of FSLeyes from the |fsleyes_homepage|_
-home page.
-
 
 If you are getting started with FSLeyes, check out the :ref:`Quick start
 <quick_start>` page.  Otherwise, choose a topic from the list below.
