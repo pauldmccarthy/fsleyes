@@ -415,4 +415,5 @@ def splineFilter(data):
     """Wrapper for ``scipy.ndimage.spline_filter``. Applies a pre-filter
     to the given data to make it suitable for spline interpolation.
     """
-    return ndimage.spline_filter(data, order=3, output=data.dtype)
+    filtered = ndimage.spline_filter(data, order=3, output=np.float32)
+    return filtered.astype(data.dtype)
