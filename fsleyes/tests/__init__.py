@@ -409,6 +409,7 @@ def run_render_test(
     result, diff = compare_images(testimg, benchimg, threshold)
 
     assert result
+    return diff
 
 
 def run_cli_tests(
@@ -475,9 +476,9 @@ def run_cli_tests(
             testfile  = op.join(td, fname)
 
             try:
-                run_render_test(list(test.split()), testfile, benchmark,
-                                scene=scene, threshold=threshold, hook=hook)
-                print('CLI test passed [{}] {}'.format(prefix, test))
+                score = run_render_test(list(test.split()), testfile, benchmark,
+                                        scene=scene, threshold=threshold, hook=hook)
+                print(f'CLI test passed[{prefix}] ({score:.4f}) {test}')
 
             except Exception as e:
                 allpassed = False
