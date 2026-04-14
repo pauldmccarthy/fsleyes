@@ -11,8 +11,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.18.1 (Monday 13th April 2026)
--------------------------------
+1.18.1 (Tuesday 14th April 2026)
+--------------------------------
 
 
 Fixed
@@ -21,6 +21,8 @@ Fixed
 
 * Make sure that overlays with a name starting with an underscore (``_``)
   appear in plot legends (!500).
+* Fixed a bug when displaying RGB volumes with prefiltered spline
+  interpolation (!500).
 
 
 1.18.0 (Thursday 12th March 2026)
