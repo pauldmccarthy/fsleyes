@@ -149,18 +149,23 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
         to store the image data.
         """
 
-        texName = '{}_{}' .format(type(self).__name__, id(self.image))
+        texName = f'{type(self).__name__}_{id(self.image)}'
         nvals   = self.overlay.nvals
         interp  = self.opts.interpolation
-
-        if interp == 'true_spline': prefilter = textures.splineFilter
-        else:                       prefilter = None
 
         if interp == 'none': interp = gl.GL_NEAREST
         else:                interp = gl.GL_LINEAR
 
         if nvals == 1:
             nvals = self.overlay.shape[-1]
+
+        def prefilter(data):
+            data = np.copy(data)
+            if self.opts.interpolation == 'true_spline':
+                data[0] = textures.splineFilter(data[0])
+                data[1] = textures.splineFilter(data[1])
+                data[2] = textures.splineFilter(data[2])
+            return data
 
         self.imageTexture = glresources.get(
             texName,
@@ -182,13 +187,10 @@ class GLRGBVolume(glimageobject.GLImageObject, globject.GLObject):
 
         interp = self.opts.interpolation
 
-        if interp == 'true_spline': prefilter = textures.splineFilter
-        else:                       prefilter = None
-
         if interp == 'none': interp = gl.GL_NEAREST
         else:                interp = gl.GL_LINEAR
 
-        self.imageTexture.set(interp=interp, prefilter=prefilter)
+        self.imageTexture.set(interp=interp)
 
 
     def __imageTextureChanged(self, *a):
