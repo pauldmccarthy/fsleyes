@@ -662,11 +662,13 @@ class FSLeyesFrame(wx.Frame):
         if ctrls is None:
             return
 
-        ctrls = [plugins.lookupControl(c) for c in ctrls]
-
         for ctrl in ctrls:
+            cls = plugins.lookupControl(ctrl)
+            if cls is None:
+                log.warning(f'Unable to find control panel: {ctrl}')
+                continue
             title = plugins.pluginTitle(ctrl)
-            viewPanel.togglePanel(ctrl, title=title)
+            viewPanel.togglePanel(cls, title=title)
 
 
     def refreshViewMenu(self):
