@@ -442,6 +442,23 @@ def test_complementaryColour():
     assert crgba[3]   == 0.6
 
 
+def test_rgbtohex():
+    tests = [
+        ((1,  1, 1),         '#ffffff'),
+        ((1,  1, 0),         '#ffff00'),
+        ((1,  0, 1),         '#ff00ff'),
+        ((0,  1, 1),         '#00ffff'),
+        ((0.50196,1, 1),     '#80ffff'),
+        ((1, 1, 1, 0),       '#ffffff00'),
+        ((1, 1, 1, 1),       '#ffffffff'),
+        ((1, 0, 1, 0.50196), '#ff00ff80')
+    ]
+
+    for rgb, hex in tests:
+        assert fslcm.rgbtohex(rgb) == hex
+        assert np.all(np.isclose(fslcm.hextorgb(hex), rgb))
+
+
 def test_LookupTable():
     lut = tw.dedent("""
     1 0 0 0 Label 1
