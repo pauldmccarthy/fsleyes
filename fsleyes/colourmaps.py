@@ -202,6 +202,8 @@ colours:
 .. autosummary::
    :nosignatures:
 
+   rgbtohex
+   hextorgb
    displayRangeToBricon
    briconToDisplayRange
    briconToScaleOffset
@@ -220,7 +222,6 @@ import operator  as ops
 import os.path   as op
 import              os
 import              bisect
-import              string
 import              logging
 import              colorsys
 
@@ -984,6 +985,55 @@ def loadLookupTableFile(fname):
 ###############
 
 
+def _normaliseRGB(rgb):
+    """Converts rgb from a hex colour string to a (r, g, b[, a]) tuple
+    of values between 0 and 1.
+    """
+    if isinstance(rgb, str) and rgb.startswith('#'):
+        return hextorgb(rgb)
+    else:
+        return rgb
+
+
+def rgbtohex(rgb : tuple[float]) -> hex:
+    """Convert a tuple of floats in the range [0, 1] to a RGB[A] hex string.
+    """
+    if len(rgb) not in (3, 4):
+        raise ValueError(f'Invalid rgb(a) tuple: {rgb}')
+
+    def tohex(v):
+        v = round(v * 255)
+        return f'{v:02x}'
+
+    r = tohex(rgb[0])
+    g = tohex(rgb[1])
+    b = tohex(rgb[2])
+
+    if len(rgb) == 3:
+        return f'#{r}{g}{b}'
+    else:
+        a = tohex(rgb[3])
+        return f'#{r}{g}{b}{a}'
+
+
+def hextorgb(hex : str) -> tuple[float]:
+    """Convert a RGB[A] hex string to a tuple of floats in the range [0, 1].
+    """
+
+    if len(hex) not in (7, 9):
+        raise ValueError(f'Invalid colour hex string: {hex}')
+
+    r = int(hex[1:3], base=16) / 255
+    g = int(hex[3:5], base=16) / 255
+    b = int(hex[5:7], base=16) / 255
+
+    if len(hex) == 9:
+        a = int(hex[7:9], base=16) / 255
+        return (r, g, b, a)
+    else:
+        return (r, g, b)
+
+
 def briconToScaleOffset(brightness, contrast, drange):
     """Used by the :func:`briconToDisplayRange` and the :func:`applyBricon`
     functions.
@@ -1101,6 +1151,7 @@ def applyBricon(rgb, brightness, contrast):
 
     :arg contrast:   A contrast level in the range ``[0, 1]``.
     """
+    rgb       = _normaliseRGB(rgb)
     rgb       = np.array(rgb, dtype=float)
     oneColour = len(rgb.shape) == 1
     rgb       = rgb.reshape(-1, rgb.shape[-1])
@@ -1168,6 +1219,7 @@ def complementaryColour(rgb):
     If the given ``rgb`` sequence contains four values, the fourth
     value (e.g. alpha) is returned unchanged.
     """
+    rgb = _normaliseRGB(rgb)
 
     if len(rgb) >= 4:
         a   = list(rgb[3:])
