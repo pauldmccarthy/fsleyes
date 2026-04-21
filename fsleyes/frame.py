@@ -18,8 +18,8 @@ import              logging
 
 from typing import Type
 
-import wx
-import wx.lib.agw.aui               as aui
+import           wx
+import wx.aui as aui
 
 import fsl.utils.idle               as idle
 import fsl.utils.settings           as fslsettings
@@ -215,10 +215,9 @@ class FSLeyesFrame(wx.Frame):
         # whidbey guides.
         self.__auiManager = aui.AuiManager(
             self.__mainPanel,
-            agwFlags=(aui.AUI_MGR_RECTANGLE_HINT          |
-                      aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
-                      aui.AUI_MGR_AERO_DOCKING_GUIDES     |
-                      aui.AUI_MGR_LIVE_RESIZE))
+            flags=(aui.AUI_MGR_ALLOW_FLOATING   |
+                   aui.AUI_MGR_TRANSPARENT_HINT |
+                   aui.AUI_MGR_LIVE_RESIZE))
 
         self.__auiManager.SetDockSizeConstraint(0.5, 0.5)
 
@@ -298,7 +297,7 @@ class FSLeyesFrame(wx.Frame):
         # __makeRecentPathsMenu methods
         import fsleyes.actions.loadoverlay as loadoverlay
         loadoverlay.recentPathManager.register(
-            self.__name, self.__makeRecentPathsMenu)
+           self.__name, self.__makeRecentPathsMenu)
 
         # This dictionary contains mappings of the form
         #
@@ -535,33 +534,29 @@ class FSLeyesFrame(wx.Frame):
         paneInfo = (aui.AuiPaneInfo()
                     .Name(name)
                     .Caption(title)
-                    .CloseButton()
-                    .Dockable()
                     .Resizable()
                     .DestroyOnClose())
 
-        # When there is only one view panel
-        # displayed, the AuiManager seems to
-        # have trouble drawing the caption
-        # bar - it is drawn, but then the
-        # panel is drawn over the top of it.
-        # So if we only have one panel, we
-        # hide the caption bar
-        if panelId == 1:
-            paneInfo.Centre().Dockable(False).CaptionVisible(False)
+        # The first panel opened is set to the
+        # centre. It cannot be re-docked, but
+        # subsequent panels can be floated and
+        # docked around the centre panel.
+        (paneInfo.CaptionVisible(panelId > 1)
+                 .CloseButton(   panelId > 1)
+                 .Floatable(     panelId > 1)
+                 .Dockable(      panelId > 1))
 
-        # But then re-show it when another
-        # panel is added. The __viewPanels
-        # dict is an OrderedDict, so the
-        # first key is the AuiPaneInfo of
-        # the first panel that was added.
-        else:
-            self.__auiManager.GetPane(self.__viewPanels[0])\
-                             .CaptionVisible(True)
+        if panelId == 1:
+            paneInfo.Centre()
 
         # If this is not the first view panel,
         # give it a sensible initial size.
-        if panelId > 1:
+        else:
+            # Additional panels - show the caption
+            # and close button on the first panel
+            (self.__auiManager.GetPane(self.__viewPanels[0])
+                              .CloseButton(   True)
+                              .CaptionVisible(True))
 
             width, height      = self.GetClientSize().Get()
             loc, width, height = self.viewPanelLocationAndSize(
@@ -1130,17 +1125,20 @@ class FSLeyesFrame(wx.Frame):
         # If the removed panel was the centre
         # pane, move another panel to the centre
         numPanels = len(self.__viewPanels)
-        wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
+        wasCentre = paneInfo.dock_direction == aui.AUI_DOCK_CENTRE
 
-        if numPanels >= 1 and wasCentre:
+        if wasCentre and numPanels >= 1:
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
-            paneInfo.Centre()
 
-        # If there is only one panel
-        # left, hide its title bar
-        if numPanels == 1:
-            paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
-            paneInfo.Dockable(False).CaptionVisible(False)
+            if wasCentre:
+                paneInfo.Centre()
+
+            # If there is only one panel remaining,
+            # hide its title bar and close button
+            (paneInfo.CloseButton(   numPanels > 1)
+                     .CaptionVisible(numPanels > 1)
+                     .Floatable(     numPanels > 1)
+                     .Dockable(      numPanels > 1))
 
         # if there are no panels,
         # disable the menus
