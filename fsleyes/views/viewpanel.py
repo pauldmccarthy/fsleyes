@@ -15,8 +15,8 @@ import itertools as it
 
 from typing import Optional, Any
 
-import                                  wx
-import wx.lib.agw.aui                as aui
+import           wx
+import wx.aui as aui
 
 import fsl.utils.notifier            as notifier
 
@@ -226,17 +226,13 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # the user of aero docking guides.
         self.__auiMgr = aui.AuiManager(
             self,
-            agwFlags=(aui.AUI_MGR_RECTANGLE_HINT          |
-                      aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
-                      aui.AUI_MGR_ALLOW_FLOATING          |
-                      aui.AUI_MGR_AERO_DOCKING_GUIDES     |
-                      aui.AUI_MGR_LIVE_RESIZE))
+            flags=(aui.AUI_MGR_ALLOW_FLOATING   |
+                   aui.AUI_MGR_TRANSPARENT_HINT |
+                   aui.AUI_MGR_LIVE_RESIZE))
 
         self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
         self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE,
                            self.__onPaneClose)
-        self.__auiMgr.Bind(aui.EVT_AUI_PERSPECTIVE_CHANGED,
-                           self.__onPerspectiveChange)
 
         # A very shitty necessity. When panes are floated,
         # the AuiManager sets the size of the floating frame
@@ -567,6 +563,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__auiMgr.AddPane(window, paneInfo)
         self.__panels[panelType] = window
         self.__auiMgrUpdate(newPanel=window)
+        self.events.notify(topic='aui_perspective')
         return window
 
 
@@ -623,7 +620,12 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             # toolbar's new size is accommodated
             panel.Bind(fsltoolbar.EVT_TOOLBAR_EVENT, self.__auiMgrUpdate)
 
-        paneInfo.Caption(title)
+        paneInfo.Caption(title)                             \
+                .CaptionVisible(not isToolbar)              \
+                .CloseButton((not isToolbar) and closeable) \
+                .Dockable(not floatOnly)                    \
+                .Floatable(True)                            \
+                .Resizable(floatPane or (not isToolbar))
 
         # Dock the pane at the position specified
         # by the location parameter
@@ -638,11 +640,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             elif location == wx.LEFT:   location = aui.AUI_DOCK_LEFT
             elif location == wx.RIGHT:  location = aui.AUI_DOCK_RIGHT
 
-            # Make sure the pane is
-            # resizable in case it
-            # gets floated later on
-            paneInfo.Direction(location) \
-                    .Resizable(not isToolbar)
+            paneInfo.Dock().Direction(location)
 
         # Or, for floating panes, centre the
         # floating pane on this ViewPanel
@@ -653,15 +651,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             selfCentre = (selfPos[0] + selfSize[0] * floatPos[0],
                           selfPos[1] + selfSize[1] * floatPos[1])
 
-            paneSize = panel.GetBestSize().Get()
-            panePos  = (int(round(selfCentre[0] - paneSize[0] * 0.5)),
-                        int(round(selfCentre[1] - paneSize[1] * 0.5)))
+            paneSize   = panel.GetBestSize().Get()
+            panePos    = (int(round(selfCentre[0] - paneSize[0] * 0.5)),
+                          int(round(selfCentre[1] - paneSize[1] * 0.5)))
 
-            paneInfo.Float()                 \
-                    .Resizable(True)         \
-                    .Dockable(not floatOnly) \
-                    .CloseButton(closeable)  \
-                    .FloatingPosition(panePos)
+            paneInfo.Float().FloatingPosition(panePos)
 
         return paneInfo
 
@@ -764,7 +758,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         #    - Dock direction (None for floating panels)
         #    - Layer number (None for floating panels)
         #    - Minimum size
-        bestSizes = []
+        bestSizes = {}
 
         for panel in self.__panels.values():
 
@@ -795,17 +789,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 layer    = pinfo.dock_layer
                 bestSize = panel.GetBestSize().Get()
 
-            bestSizes.append((panel, pinfo, dockDir, layer, bestSize))
+            bestSizes[panel] = (pinfo, dockDir, layer, bestSize)
 
         # Now we loop through one final time, and
         # set all of the necessary size hints on
         # the AuiPaneInfo instances.
-        for panel, pinfo, dockDir, layer, bestSize in bestSizes:
+        for panel, (pinfo, dockDir, layer, bestSize) in bestSizes.items():
 
             parent = panel.GetParent()
 
             # When a panel is added/removed from the AuiManager,
-            # the position of floating panels seems to get reset
+            # the position of floating panels may be reset
             # to their original position, when they were created.
             # Here, we explicitly set the position of each
             # floating frame, so the AuiManager doesn't move our
@@ -819,25 +813,30 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             floatSize = (bestSize[0] + self.__floatOffset[0],
                          bestSize[1] + self.__floatOffset[1])
 
-            log.debug('New size for panel {} - '
-                      'best: {}, float: {}'.format(
-                          type(panel).__name__, bestSize, floatSize))
+            log.debug('New size for panel %s - best: %s, float: %s',
+                      type(panel).__name__, bestSize, floatSize)
 
-            pinfo.MinSize(     (1, 1))  \
-                 .BestSize(    bestSize) \
+            pinfo.MinSize(     (1, 1))    \
+                 .BestSize(    bestSize)  \
                  .FloatingSize(floatSize) \
                  .Resizable(   True)
 
-            # This is a terrible hack which forces
-            # the AuiManager to grow a dock when a
-            # new panel is added, which is bigger
-            # than the existing dock contents.
-            if panel is newPanel and not pinfo.IsFloating():
-                docks = aui.FindDocks(self.__auiMgr._docks, dockDir, layer)
-                for d in docks:
-                    d.size = 0
+            # Hack - when a new panel is added,
+            # temporarily fix its minimum height
+            # to ensure that an existing dock is
+            # resized to fit the panel. Otherwise
+            # the panel will be sized to fit the
+            # existing dock.
+            # https://github.com/wxWidgets/wxWidgets/issues/13180
+            if newPanel is not None:
+                pinfo.Fixed().MinSize((1, bestSize[-1]))
 
         self.__auiMgr.Update()
+
+        # Make new panel resizable after it was fixed above
+        if newPanel is not None:
+            bestSizes[newPanel][0].Resizable().MinSize((1, 1))
+            self.__auiMgr.Update()
 
 
     def __onPaneClose(self, ev=None, panel=None):
@@ -925,11 +924,4 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # Update the view panel layout
         wx.CallAfter(self.__auiMgrUpdate)
 
-
-    def __onPerspectiveChange(self, ev):
-        """Called on ``EVT_AUI_PERSPECTIVE_CHANGED`` events. Re-emits the
-        event via the :meth:`events` notifier, with topic ``'aui_perspective'``.
-        This is performed for the benefit of non-wx entities which need to
-        know about layout changes.
-        """
         self.events.notify(topic='aui_perspective')
