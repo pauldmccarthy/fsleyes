@@ -389,7 +389,7 @@ def saveLayout(frame, title):
     """
 
     if title in BUILT_IN_LAYOUTS.keys():
-        raise ValueError(f'A built-in layout named "{name}" '
+        raise ValueError(f'A built-in layout named "{title}" '
                          'already exists')
 
     log.debug('Saving current layout with name %s', title)

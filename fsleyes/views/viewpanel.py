@@ -13,9 +13,10 @@ documentation for more details.
 import              logging
 import itertools as it
 
+from typing import Optional, Any
+
 import                                  wx
 import wx.lib.agw.aui                as aui
-import wx.lib.agw.aui.framemanager   as auifm
 
 import fsl.utils.notifier            as notifier
 
@@ -93,7 +94,10 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     """
 
 
-    def controlOptions(self, cpType):
+    def controlOptions(
+            self,
+            cpType : ctrlpanel.ControlPanel
+    ) -> Optional[dict[str, Any]]:
         """May be overridden by sub-classes. Given a control panel type,
         may return a dictionary containing arguments to be passed to
         the  ``__init__`` method when the control panel is created.
@@ -102,7 +106,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
-    def title():
+    def title() -> Optional[str]:
         """May be overridden by sub-classes. Returns a title for this
         ``ViewPanel``, to be used in menus and window title bars.
         """
@@ -110,7 +114,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
-    def controlOrder():
+    def controlOrder() -> Optional[list[str]]:
         """May be overridden by sub-classes. Returns a list of names of
         control panel types, specifying a suggested order for the
         settings menu for views of this type.
@@ -119,7 +123,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
-    def toolOrder():
+    def toolOrder() -> Optional[list[str]]:
         """May be overridden by sub-classes. Returns a list of names of
         tools, specifying a suggested order for the corresponding entries
         in the FSLeyes tools menu. Note that the ordering of tools returned
@@ -130,7 +134,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
-    def defaultLayout():
+    def defaultLayout() -> Optional[list[str]]:
         """May be overridden by sub-classes. Should return a list of names of
         FSLeyes :class:`.ControlPanel` types which form the default layout for
         this view.
@@ -139,7 +143,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
-    def defaultLocation():
+    def defaultLocation() -> Optional[tuple[int, int]]:
         """May be overridden by sub-classes. Should return a sequence
         containing:
 
@@ -153,7 +157,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @staticmethod
-    def displayType():
+    def displayType() -> Optional[str]:
         """May be overridden by sub-classes. May return a string which
         describes the type of display/view that this ``ViewPanel`` provides.
         This might be used as a hint by :class:`.Display` /
@@ -243,9 +247,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # the AuiFloatingFrame derives), and saving the size
         # of its trimmings for later use in the togglePanel
         # method.
-        ff         = wx.MiniFrame(self)
-        size       = ff.GetSize().Get()
-        clientSize = ff.GetClientSize().Get()
+        ff                 = wx.MiniFrame(self)
+        size               = ff.GetSize().Get()
+        clientSize         = ff.GetClientSize().Get()
         self.__floatOffset = (size[0] - clientSize[0],
                               size[1] - clientSize[1])
         ff.Destroy()
@@ -319,7 +323,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # this ViewPanel.
 
         # remove listeners from overlaylist and display context
-        lName = 'ViewPanel_{}'.format(self.name)
+        lName = f'ViewPanel_{self.name}'
         self.overlayList.removeListener('overlays',        lName)
         self.displayCtx .removeListener('selectedOverlay', lName)
 
@@ -368,7 +372,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return self.__events
 
 
-    def initProfile(self, defaultProfile):
+    def initProfile(self, defaultProfile : profiles.Profile):
         """Must be called by subclasses, after they have initialised all
         of the attributes which may be needed by their associated
         :class:`.Profile` instances.
@@ -379,13 +383,13 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @property
-    def currentProfile(self):
+    def currentProfile(self) -> profiles.Profile:
         """Returns the :class:`.Profile` instance currently in use. """
         return self.__profileManager.getCurrentProfile()
 
 
     @property
-    def profileManager(self):
+    def profileManager(self) -> profiles.ProfileManager:
         """Returns a reference to the :class:`.ProfileManager` used by
         this ``ViewPanel``.
         """
@@ -393,14 +397,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @property
-    def centrePanel(self):
+    def centrePanel(self) -> wx.Window:
         """Returns the primary (centre) panel on this ``ViewPanel``.
         """
         return self.__centrePanel
 
 
     @centrePanel.setter
-    def centrePanel(self, panel):
+    def centrePanel(self, panel : wx.Window):
         """Set the primary centre panel for this ``ViewPanel``. This method
         is only intended to be called by sub-classes.
         """
@@ -415,7 +419,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.__centrePanel = panel
 
 
-    def togglePanel(self, panelType, *args, **kwargs):
+    def togglePanel(
+            self,
+            panelType : type[ctrlpanel.ControlPanel],
+            *args,
+            **kwargs) -> ctrlpanel.ControlPanel:
         """Add/remove the secondary control panel of the specified type to/from
         this ``ViewPanel``.
 
@@ -658,14 +666,17 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         return paneInfo
 
 
-    def isPanelOpen(self, panelType):
+    def isPanelOpen(self, panelType : type[ctrlpanel.ControlPanel]) -> bool:
         """Returns ``True`` if a panel of type ``panelType`` is open,
         ``False`` otherwise.
         """
         return self.getPanel(panelType) is not None
 
 
-    def getPanel(self, panelType):
+    def getPanel(
+            self,
+            panelType : type[ctrlpanel.ControlPanel]
+    ) -> Optional[ctrlpanel.ControlPanel]:
         """If an instance of ``panelType`` exists, it is returned.
         Otherwise ``None`` is returned.
         """
@@ -690,14 +701,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         self.frame.removeViewPanel(self)
 
 
-    def getPanels(self):
+    def getPanels(self) -> list[ctrlpanel.ControlPanel]:
         """Returns a list containing all control panels currently shown in this
         ``ViewPanel``.
         """
         return list(self.__panels.values())
 
 
-    def getPanelInfo(self, panel):
+    def getPanelInfo(self, panel : ctrlpanel.ControlPanel) -> aui.AuiPaneInfo:
         """Returns the ``AuiPaneInfo`` object which contains information about
         the given control panel.
         """
@@ -705,7 +716,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
 
     @property
-    def auiManager(self):
+    def auiManager(self) -> aui.AuiManager:
         """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
         layout of this ``ViewPanel``.
         """

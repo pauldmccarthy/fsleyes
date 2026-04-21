@@ -15,6 +15,7 @@ class for certain *FSLeyes* control panels (see the ::mod:`fsleyes`
 documentation).
 """
 
+from typing import Optional, Any
 
 import                   wx
 import wx.lib.agw.aui as wxaui
@@ -30,7 +31,7 @@ class ControlMixin:
     """
 
     @staticmethod
-    def title():
+    def title() -> Optional[str]:
         """May be overridden by sub-classes. Returns a title to be used
         in menus and window title bars.
         """
@@ -38,7 +39,7 @@ class ControlMixin:
 
 
     @staticmethod
-    def ignoreControl():
+    def ignoreControl() -> bool:
         """Tell FSLeyes that this control should not be considered a FSLeyes
         plugin.
 
@@ -57,8 +58,8 @@ class ControlMixin:
     def supportedViews():
         """Return the views that this control supports.
 
-        This method may be overridden by sub-classes to return a list of
-        the view types that are supported by this control. For example, the
+        This method may be overridden by sub-classes to return a list of the
+        view types that are supported by this control. For example, the
         :class:`.OrthoToolBar` control is intended to be used solely with the
         :class:`.OrthoPanel` view.
 
@@ -69,7 +70,7 @@ class ControlMixin:
 
 
     @staticmethod
-    def supportSubClasses():
+    def supportSubClasses() -> bool:
         """May be overridden by sub-classes. If this control panel is intended
         for use with specific views, via the :meth:`supportedViews` method,
         this method specifies whether sub-classes of the :meth:`supportedViews`
@@ -84,7 +85,7 @@ class ControlMixin:
 
 
     @staticmethod
-    def defaultLayout():
+    def defaultLayout() -> Optional[dict[str, Any]]:
         """Return default options for :meth:`.ViewPanel.togglePanel`.
 
         This method may be overridden by sub-classes to return a ``dict``
