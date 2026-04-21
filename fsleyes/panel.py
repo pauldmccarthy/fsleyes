@@ -106,12 +106,10 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         props.SyncableHasProperties.__init__(self)
 
         if not isinstance(displayCtx, displaycontext.DisplayContext):
-            raise TypeError(
-                'displayCtx must be a '
-                '{} instance'.format( displaycontext.DisplayContext.__name__))
+            raise TypeError('displayCtx must be a DisplayContext instance')
 
         self.__frame     = frame
-        self.__name      = '{}_{}'.format(self.__class__.__name__, id(self))
+        self.__name      = f'{self.__class__.__name__}_{id(self)}'
         self.__destroyed = False
         self.__navOrder  = None
 
@@ -129,18 +127,18 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
         allChildren = []
         for c in children:
-            if type(c) == wx.Panel: allChildren.extend(c.GetChildren())
-            else:                   allChildren.append(c)
+            if isinstance(c, wx.Panel): allChildren.extend(c.GetChildren())
+            else:                       allChildren.append(c)
 
         children = allChildren
 
-        log.debug('Updating nav order for {}'.format(type(self).__name__))
+        log.debug('Updating nav order for %s', type(self).__name__)
         for i, w in enumerate(children):
 
-            log.debug('{} nav {:2d}: {}'.format(
-                type(self).__name__,
-                i,
-                type(w).__name__))
+            log.debug('%s nav %2d: %s',
+                      type(self).__name__,
+                      i,
+                      type(w).__name__)
 
             # Special cases for some of our custom controls
             if isinstance(w, floatspin.FloatSpinCtrl):
@@ -180,10 +178,10 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         try:
             focusIdx = self.__navOrder.index(wx.Window.FindFocus())
 
-            log.debug('{} focus nav event ({:2d} [{}] is focused)'.format(
-                type(self).__name__,
-                focusIdx,
-                type(wx.Window.FindFocus()).__name__))
+            log.debug('%s focus nav event (%2d [%s] is focused)',
+                      type(self).__name__,
+                      focusIdx,
+                      type(wx.Window.FindFocus()).__name__)
 
         # Some other widget that we
         # don't care about has focus.
@@ -209,10 +207,10 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
 
         toFocus = self.__navOrder[nextIdx]
 
-        log.debug('{}: moving focus to {:2d} [{}]'.format(
-            type(self).__name__,
-            nextIdx,
-            type(toFocus).__name__))
+        log.debug('%s: moving focus to %2d [%s]',
+                  type(self).__name__,
+                  nextIdx,
+                  type(toFocus).__name__)
 
         toFocus.SetFocus()
 
@@ -286,9 +284,9 @@ class _FSLeyesPanel(actions.ActionProvider, props.SyncableHasProperties):
         is logged.
         """
         if not self.__destroyed:
-            log.warning('The {}.destroy() method has not been called '
+            log.warning('The %s.destroy() method has not been called '
                         '- unless the application is shutting down, '
-                        'this is probably a bug!'.format(type(self).__name__))
+                        'this is probably a bug!', type(self).__name__)
 
 
 class FSLeyesPanel(_FSLeyesPanel, wx.Panel):

@@ -37,7 +37,7 @@ class PlotControlPanel(ctrlpanel.SettingsPanel):
       - Override :meth:`generateDataSeriesWidgets` to add to the default group
         of widgets controlling :class:`.DataSeries` properties.
 
-      - Override :meth:`generateDataSeriesWidgets` to create a new group
+      - Override :meth:`generateCustomDataSeriesWidgets` to create a new group
         of widgets controlling :class:`.DataSeries` properties.
 
 

@@ -153,7 +153,7 @@ def openHelp(self, *args, **kwargs):
     """Opens FSLeyes help in a web browser. """
 
     import fsleyes_widgets.utils.webpage as webpage
-    url = 'https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/userdoc/'
+    url = 'https://open.oxcin.ox.ac.uk/pages/fsl/fsleyes/fsleyes/userdoc/'
     webpage.openPage(url)
 
 
