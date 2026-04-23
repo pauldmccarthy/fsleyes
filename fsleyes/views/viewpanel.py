@@ -600,7 +600,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             # So in order to put a new toolbar at the
             # innermost layer, we need to adjust the
             # layers of all other existing toolbars
-
             for p in self.__panels.values():
                 if isinstance(p, ctrlpanel.ControlToolBar):
                     info = self.__auiMgr.GetPane(p)
@@ -624,8 +623,9 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 .CaptionVisible(not isToolbar)              \
                 .CloseButton((not isToolbar) and closeable) \
                 .Dockable(not floatOnly)                    \
-                .Floatable(True)                            \
-                .Resizable(floatPane or (not isToolbar))
+                .DockFixed(isToolbar)                       \
+                .Resizable(not isToolbar)                   \
+                .Floatable(True)
 
         # Dock the pane at the position specified
         # by the location parameter
@@ -750,20 +750,18 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # then calls AuiManager.Update.
 
         # We first loop through all panels, and
-        # figure out their best sizes. Each entry
-        # in this list is a tuple containing:
+        # figure out their best sizes. This dict
+        # contains panels as keys, and tuples as
+        # values, containing:
         #
-        #    - Panel
         #    - AuiPaneInfo instance
         #    - Dock direction (None for floating panels)
         #    - Layer number (None for floating panels)
+        #    - Best size
         #    - Minimum size
-        bestSizes = {}
+        layouts = {}
 
         for panel in self.__panels.values():
-
-            if isinstance(panel, ctrlpanel.ControlToolBar):
-                continue
 
             pinfo = self.__auiMgr.GetPane(panel)
 
@@ -775,6 +773,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             if pinfo.IsFloating():
                 dockDir  = None
                 layer    = None
+                minSize  = panel.GetMinSize().Get()
                 bestSize = panel.GetSize().Get()
 
                 # Unless its current size is tiny
@@ -784,19 +783,22 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                    bestSize[1] <= 20:
                     bestSize = panel.GetBestSize().Get()
 
+            # Otherwise use the panel's actual best size
             else:
                 dockDir  = pinfo.dock_direction
                 layer    = pinfo.dock_layer
                 bestSize = panel.GetBestSize().Get()
+                minSize  = panel.GetMinSize().Get()
 
-            bestSizes[panel] = (pinfo, dockDir, layer, bestSize)
+            layouts[panel] = (pinfo, dockDir, layer, bestSize, minSize)
 
         # Now we loop through one final time, and
         # set all of the necessary size hints on
         # the AuiPaneInfo instances.
-        for panel, (pinfo, dockDir, layer, bestSize) in bestSizes.items():
+        for panel, layout in layouts.items():
 
             parent = panel.GetParent()
+            pinfo, dockDir, layer, bestSize, minSize = layout
 
             # When a panel is added/removed from the AuiManager,
             # the position of floating panels may be reset
@@ -816,26 +818,28 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             log.debug('New size for panel %s - best: %s, float: %s',
                       type(panel).__name__, bestSize, floatSize)
 
-            pinfo.MinSize(     (1, 1))    \
+            pinfo.MinSize(     minSize)   \
                  .BestSize(    bestSize)  \
                  .FloatingSize(floatSize) \
                  .Resizable(   True)
 
             # Hack - when a new panel is added,
-            # temporarily fix its minimum height
-            # to ensure that an existing dock is
-            # resized to fit the panel. Otherwise
-            # the panel will be sized to fit the
-            # existing dock.
+            # temporarily fix its minimum size to
+            # ensure that the dock it is being
+            # inserted into is resized to fit the
+            # panel. Otherwise the panel will be
+            # resized to fit the existing dock.
             # https://github.com/wxWidgets/wxWidgets/issues/13180
-            if newPanel is not None:
-                pinfo.Fixed().MinSize((1, bestSize[-1]))
+            if panel is newPanel:
+                pinfo.Fixed().MinSize(bestSize)
 
         self.__auiMgr.Update()
 
         # Make new panel resizable after it was fixed above
         if newPanel is not None:
-            bestSizes[newPanel][0].Resizable().MinSize((1, 1))
+            pinfo   = layouts[newPanel][0]
+            minSize = layouts[newPanel][4]
+            pinfo.Resizable().MinSize(minSize)
             self.__auiMgr.Update()
 
 
