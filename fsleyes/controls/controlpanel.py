@@ -176,7 +176,6 @@ class ControlPanel(fslpanel.FSLeyesPanel, ControlMixin):
 
 class ControlToolBar(fsltoolbar.FSLeyesToolBar, ControlMixin):
     """The ``ControlToolBar`` is the base class for all FSLeyes toolbars. """
-    pass
 
 
 class SettingsPanel(ControlPanel):

@@ -166,7 +166,7 @@ class OrthoEditToolBar(ctrlpanel.ControlToolBar):
             isGroup      = isinstance(specGroup, list)
 
             if isGroup:
-                parent = wx.Panel(self)
+                parent = wx.Control(self)
 
             else:
                 parent    = self

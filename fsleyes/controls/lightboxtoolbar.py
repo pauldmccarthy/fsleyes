@@ -149,7 +149,7 @@ class LightBoxToolBar(ctrlpanel.ControlToolBar):
         }
 
         # Slice spacing and zoom go on a single panel
-        panel = wx.Panel(self)
+        panel = wx.Control(self)
         sizer = wx.FlexGridSizer(2, 2, 0, 0)
         panel.SetSizer(sizer)
 

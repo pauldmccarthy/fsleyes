@@ -7,11 +7,8 @@
 """This module provides the :class:`FSLeyesPanel` class.
 
 
-A :class:`FSLeyesPanel` object is a :class:`wx.Panel` which provides some sort
-of view of a collection of overlay objects, contained within an
-:class:`.OverlayList`. The :class:`FSLeyesPanel` is the base class for all GUI
-panels in FSLeyes - see also the :class:`.ViewPanel` and :class:`.ControlPanel`
-classes.
+The :class:`FSLeyesPanel` is the base class for all GUI panels in FSLeyes -
+see also the :class:`.ViewPanel` and :class:`.ControlPanel` classes.
 
 
 ``FSLeyesPanel`` instances are also :class:`.ActionProvider` instances - any

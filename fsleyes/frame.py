@@ -297,7 +297,7 @@ class FSLeyesFrame(wx.Frame):
         # __makeRecentPathsMenu methods
         import fsleyes.actions.loadoverlay as loadoverlay
         loadoverlay.recentPathManager.register(
-           self.__name, self.__makeRecentPathsMenu)
+            self.__name, self.__makeRecentPathsMenu)
 
         # This dictionary contains mappings of the form
         #

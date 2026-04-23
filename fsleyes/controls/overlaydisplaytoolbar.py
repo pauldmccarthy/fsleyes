@@ -279,8 +279,8 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
 
         # Name/overlay type and brightness/contrast
         # are respectively placed together
-        nameTypePanel = wx.Panel(self)
-        briconPanel   = wx.Panel(self)
+        nameTypePanel = wx.Control(self)
+        briconPanel   = wx.Control(self)
         nameTypeSizer = wx.BoxSizer(wx.VERTICAL)
         briconSizer   = wx.FlexGridSizer(2, 2, 0, 0)
 
@@ -343,7 +343,7 @@ class OverlayDisplayToolBar(ctrlpanel.ControlToolBar):
         negCmapSpec    = self.__widgetSpecs[opts, 'negativeCmap']
         useNegCmapSpec = self.__widgetSpecs[opts, 'useNegativeCmap']
 
-        cmapPanel = wx.Panel(self)
+        cmapPanel = wx.Control(self)
 
         rangeWidget      = props.buildGUI(self,      opts, rangeSpec)
         resetWidget      = props.buildGUI(self,      opts, resetSpec)
