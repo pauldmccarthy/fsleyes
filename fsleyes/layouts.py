@@ -5,14 +5,10 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides functions for managing *layouts* - stored view and
-control panel layouts for *FSLeyes*. Layouts may be persisted using the
-:mod:`.settings` module. A few layouts are also *built in*, and are defined in
-the :attr:`BUILT_IN_LAYOUTS` dictionary. Layouts may also be provided by
-FSLeyes :mod:`.plugins`, saved via the FSLeyes interface, or stored in files
-in the FSLeyes settings directory.
-
-
-.. note:: Prior to FSLeyes 0.24.0, *layouts* were called *perspectives*.
+control panel layouts for *FSLeyes*. Several layouts are *built in*, and are
+defined in the :attr:`BUILT_IN_LAYOUTS` dictionary. Layouts may also be
+provided by FSLeyes :mod:`.plugins`, saved via the FSLeyes interface, or
+stored in files in the FSLeyes settings directory.
 
 
 The ``layouts`` module provides the following functions. These are intended
@@ -30,6 +26,8 @@ for use by the :class:`.FSLeyesFrame`, but can be used in other ways too:
    removeLayout
    serialiseLayout
    deserialiseLayout
+   serialiseAuiLayout
+   deserialiseAuiLayout
 
 
 A layout defines a layout for a :class:`.FSLeyesFrame`. It specifies the type
@@ -42,22 +40,26 @@ for an overview of views and controls.
 FSLeyes layout format
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. note:: The serialisation format was written against
-          ``wx.lib.agw.aui.AuiManager`` as it exists in wxPython 3.0.2.0.
-
-
 FSLeyes encodes layouts as strings.  FSLeyes layout specification strings are
 not intended to be written by hand.  If you need to create a layout string
 (e.g. for inclusion in a FSLeyes plugin library), a much easier approach to
-generating a layout string is to open FSLeyes, set the layout up by hand, and
-then use the :func:`serialiseLayout` function to generate the layout string -
-this function can be called from the FSLeyes python shell, or an attached
-Jupyter Notebook / IPython shell.
+generating a layout string is to:
 
-FSLeyes uses a hierarchy of ``wx.lib.agw.aui.AuiManager`` instances for
-its layout - the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
-:class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their
-own ``AuiManager`` to lay out control panels.
+  1. Open FSLeyes.
+
+  2. Set the layout up by hand.
+
+  3. Use the *View* -> *Layouts* -> *Save current layout* menu item.
+
+  4. Copy the text file that was saved to the FSLeyes configuration directory
+     (e.g. ``~/.fsleyes/layouts/`` on macOS).
+
+
+FSLeyes uses a hierarchy of ``wx.aui.AuiManager`` instances for its layout -
+the :class:`.FSLeyesFrame` uses an ``AuiManager`` to lay out
+:class:`.ViewPanel` instances, and each of these ``ViewPanels`` use their own
+``AuiManager`` to lay out control panels.
+
 
 The layout for a single ``AuiManager`` can be serialised to a string via
 the ``AuiManager.SavePerspective`` and ``AuiManager.SavePaneInfo``
@@ -66,17 +68,18 @@ methods. One of these strings consists of:
   - A name, ``'layout1'`` or ``'layout2'``, specifying the AUI version
     (this will always be at least ``'layout2'`` for FSLeyes).
 
-  - A set of key-value set of key-value pairs defining the top level
-    panel layout.
+  - A set of key-value pairs defining the central pane layout.
 
-  - A set of key-value pairs for each pane, defining its layout. the
+  - A set of key-value pairs for each side pane, defining its layout. The
     ``AuiManager.SavePaneInfo`` method returns this for a single pane.
+
 
 These are all encoded in a single string, with the above components separated
 with ``'|'`` characters, and the pane-level key-value pairs separated with a
 ``';'`` character. For example::
 
-    layout2|key1=value1|name=Pane1;caption=Pane 1|name=Pane2;caption=Pane 2|doc_size(5,0,0)=22|
+    layout2|key1=value1|name=Pane1;caption=Pane 1|name=Pane2;caption=Pane 2|dock_size(5,0,0)=22|
+
 
 The :func:`serialiseLayout` function queries each of the ``AuiManager``
 instances, and generates the following:
@@ -111,13 +114,6 @@ default FSLeyes ortho view layout) is::
     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
 
 
-.. note:: In FSLeyes 0.35.0, the list of ``ViewPanel`` and ``ControlPanel``
-          class names was changed from containing just the class names
-          (e.g. ``'OrthoPanel'``) to containing the fully resolved class paths
-          (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
-          :func:`deserialiseLayout` function is compatible with both formats.
-
-
 Storage of custom layouts
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -146,13 +142,35 @@ by the serialised layout string. For example::
     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
 
 
-.. note:: Prior to FSLeyes version 1.10.0, layouts which were saved with the
-          :func:`saveLayout` function were saved via the
-          :mod:`fsl.utils.settings` module, and were ultimately stored in a
-          pickle file called ``config.pkl`` in the FSLeyes settings directory.
-          Layouts are no longer saved in this manner, however FSLeyes will
-          still read layouts stored in ``config.pkl`` and make them available
-          for selection in the interface.
+Changes
+^^^^^^^
+
+The FSLeyes layout system has undergone a number of minor changes since its
+inception.
+
+  - **1.19.0**: Migrated from ``wx.lib.agw.aui.AuiManager`` to
+    ``wx.aui.AuiManager``. No changes to the FSLeyes layout format.
+
+  - **1.10.0**: Prior to FSLeyes version 1.10.0, layouts which were saved
+    with the :func:`saveLayout` function were saved via the
+    :mod:`fsl.utils.settings` module, and were ultimately stored in a pickle
+    file called ``config.pkl`` in the FSLeyes settings directory.  Layouts
+    are no longer saved in this manner, however FSLeyes will still read
+    layouts stored in ``config.pkl`` and make them available for selection in
+    the interface.
+
+  - **1.0.0**: The list of ``ViewPanel`` and ``ControlPanel`` class names was
+    changed from containing just the class names (e.g. ``'OrthoPanel'``) to
+    containing the fully resolved class paths
+    (e.g. ``'fsleyes.views.orthopanel.OrthoPanel'``). The
+    :func:`deserialiseLayout` function is compatible with both formats.
+
+
+  - **0.24.0**: Prior to FSLeyes 0.24.0, *layouts* were called *perspectives*
+    in both the FSLeyes user interface and the code.
+
+  - **0.10.1**: The FSLeyes layout format was defined against
+    ``wx.lib.agw.aui.AuiManager`` as it existed in wxPython 3.0.2.0.
 """
 
 
@@ -973,69 +991,70 @@ BUILT_IN_LAYOUTS = {
     'default' :
      textwrap.dedent("""
                      fsleyes.views.orthopanel.OrthoPanel
-                     layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncOverlayOrder=True,syncLocation=True,syncOverlayDisplay=True,movieRate=400;colourBarLocation=top,showCursor=True,bgColour=#000000ff,layout=horizontal,colourBarLabelSide=top-left,cursorGap=False,fgColour=#ffffffff,cursorColour=#00ff00ff,showXCanvas=True,showYCanvas=True,showColourBar=False,showZCanvas=True,showLabels=True
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
+                     layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|
+                     fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.orthotoolbar.OrthoToolBar;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True,movieRate=400,movieAxis=3;showCursor=True,bgColour=#000000ff,fgColour=#ffffffff,cursorColour=#00ff00ff,cursorGap=False,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,showXCanvas=True,showYCanvas=True,showZCanvas=True,showLabels=True,labelSize=12,layout=horizontal,xzoom=100.0,yzoom=100.0,zzoom=100.0
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=OverlayListPanel;caption=Overlay list;state=2099196;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=301;besth=104;minw=301;minh=104;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=309;floath=128|name=LocationPanel;caption=Location;state=2099196;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=495;besth=156;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=503;floath=180|name=OverlayDisplayToolBar;caption=Overlay display toolbar;state=142332;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=1235;besth=74;minw=1235;minh=74;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=1243;floath=98|name=OrthoToolBar;caption=Ortho toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=784;besth=51;minw=784;minh=51;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=792;floath=75|dock_size(5,0,0)=22|dock_size(3,0,0)=175|dock_size(1,10,0)=53|dock_size(1,11,0)=76|
                      """),  # noqa
 
     'defaultlb' :
      textwrap.dedent("""
                      fsleyes.views.lightboxpanel.LightBoxPanel
-                     layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     fsleyes.controls.lightboxtoolbar.LightBoxToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LightBoxToolBar;caption=Lightbox view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
+                     layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|
+                     fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.lightboxtoolbar.LightBoxToolBar;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True,movieRate=400,movieAxis=3;showCursor=True,bgColour=#000000ff,fgColour=#ffffffff,cursorColour=#00ff00ff,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,zax=2,showGridLines=False,highlightSlice=False
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=OverlayListPanel;caption=Overlay list;state=2099196;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=301;besth=104;minw=301;minh=104;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=309;floath=128|name=LocationPanel;caption=Location;state=2099196;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=467;besth=154;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=475;floath=178|name=OverlayDisplayToolBar;caption=Overlay display toolbar;state=142332;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=1235;besth=74;minw=1235;minh=74;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=1243;floath=98|name=LightBoxToolBar;caption=Lightbox toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=707;besth=77;minw=707;minh=77;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=715;floath=101|dock_size(5,0,0)=10|dock_size(3,0,0)=173|dock_size(1,10,0)=79|dock_size(1,11,0)=76|
                      """),  # noqa
 
     'default3d' :
      textwrap.dedent("""
                      fsleyes.views.scene3dpanel.Scene3DPanel
-                     layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     fsleyes.controls.scene3dtoolbar.Scene3DToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#9999c0ff,fgColour=#00ff00ff
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=Scene3DToolBar;caption=3D view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=176|dock_size(1,10,0)=49|dock_size(1,11,0)=67|
+                     layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=24|
+                     fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.scene3dtoolbar.Scene3DToolBar;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True;showCursor=True,bgColour=#9999c0ff,fgColour=#00ff00ff,cursorColour=#00ff00ff,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,light=True,lightPos=0.0#0.0#0.0,offset=0.0#0.0,rotation=2#3#3#1.0#0.0#0.0#0.0#1.0#0.0#0.0#0.0#1.0,showLegend=True
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=OverlayListPanel;caption=Overlay list;state=2099196;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=301;besth=104;minw=301;minh=104;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=309;floath=128|name=LocationPanel;caption=Location;state=2099196;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=467;besth=154;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=475;floath=178|name=OverlayDisplayToolBar;caption=Overlay display toolbar;state=142332;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=1235;besth=74;minw=1235;minh=74;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=1243;floath=98|name=Scene3DToolBar;caption=3D toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=498;besth=51;minw=498;minh=51;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=506;floath=75|dock_size(5,0,0)=22|dock_size(3,0,0)=173|dock_size(1,10,0)=53|dock_size(1,11,0)=76|
                      """),  # noqa
 
     'melodic' :
      textwrap.dedent("""
                      fsleyes.views.lightboxpanel.LightBoxPanel,fsleyes.views.timeseriespanel.TimeSeriesPanel,fsleyes.views.powerspectrumpanel.PowerSpectrumPanel
-                     layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=PowerSpectrumPanel 3;caption=Power spectra 3;state=67377148;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=224|
-                     fsleyes.controls.locationpanel.LocationPanel,fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.plugins.controls.melodicclassificationpanel.MelodicClassificationPanel,fsleyes.controls.lightboxtoolbar.LightBoxToolBar,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=MelodicClassificationPanel;caption=Melodic IC classification;state=67373052;dir=2;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LightBoxToolBar;caption=Lightbox view toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=130|dock_size(1,10,0)=45|dock_size(1,11,0)=51|dock_size(2,0,0)=402|
-                     TimeSeriesToolBar;;
-                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|
-                     PowerSpectrumToolBar;;
-                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=PowerSpectrumToolBar;caption=Plot toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|
+                     layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=69474240;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=TimeSeriesPanel 2;caption=Time series 2;state=2103292;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=1728;besth=350;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=PowerSpectrumPanel 3;caption=Power spectra 3;state=2103292;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=1728;besth=350;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|dock_size(3,0,0)=369|
+                     fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.lightboxtoolbar.LightBoxToolBar,fsleyes.plugins.controls.melodicclassificationpanel.melodicclassificationpanel.MelodicClassificationPanel;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True,movieRate=400,movieAxis=3;showCursor=True,bgColour=#000000ff,fgColour=#ffffffff,cursorColour=#00ff00ff,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,zax=2,showGridLines=False,highlightSlice=False
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=OverlayListPanel;caption=Overlay list;state=2099196;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=301;besth=104;minw=301;minh=104;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=309;floath=128|name=LocationPanel;caption=Location;state=2099196;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=467;besth=154;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=475;floath=178|name=OverlayDisplayToolBar;caption=Overlay display toolbar;state=142332;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=1235;besth=74;minw=1235;minh=74;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=1243;floath=98|name=LightBoxToolBar;caption=Lightbox toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=707;besth=77;minw=707;minh=77;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=715;floath=101|name=MelodicClassificationPanel;caption=Melodic IC classification;state=2099196;dir=2;layer=0;row=0;pos=0;prop=100000;bestw=400;besth=100;minw=400;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=408;floath=124|dock_size(5,0,0)=10|dock_size(3,0,0)=173|dock_size(1,10,0)=79|dock_size(1,11,0)=76|dock_size(2,0,0)=402|
+                     fsleyes.controls.timeseriestoolbar.TimeSeriesToolBar;usePixdim=False,plotMode=normal,plotMelodicICs=True;legend=True,xAutoScale=True,yAutoScale=True,xLogScale=False,yLogScale=False,ticks=True,grid=True,gridColour=#ffffffff,bgColour=#ccccccff,smooth=False
+                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=TimeSeriesToolBar;caption=Time series toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=500;besth=47;minw=500;minh=47;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=508;floath=71|dock_size(5,0,0)=10|dock_size(1,10,0)=49|
+                     fsleyes.controls.powerspectrumtoolbar.PowerSpectrumToolBar;plotMelodicICs=True,plotFrequencies=True;legend=True,xAutoScale=True,yAutoScale=True,xLogScale=False,yLogScale=False,ticks=True,grid=True,gridColour=#ffffffff,bgColour=#ccccccff,smooth=False
+                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=PowerSpectrumToolBar;caption=Power spectrum toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=308;besth=34;minw=308;minh=34;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=316;floath=58|dock_size(5,0,0)=10|dock_size(1,10,0)=36|
                      """),  # noqa
 
     'feat' :
      textwrap.dedent("""
                      fsleyes.views.orthopanel.OrthoPanel,fsleyes.views.timeseriespanel.TimeSeriesPanel
-                     layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67377088;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesPanel 2;caption=Time series 2;state=67377148;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|dock_size(3,0,0)=282|
-                     fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.controls.locationpanel.LocationPanel,fsleyes.plugins.controls.clusterpanel.ClusterPanel;syncLocation=True,syncOverlayOrder=True,movieRate=750,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=3;layer=2;row=0;pos=0;prop=87792;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayDisplayToolBar;caption=Display toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OrthoToolBar;caption=Ortho view toolbar;state=67382012;dir=1;layer=10;row=1;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=LocationPanel;caption=Location;state=67373052;dir=3;layer=2;row=0;pos=1;prop=98544;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=ClusterPanel;caption=Cluster browser;state=67373052;dir=2;layer=1;row=0;pos=0;prop=114760;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=10|dock_size(2,1,0)=566|dock_size(1,10,0)=51|dock_size(1,10,1)=36|dock_size(3,2,0)=130|
-                     OverlayListPanel,TimeSeriesToolBar;;
-                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=OverlayListPanel;caption=Overlay list;state=67373052;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|name=TimeSeriesToolBar;caption=Time series toolbar;state=67382012;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=642|dock_size(1,10,0)=36|dock_size(4,0,0)=206|
+                     layout2|name=OrthoPanel 1;caption=Ortho View 1;state=69474240;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=TimeSeriesPanel 2;caption=Time series 2;state=2103292;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=1728;besth=350;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|dock_size(3,0,0)=369|
+                     fsleyes.controls.overlaylistpanel.OverlayListPanel,fsleyes.controls.locationpanel.LocationPanel,fsleyes.controls.overlaydisplaytoolbar.OverlayDisplayToolBar,fsleyes.controls.orthotoolbar.OrthoToolBar,fsleyes.plugins.controls.clusterpanel.ClusterPanel;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True,movieRate=400,movieAxis=3;showCursor=True,bgColour=#000000ff,fgColour=#ffffffff,cursorColour=#00ff00ff,cursorGap=False,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,showXCanvas=True,showYCanvas=True,showZCanvas=True,showLabels=True,labelSize=12,layout=horizontal,xzoom=100.0,yzoom=100.0,zzoom=100.0
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=OverlayListPanel;caption=Overlay list;state=2099196;dir=3;layer=0;row=0;pos=0;prop=100000;bestw=301;besth=104;minw=301;minh=104;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=309;floath=128|name=LocationPanel;caption=Location;state=2099196;dir=3;layer=0;row=0;pos=1;prop=100000;bestw=495;besth=156;minw=1;minh=1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=503;floath=180|name=OverlayDisplayToolBar;caption=Overlay display toolbar;state=142332;dir=1;layer=11;row=0;pos=0;prop=100000;bestw=1235;besth=74;minw=1235;minh=74;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=1243;floath=98|name=OrthoToolBar;caption=Ortho toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=784;besth=51;minw=784;minh=51;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=792;floath=75|name=ClusterPanel;caption=Cluster browser;state=2099196;dir=2;layer=0;row=1;pos=0;prop=100000;bestw=399;besth=102;minw=399;minh=102;maxw=-1;maxh=-1;floatx=3111;floaty=448;floatw=407;floath=126|dock_size(5,0,0)=22|dock_size(3,0,0)=175|dock_size(1,10,0)=53|dock_size(1,11,0)=76|dock_size(2,0,1)=720|
+                     fsleyes.controls.timeseriestoolbar.TimeSeriesToolBar,fsleyes.controls.overlaylistpanel.OverlayListPanel;usePixdim=False,plotMode=normal,plotMelodicICs=True;legend=True,xAutoScale=True,yAutoScale=True,xLogScale=False,yLogScale=False,ticks=True,grid=True,gridColour=#ffffffff,bgColour=#ccccccff,smooth=False
+                     layout2|name=FigureCanvasWxAgg;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=640;besth=480;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=TimeSeriesToolBar;caption=Time series toolbar;state=142332;dir=1;layer=10;row=0;pos=0;prop=100000;bestw=500;besth=47;minw=500;minh=47;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=508;floath=71|name=OverlayListPanel;caption=Overlay list;state=2099196;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=301;besth=72;minw=301;minh=72;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=309;floath=96|dock_size(5,0,0)=10|dock_size(1,10,0)=49|dock_size(4,0,0)=303|
                      """),  # noqa
 
     'ortho' :
      textwrap.dedent("""
                      fsleyes.views.orthopanel.OrthoPanel
-                     layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;layout=horizontal,showLabels=True,bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,showZCanvas=True,cursorColour=#00ff00ff,showColourBar=False,showYCanvas=True,showXCanvas=True,colourBarLocation=top
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
+                     layout2|name=OrthoPanel 1;caption=Ortho View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|
+                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True,movieRate=400,movieAxis=3;showCursor=True,bgColour=#000000ff,fgColour=#ffffffff,cursorColour=#00ff00ff,cursorGap=False,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,showXCanvas=True,showYCanvas=True,showZCanvas=True,showLabels=True,labelSize=12,layout=horizontal,xzoom=100.0,yzoom=100.0,zzoom=100.0
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|
                      """),  # noqa
+
     '3d' :
      textwrap.dedent("""
                      fsleyes.views.scene3dpanel.Scene3DPanel
-                     layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=24|
-                     ;syncOverlayOrder=True,syncOverlayDisplay=True,syncLocation=True;showColourBar=False,showLegend=True,cursorColour=#00ff00ff,colourBarLocation=top,showCursor=True,colourBarLabelSide=top-left,bgColour=#9999c0ff,fgColour=#00ff00ff
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
+                     layout2|name=Scene3DPanel 1;caption=3D View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=24|
+                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True;showCursor=True,bgColour=#9999c0ff,fgColour=#00ff00ff,cursorColour=#00ff00ff,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,light=True,lightPos=0.0#0.0#0.0,offset=0.0#0.0,rotation=2#3#3#1.0#0.0#0.0#0.0#1.0#0.0#0.0#0.0#1.0,showLegend=True
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|
                      """),  # noqa
 
     'lightbox' :
      textwrap.dedent("""
                      fsleyes.views.lightboxpanel.LightBoxPanel
-                     layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=22|
-                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True;bgColour=#000000ff,fgColour=#ffffffff,showCursor=True,cursorColour=#00ff00ff,highlightSlice=False,zax=2,showColourBar=False,showGridLines=False,colourBarLocation=top
-                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1;notebookid=-1;transparent=255|dock_size(5,0,0)=10|
+                     layout2|name=LightBoxPanel 1;caption=Lightbox View 1;state=67376064;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=22|
+                     ;syncLocation=True,syncOverlayOrder=True,syncOverlayDisplay=True,syncOverlayVolume=True,movieRate=400,movieAxis=3;showCursor=True,bgColour=#000000ff,fgColour=#ffffffff,cursorColour=#00ff00ff,showColourBar=False,colourBarLocation=top,colourBarLabelSide=top-left,zax=2,showGridLines=False,highlightSlice=False
+                     layout2|name=Panel;caption=;state=768;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=-1;besth=-1;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=10|
                      """)  # noqa
 }
