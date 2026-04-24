@@ -20,6 +20,7 @@ import wx.aui as aui
 
 import fsl.utils.notifier            as notifier
 
+import                                  fsleyes
 import fsleyes.panel                 as fslpanel
 import fsleyes.toolbar               as fsltoolbar
 import fsleyes.controls.controlpanel as ctrlpanel
@@ -223,10 +224,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
         # AUI manager for control panel management
         self.__auiMgr = aui.AuiManager(
-            self,
-            flags=(aui.AUI_MGR_ALLOW_FLOATING   |
-                   aui.AUI_MGR_TRANSPARENT_HINT |
-                   aui.AUI_MGR_LIVE_RESIZE))
+            self, flags=fsleyes.auiManagerStyle())
 
         self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
         self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)

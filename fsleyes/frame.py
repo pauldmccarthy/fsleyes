@@ -15,27 +15,28 @@ from __future__ import division
 import functools as ft
 import itertools as it
 import              logging
+import              sys
 
 from typing import Type
 
 import           wx
 import wx.aui as aui
 
-import fsl.utils.idle               as idle
-import fsl.utils.settings           as fslsettings
-import fsleyes_widgets              as fwidgets
-import fsleyes_widgets.dialog       as fsldlg
-import fsleyes_widgets.utils.status as status
+import fsl.utils.idle             as idle
+import fsl.utils.settings         as fslsettings
+import fsleyes_widgets            as fw
 
-import fsleyes.strings              as strings
-import fsleyes.plugins              as plugins
-import fsleyes.autodisplay          as autodisplay
-import fsleyes.profiles.shortcuts   as shortcuts
-import fsleyes.views.viewpanel      as viewpanel
-import fsleyes.actions              as actions
-import fsleyes.tooltips             as tooltips
-import fsleyes.layouts              as layouts
-import fsleyes.displaycontext       as displaycontext
+import fsleyes
+from   fsleyes          import actions
+from   fsleyes          import autodisplay
+from   fsleyes          import displaycontext
+from   fsleyes          import layouts
+from   fsleyes          import plugins
+from   fsleyes          import strings
+from   fsleyes          import tooltips
+from   fsleyes.profiles import shortcuts
+from   fsleyes.views    import viewpanel
+
 
 
 log = logging.getLogger(__name__)
@@ -126,6 +127,7 @@ class FSLeyesFrame(wx.Frame):
               keep file sizes down.
     """
 
+
     def __init__(self,
                  parent,
                  overlayList,
@@ -181,10 +183,7 @@ class FSLeyesFrame(wx.Frame):
         self.__statusBar     = wx.StaticText(self)
         self.__closeHandlers = closeHandlers
         self.__auiManager    = aui.AuiManager(
-            self.__mainPanel,
-            flags=(aui.AUI_MGR_ALLOW_FLOATING   |
-                   aui.AUI_MGR_TRANSPARENT_HINT |
-                   aui.AUI_MGR_LIVE_RESIZE))
+            self.__mainPanel, flags=fsleyes.auiManagerStyle())
 
         self.__auiManager.SetDockSizeConstraint(0.5, 0.5)
 
@@ -214,7 +213,7 @@ class FSLeyesFrame(wx.Frame):
                     pass
 
             wx.CallAfter(realUpdate)
-        status.setTarget(update)
+        fw.status.setTarget(update)
 
         # Keeping track of all open view panels
         #
@@ -1271,7 +1270,7 @@ class FSLeyesFrame(wx.Frame):
 
                 # Give the user the option of suppressing
                 # this dialog forever more
-                dlg = fsldlg.CheckBoxMessageDialog(
+                dlg = fw.CheckBoxMessageDialog(
                     self,
                     strings.titles[self, 'saveLayout'],
                     message=strings.messages[self, 'saveLayout'],
@@ -1487,32 +1486,17 @@ class FSLeyesFrame(wx.Frame):
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
 
-        # The menu bar on OSX/wxPython is a bit different
-        # than the menu bar on OSX/wxPhoenix, or on Linux.
-        # This is because under OSX/wxPython, we can't get
-        # access to the built-in application menu.
-        onOSX          = fwidgets.wxPlatform() in (fwidgets.WX_MAC_CARBON,
-                                                   fwidgets.WX_MAC_COCOA)
-        haveAppMenu    = (onOSX and
-                          fwidgets.wxFlavour() == fwidgets.WX_PHOENIX)
-        locationOffset = 0
-
-        # On linux, we create a FSLeyes menu
-        if not onOSX:
-            locationOffset  = 1
-            fsleyesMenu     = wx.Menu()
-            menuBar.Append(fsleyesMenu, 'FSLeyes')
-
-        # On OSX/wxPhoenix, we can
-        # get the built-in app menu
-        elif haveAppMenu:
-            fsleyesMenu = menuBar.OSXGetAppleMenu()
+        # On macOS, we use the built-in app menu
+        if sys.platform == 'darwin':
+            fsleyesMenu    = menuBar.OSXGetAppleMenu()
+            locationOffset = 0
             fsleyesMenu.SetTitle('FSLeyes')
 
-        # On OSX/wxPython, we fudge
-        # things a bit - see below.
+        # Otherwise we create a FSLeyes menu
         else:
-            fsleyesMenu = None
+            fsleyesMenu    = wx.Menu()
+            locationOffset = 1
+            menuBar.Append(fsleyesMenu, 'FSLeyes')
 
         fileMenu     = wx.Menu()
         overlayMenu  = wx.Menu()
@@ -1545,18 +1529,7 @@ class FSLeyesFrame(wx.Frame):
         }
 
         self.__makeFileMenu()
-
-        # We have a FSLeyes menu
-        if fsleyesMenu is not None:
-            self.__makeFSLeyesMenu(fsleyesMenu)
-
-        # We don't have a FSLeyes menu -
-        # throw all of the FSLeyes menu
-        # stuff onto the end of the File
-        # menu.
-        else:
-            fileMenu.AppendSeparator()
-            self.__makeFSLeyesMenu(fileMenu)
+        self.__makeFSLeyesMenu(fsleyesMenu)
 
         self.__makeOverlayMenu()
         self.refreshToolsMenu()
