@@ -46,7 +46,7 @@ class FSLeyesFrame(wx.Frame):
     container for :class:`.ViewPanel` instances.
 
 
-    A :class:`wx.lib.agw.aui.AuiManager` is used so that ``ViewPanel`` panels
+    A :class:`wx.aui.AuiManager` is used so that ``ViewPanel`` panels
     can be dynamically laid out and reconfigured by the user.
 
 
@@ -180,40 +180,7 @@ class FSLeyesFrame(wx.Frame):
         self.__mainPanel     = wx.Panel(self)
         self.__statusBar     = wx.StaticText(self)
         self.__closeHandlers = closeHandlers
-
-        # Even though the FSLeyesFrame does not allow
-        # panels to be floated, I am specifying the
-        # docking guide style for complicated reasons...
-        #
-        # Each ViewPanel contained in this FSLeyesFrame
-        # has an AuiManager of its own; these child
-        # AuiManagers do support floating of their
-        # child panels. However, it seems that when
-        # a floating child panel of a ViewPanel is
-        # docked, this top-level AuiManager is called
-        # to draw the docking guides. This is because
-        # the wx.lib.agw.aui.framemanager.GetManager
-        # function uses the wx event handling system
-        # to figure out which AuiManager should be used
-        # to manage the docking (which is a ridiculous
-        # way to do this, in my opinion).
-        #
-        # Anyway, this means that the docking guides
-        # will be drawn according to the style set up
-        # in this AuiManager, instead of the ViewPanel
-        # AuiManager, which is the one that is actually
-        # managing the panel being docked.
-        #
-        # This wouldn't be a problem, if not for the fact
-        # that, when running over SSH/X11, the default
-        # docking guides seem to get sized incorrectly,
-        # and look terrible (probably related to the
-        # AuiDockingGuide monkey-patch at the bottom of
-        # viewpanel.py).
-        #
-        # This problem does not occur with the aero/
-        # whidbey guides.
-        self.__auiManager = aui.AuiManager(
+        self.__auiManager    = aui.AuiManager(
             self.__mainPanel,
             flags=(aui.AUI_MGR_ALLOW_FLOATING   |
                    aui.AUI_MGR_TRANSPARENT_HINT |
@@ -413,8 +380,8 @@ class FSLeyesFrame(wx.Frame):
 
     @property
     def auiManager(self):
-        """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
-        the layout of this ``FSLeyesFrame``.
+        """Returns the ``wx.aui.AuiManager` object which is managing the layout
+        of this ``FSLeyesFrame``.
         """
         return self.__auiManager
 
@@ -1069,15 +1036,9 @@ class FSLeyesFrame(wx.Frame):
                           :class:`.DisplayContext`.
         """
 
+        # Get the AuiPaneInfo and panel that triggered this event
         if ev is not None:
             ev.Skip()
-
-            # Undocumented - the window associated with an
-            # AuiPaneInfo is available as an attribute called
-            # 'window'. Honestly, I don't know why there is
-            # not a method available on the AuiPaneInfo or
-            # AuiManager to retrieve a managed Window given
-            # the associated AuiPaneInfo object.
             paneInfo = ev.GetPane()
             panel    = paneInfo.window
 
@@ -1365,8 +1326,7 @@ class FSLeyesFrame(wx.Frame):
                 self.__onViewPanelClose(panel=vp, displaySync=False)
 
             self.__auiManager.UnInit()
-            self.__auiManager._frame = None
-            self.__auiManager        = None
+            self.__auiManager = None
 
             # Cleanly destroy all
             # menu action objects

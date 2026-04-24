@@ -335,13 +335,11 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         This method is called by :mod:`wx` when this toolbar is laid out.
         """
 
-        # Calculate the minimum/maximum size
-        # for this toolbar, given the addition
-        # of the new tool. If the orientation
-        # of this toolbar (set in __init__) is
-        # HORIZONTAL, the ttlSpace is used to
-        # store total width, otherwise it is
-        # used to store total height.
+        # If the orientation of this toolbar
+        # (set in __init__) is HORIZONTAL, the
+        # ttlSpace is used to store total
+        # width, otherwise it is used to store
+        # total height.
         ttlSpace  = 0
         minWidth  = 0
         minHeight = 0
@@ -367,11 +365,7 @@ class FSLeyesToolBar(fslpanel.FSLeyesPanel):
         if self.__orient == wx.HORIZONTAL: size = (ttlSpace, minHeight)
         else:                              size = (minWidth, ttlSpace)
 
-        # The agw.AuiManager does not honour the best size when
-        # toolbars are floated, but it does honour the minimum
-        # size. So I'm just setting the minimum size to the best
-        # size.
-        log.debug('Setting toolbar size: {}'.format(size))
+        log.debug('Calculated best toolbar size [%s]: %s', self.name, size)
 
         self.SetMinSize(   size)
         self.SetMaxSize(   size)

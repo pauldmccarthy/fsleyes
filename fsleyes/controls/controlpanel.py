@@ -17,8 +17,8 @@ documentation).
 
 from typing import Optional, Any
 
-import                   wx
-import wx.lib.agw.aui as wxaui
+import           wx
+import wx.aui as aui
 
 import fsl.utils.deprecated       as deprecated
 import fsleyes_widgets.widgetlist as widgetlist
@@ -218,6 +218,14 @@ class SettingsPanel(ControlPanel):
         """Called whenever the widget list contents change. If this panel
         is floating, its parent is autmatically resized.
         """
-        if isinstance(self.GetTopLevelParent(), wxaui.AuiFloatingFrame):
-            self.SetInitialSize(self.__widgets.GetBestSize())
-            self.GetTopLevelParent().Fit()
+        parent = self.GetTopLevelParent()
+        if isinstance(parent, aui.AuiFloatingFrame):
+            vp    = self.viewPanel
+            pinfo = vp.getPanelInfo(self)
+            size  = self.__widgets.GetBestSize()
+            self  .SetInitialSize(size)
+            parent.SetMinClientSize(size)
+            pinfo.MinSize(size)  \
+                 .BestSize(size) \
+                 .FloatingSize(size)
+            vp.auiManager.Update()

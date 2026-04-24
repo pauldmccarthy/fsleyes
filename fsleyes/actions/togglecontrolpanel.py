@@ -10,9 +10,7 @@ the addition/removal of control panels.
 """
 
 
-import wx.lib.agw.aui as aui
-
-from . import base
+from fsleyes.actions import base
 
 
 class ToggleControlPanelAction(base.ToggleAction):

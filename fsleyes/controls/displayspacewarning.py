@@ -11,9 +11,9 @@ the user from seeing or doing something.
 """
 
 
-import                   logging
-import                   wx
-import wx.lib.agw.aui as wxaui
+import           logging
+import           wx
+import wx.aui as aui
 
 import fsl.utils.idle  as idle
 import fsleyes.panel   as fslpanel
@@ -153,8 +153,8 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         else:    size = (0, 0)
 
         if show:
-            log.debug('Showing display space warning ({} / {})'.format(
-                displaySpace, condition))
+            log.debug('Showing display space warning (%s / %s)',
+                      displaySpace, condition)
 
         self.SetMinSize(   size)
         self.CacheBestSize(size)
@@ -168,7 +168,7 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
 
         parent = parent.GetTopLevelParent()
         sizer  = parent.GetSizer()
-        if isinstance(parent, wxaui.AuiFloatingFrame):
+        if isinstance(parent, aui.AuiFloatingFrame):
             parent.SetInitialSize(sizer.GetMinSize())
             parent.Layout()
             parent.Fit()
@@ -191,5 +191,5 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
             newSpace = displayCtx.getSelectedOverlay()
             newSpace = displayCtx.getReferenceImage(newSpace)
 
-        log.debug('Changing displaySpace to {}'.format(newSpace))
+        log.debug('Changing displaySpace to %s', newSpace)
         displayCtx.displaySpace = newSpace

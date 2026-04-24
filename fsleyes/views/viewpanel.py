@@ -42,17 +42,16 @@ class ViewPanel(fslpanel.FSLeyesPanel):
     **Panels and controls**
 
 
-    A ``ViewPanel`` class uses a ``wx.lib.agw.aui.AuiManager`` to lay out its
-    children. A ``ViewPanel`` has one central panel, which contains the
-    primary view; and may have one or more secondary panels, which contain
-    *controls* - see the :mod:`fsleyes.controls` package. The centre panel can
-    be set via the :meth:`centrePanel` property, and secondary panels can be
-    added/removed to/from with the :meth:`togglePanel` method. The current
-    state of a secondary panel (i.e. whether one is open or not) can be
-    queried with the :meth:`isPanelOpen` method, and existing secondary panels
-    can be accessed via the :meth:`getPanel` method.  Secondary panels must be
-    derived from either the :class:`.ControlPanel` or :class:`.ControlToolBar`
-    base-classes.
+    A ``ViewPanel`` class uses a ``wx.aui.AuiManager`` to lay out its children.
+    A ``ViewPanel`` has one central panel, which contains the primary view; and
+    may have one or more secondary panels, which contain *controls* - see the
+    :mod:`fsleyes.controls` package. The centre panel can be set via the
+    :meth:`centrePanel` property, and secondary panels can be added/removed
+    to/from with the :meth:`togglePanel` method. The current state of a
+    secondary panel (i.e. whether one is open or not) can be queried with the
+    :meth:`isPanelOpen` method, and existing secondary panels can be accessed
+    via the :meth:`getPanel` method.  Secondary panels must be derived from
+    either the :class:`.ControlPanel` or :class:`.ControlToolBar` base-classes.
 
 
     **Profiles**
@@ -222,8 +221,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # profilemanager.
         self.__events = self.__profileManager
 
-        # See note in FSLeyesFrame about
-        # the user of aero docking guides.
+        # AUI manager for control panel management
         self.__auiMgr = aui.AuiManager(
             self,
             flags=(aui.AUI_MGR_ALLOW_FLOATING   |
@@ -231,8 +229,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                    aui.AUI_MGR_LIVE_RESIZE))
 
         self.__auiMgr.SetDockSizeConstraint(0.5, 0.5)
-        self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE,
-                           self.__onPaneClose)
+        self.__auiMgr.Bind(aui.EVT_AUI_PANE_CLOSE, self.__onPaneClose)
 
         # A very shitty necessity. When panes are floated,
         # the AuiManager sets the size of the floating frame
@@ -336,10 +333,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # Un-initialise the AUI manager
         self.__auiMgr.UnInit()
 
-        # The AUI manager does not clear its
-        # reference to this panel, so let's
-        # do it here.
-        self.__auiMgr._frame  = None
         self.__profileManager = None
         self.__auiMgr         = None
         self.__panels         = None
@@ -358,12 +351,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
            be passed a tuple containing the types (:class:`.Profile`
            sub-classes) of the de-registered and newly registered profiles.
 
-         - ``'aui_perspective'``, when the AUI-managed layout changes, e.g.
-           sash resizes, control panels added/removed, etc. This event is
-           emitted whenever the ``AuiManager`` emits a
-           ``EVT_AUI_PERSPECTIVE_CHANGED`` event. It is re-emitted via the
-           :class:`.Notifer` interface so that non-wx entities can be
-           notified (see e.g. the :class:`.ToggleControlPanelAction`).
+         - ``'aui_perspective'``, when control panels are added or removed -
+           see e.g. the :class:`.ToggleControlPanelAction`.
         """
         return self.__events
 
@@ -603,13 +592,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             for p in self.__panels.values():
                 if isinstance(p, ctrlpanel.ControlToolBar):
                     info = self.__auiMgr.GetPane(p)
-
-                    # This is nasty - the agw.aui.AuiPaneInfo
-                    # class doesn't have any publicly documented
-                    # methods of querying its current state.
-                    # So I'm accessing its undocumented instance
-                    # attributes (determined by browsing the
-                    # source code)
                     if info.IsDocked() and \
                        info.dock_direction == aui.AUI_DOCK_TOP:
                         info.Layer(info.dock_layer + 1)
@@ -711,8 +693,8 @@ class ViewPanel(fslpanel.FSLeyesPanel):
 
     @property
     def auiManager(self) -> aui.AuiManager:
-        """Returns the ``wx.lib.agw.aui.AuiManager`` object which manages the
-        layout of this ``ViewPanel``.
+        """Returns the ``wx.aui.AuiManager`` object which manages the layout of
+        this ``ViewPanel``.
         """
         return self.__auiMgr
 
@@ -854,64 +836,40 @@ class ViewPanel(fslpanel.FSLeyesPanel):
             ev.Skip()
             panel = ev.GetPane().window
 
-        # If the user has grouped multiple control panels
-        # into a single tabbed notebook, and then closed
-        # the entire notebook, the AuiManager will generate
-        # a single close event, and will pass us that
-        # notebook. So we have to look in the notebook
-        # to see which control panels were actually closed.
-        if isinstance(panel, wx.lib.agw.aui.AuiNotebook):
-            panels = [panel.GetPage(i) for i in range(panel.GetPageCount())]
-        else:
-            panels = [panel]
+        # The window close event may be emitted
+        # twice, so we ignore any events for
+        # panels that are not being managed
+        if panel is None or not self.__auiMgr.GetPane(panel).IsOk():
+            return
 
-        for panel in list(panels):
+        # Even when the user closes a pane,
+        # AUI does not detach said pane -
+        # we have to do it manually
+        self.__auiMgr.DetachPane(panel)
+        wx.CallAfter(panel.Destroy)
 
-            # note: in theory, all panels  should be sub-classes
-            # of ControlPanel/ControlToolBar. But this check is
-            # kept here to support third party scripts which don't
-            # honour the FSLeyes plugin rules.
-            if isinstance(panel, (ctrlpanel.ControlPanel,
-                                  ctrlpanel.ControlToolBar)):
+        # In theory, all panels should be sub-classes of
+        # ControlPanel/ControlToolBar. But this check is kept
+        # here to support third party scripts which don't
+        # honour the FSLeyes plugin rules, and which interact
+        # with the ViewPanel.auiManager directly.
+        if isinstance(panel, (ctrlpanel.ControlPanel,
+                              ctrlpanel.ControlToolBar)):
 
-                # WTF AUI. Sometimes this method gets called
-                # twice for a panel, the second time with a
-                # reference to a wx._wxpyDeadObject; in such
-                # situations, the Destroy method call below
-                # would result in an exception being raised.
-                if self.__panels.pop(type(panel), None) is None:
-                    panels.remove(panel)
+            self.__panels.pop(type(panel))
 
-                # calling ControlPanel.destroy()
-                # here -  wx.Destroy is done below
-                else:
-                    log.debug('Panel closed: %s', type(panel).__name__)
-                    panel.destroy()
+            log.debug('Panel closed: %s', type(panel).__name__)
+            panel.destroy()
 
-        # Destroy all the panels
-        for panel in panels:
-
-            # Even when the user closes a pane,
-            # AUI does not detach said pane -
-            # we have to do it manually
-            self.__auiMgr.DetachPane(panel)
-            wx.CallAfter(panel.Destroy)
-
-        # Update interaction profile. We do not
-        # consider multiple tabbed controls here.
-        # If the closed control is associated with
-        # an interaction profile, if no other other
-        # open panels rely on the same destroy the
-        # profile and restore the default profile
-        #
-        # We assume that, if a panel which requires
-        # a custom profile was open, that profile
-        # was active.
-        #
-        # See WTF AUI comment above for reason for
-        # len(panels) guard
-        if len(panels) > 0:
-            profileCls   = panels[0].profileCls()
+            # If the closed control is associated with
+            # an interaction profile, if no other other
+            # open panels rely on the same, destroy the
+            # profile and restore the default profile
+            #
+            # We assume that, if a panel which requires
+            # a custom profile was open, that profile
+            # was active.
+            profileCls   = panel.profileCls()
             closeProfile = True
             if profileCls is not None:
                 for ctype in self.__panels:
@@ -922,7 +880,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                 if closeProfile:
                     log.debug('Panel %s uses a custom interaction profile %s - '
                               'deactivating it and restoring default profile',
-                              type(panels[0]).__name__, profileCls.__name__)
+                              type(panel).__name__, profileCls.__name__)
                     self.__profileManager.deactivateProfile()
 
         # Update the view panel layout
