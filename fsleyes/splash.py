@@ -50,14 +50,17 @@ class FSLeyesSplash(wx.Frame):
         :arg parent: The :mod:`wx` parent object.
         """
 
-        wx.Frame.__init__(self, parent, style=wx.FULL_REPAINT_ON_RESIZE)
+        wx.Frame.__init__(self, parent, style=wx.FRAME_NO_TASKBAR)
+
+        # Flag set when Close is called
+        self.__closed = False
 
         splashbmp  = wx.Bitmap(getSplashFile(), wx.BITMAP_TYPE_PNG)
         splashimg  = splashbmp.ConvertToImage()
 
+        self.__statusBar   = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
         self.__splashPanel = imagepanel.ImagePanel(self, splashimg)
         self.__splashPanel.SetMinSize(splashimg.GetSize())
-        self.__statusBar   = wx.StaticText(self, style=wx.ST_ELLIPSIZE_MIDDLE)
 
         self.__statusBar.SetLabel(strings.messages[self, 'default'])
 
@@ -74,6 +77,12 @@ class FSLeyesSplash(wx.Frame):
 
         self.Layout()
         self.Fit()
+
+
+    def Close(self):
+        """Close the splash screen."""
+        self.__closed = True
+        super().Close()
 
 
     def Show(self):
@@ -97,6 +106,7 @@ class FSLeyesSplash(wx.Frame):
 
     def SetStatus(self, text):
         """Sets the text shown on the status bar to the specified ``text``. """
-        self.__statusBar.SetLabel(text)
-        self.__statusBar.Refresh()
-        self.__statusBar.Update()
+        if not self.__closed:
+            self.__statusBar.SetLabel(text)
+            self.__statusBar.Refresh()
+            self.__statusBar.Update()
