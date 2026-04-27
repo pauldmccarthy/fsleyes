@@ -651,6 +651,7 @@ class GLContext:
                  offscreen=False,
                  other=None,
                  target=None,
+                 parent=None,
                  requestVersion=None,
                  createApp=False,
                  ready=None,
@@ -665,6 +666,10 @@ class GLContext:
         :arg target:         If ``other`` is not ``None``, this must be a
                              reference to a ``WXGLCanvasTarget``, the rendering
                              target for the new context.
+
+        :arg parent:         ``wx`` parent object under which to create a
+                             temporary GL canvas. If not provided, a temporary
+                             ``wx.Frame`` is created.
 
         :arg requestVersion: A tuple containing the desired (major, minor)
                              OpenGL API version to use. If ``None``, the best
@@ -691,9 +696,10 @@ class GLContext:
 
         self.__offscreen = offscreen
         self.__ownApp    = False
+        self.__ownParent = parent is None
         self.__context   = None
         self.__canvas    = None
-        self.__parent    = None
+        self.__parent    = parent
         self.__buffer    = None
         self.__app       = None
 
@@ -746,7 +752,8 @@ class GLContext:
 
         # Create a parent for the GL
         # canvas, and the canvas itself
-        self.__createWXGLParent()
+        if self.__parent is None:
+            self.__parent = self.__createWXGLParent()
         self.__createWXGLCanvas()
 
         # This function creates the context
@@ -786,7 +793,8 @@ class GLContext:
             # errors when running on macOS+XQuartz. It is
             # destroyed when the GLContext.destroy() method
             # is called.
-            self.__parent.Hide()
+            if self.__ownParent:
+                self.__parent.Hide()
 
         # If we've created our own wx.App, run its
         # main loop - we need to run the loop
@@ -880,9 +888,11 @@ class GLContext:
 
         log.debug('Creating dummy wx.Frame for GL context creation')
 
-        self.__parent = DummyFrame(None, style=0)
-        self.__parent.SetSize((0, 0))
-        self.__parent.Show(True)
+        parent = DummyFrame(None, style=0)
+        parent.SetSize((0, 0))
+        parent.Show(True)
+
+        return parent
 
 
     def __createWXGLCanvas(self):
@@ -891,6 +901,7 @@ class GLContext:
         called ``__canvas``.
         """
 
+        import                wx
         import wx.glcanvas as wxgl
 
         log.debug('Creating temporary wx.GLCanvas')
@@ -922,6 +933,10 @@ class GLContext:
             self.__canvas = wxgl.GLCanvas(self.__parent)
             self.__canvas.SetSize((0, 0))
 
+        def onDestroy(ev):
+            self.__canvas = None
+
+        self.__canvas.Bind(wx.EVT_WINDOW_DESTROY, onDestroy)
         self.__canvas.Show(True)
 
 

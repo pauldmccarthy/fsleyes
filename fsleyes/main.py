@@ -603,9 +603,11 @@ def initialise(splash, namespace, callback):
         callback()
 
     try:
+
         # Force the creation of a wx.glcanvas.GLContext object,
         # and initialise OpenGL version-specific module loads.
         fslgl.getGLContext(ready=realCallback,
+                           parent=splash,
                            requestVersion=namespace.glversion)
 
     except Exception:
