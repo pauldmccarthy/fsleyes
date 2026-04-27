@@ -11,6 +11,18 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+1.19.0 (Under development)
+--------------------------
+
+
+Changed
+^^^^^^^
+
+
+* FSLeyes now uses ``wx.aui`` instead of ``wx.lib.agw.aui`` for layout
+  management, which will hopefully result in a smoother user experience.
+
+
 1.18.1 (Tuesday 14th April 2026)
 --------------------------------
 
