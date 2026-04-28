@@ -827,18 +827,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         """Called when the user closes a control (a.k.a. secondary) panel.
         Calls the
         :class:`.ControlPanel.destroy`/:class:`.ControlToolBar.destroy`
-        method on the panel.
+        method on the panel. If called directly, ``panel`` must be provided.
         """
 
         if ev is not None:
-            ev.Skip()
             panel = ev.GetPane().window
-
-        # The window close event may be emitted
-        # twice, so we ignore any events for
-        # panels that are not being managed
-        if panel is None or not self.__auiMgr.GetPane(panel).IsOk():
-            return
 
         # Even when the user closes a pane,
         # AUI does not detach said pane -
