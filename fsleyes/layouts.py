@@ -262,9 +262,9 @@ def getAllLayouts():
               list(plugins.listLayouts().keys())
 
     uniq = []
-    for l in layouts:
-        if l not in uniq:
-            uniq.append(l)
+    for layout in layouts:
+        if layout not in uniq:
+            uniq.append(layout)
 
     return uniq
 
@@ -643,6 +643,7 @@ def deserialiseLayout(layout):
         version, sections = deserialiseAuiLayout(layoutStr)
         for i, section in enumerate(sections):
             section.pop('notebookid',  None)
+            section.pop('minimode',    None)
             section.pop('transparent', None)
         return serialiseAuiLayout(version, sections)
 
@@ -822,7 +823,7 @@ def serialiseAuiLayout(
 
     sections = '|'.join(sections)
 
-    return f'{version}|{sections}'
+    return f'{version}|{sections}|'
 
 
 def _addToLayoutList(layout):
