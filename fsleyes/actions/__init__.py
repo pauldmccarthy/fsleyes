@@ -99,9 +99,8 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
 
 import logging
 import types
-import inspect
-import warnings
 import functools
+from   collections import defaultdict
 
 import fsleyes_props   as props
 import fsleyes.strings as strings
@@ -143,7 +142,6 @@ class ActionProvider:
     actions.
     """
 
-
     def __init__(self, overlayList, displayCtx):
         """Create an ``ActionProvider``.
 
@@ -152,6 +150,44 @@ class ActionProvider:
         """
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+        self.__actions     = {}
+
+
+    def addAction(self, action, name=None):
+        """Register an :class:`.Action` object with this ``ActionProvider``.
+
+        Actions defined via the :func:`action` decorators are automatically
+        registered - this method can be used to register an ``Action`` which
+        was created separately.
+
+        All registered ``Action`` instances of an ``ActionProvider`` are made
+        available as attributes of the provider, with the
+        :meth:`.Action.actionName` the attribute name.
+
+        Once an ``Action`` is registered with an ``ActionProvider``, the
+        provider effectively owns the ``Action`` and is responsible for its
+        lifecycle. This means that when the ``ActionProvider`` is destroyed,
+        it will call the :meth:`.Action.destroy` method of all registered
+        ``Action`` instances.
+
+        :arg action: An :class:`.Action` object
+        :arg name:   The action name - used as the attribute name on this
+                     ``ActionProvider``. Defaults to :meth:`.Action.actionName`
+        """
+        if name is None:
+            name = action.actionName
+
+        if name in self.__actions:
+            raise ValueError(f'An action with name {name} is already '
+                             f'registered with this {type(self).__name__}')
+
+
+        log.debug('%s: registering action %s', type(self).__name__, name)
+
+        self.__actions[name] = action
+        action.provider      = self
+
+        setattr(self, name, action)
 
 
     @property
@@ -168,42 +204,45 @@ class ActionProvider:
 
     def destroy(self):
         """Must be called when this ``ActionProvider`` is no longer needed.
-        Calls the :meth:`Action.destroy` method of all ``Action`` instances.
+        Calls the :meth:`Action.destroy` method of all ``Action`` instances
+        owned by this ``ActionProvider``.
         """
+
+        for name, act in self.__actions.items():
+            if not act.destroyed:
+                act.destroy()
 
         self.__overlayList = None
         self.__displayCtx  = None
-
-        for name, act in ActionProvider.getActions(self):
-
-            # Entries in getActions may be (None, None)
-            if act is None:
-                continue
-
-            # Or may be ('actionName', action)
-            else:
-                act.destroy()
+        self.__actions     = None
 
 
     def getAction(self, name):
         """Return the :class:`Action` instance with the specified name. """
-        return getattr(self, name)
+
+        # getattr in case this is a decorated ActionFactory
+        # instance that hasn't yet been accesseed.
+        getattr(self, name, None)
+        return self.__actions[name]
 
 
     def hasAction(self, name):
         """Return ``True`` if this ``ActionProvider`` has an action with the
         given name, ``False`` otherwise
         """
-        return getattr(self, name, None) is not None
+        getattr(self, name, None)
+        return name in self.__actions
 
 
     def enableAction(self, name, enable=True):
         """Enable/disable the named :class:`Action`. """
-        self.getAction(name).enabled = enable
+        getattr(self, name, None)
+        self[name].enabled = enable
 
 
     def disableAction(self, name):
         """Disable the named :class:`Action`. """
+        getattr(self, name, None)
         self.enableAction(name, False)
 
 
@@ -219,16 +258,7 @@ class ActionProvider:
                       :class:`.FSLeyesFrame`, which creates menu items, to
                       indicate that a separator should be inserted.
         """
-
-        acts = []
-
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            for name, attr in inspect.getmembers(self):
-                if isinstance(attr, Action):
-                    acts.append((name, attr))
-
-        return acts
+        return list(self.__actions.items())
 
 
 class ActionFactory:
@@ -373,28 +403,31 @@ class ActionFactory:
             return self.__func
 
         else:
-
             # first argument will be the
             # instance (the "self" argument)
             func = functools.partial(self.__func, instance)
             func = functools.update_wrapper(func, self.__func)
-
             args = [instance.overlayList, instance.displayCtx]
+
+            # ToggleControlPanelAction for a ViewPanel instance
             if self.__actionType is ToggleControlPanelAction:
                 args.append(instance)
 
-            # Create an Action for the instance
+            # Create an Action for the ActionProvider
+            # instance and register it with the provider
+            log.debug('Creating @action %s.%s',
+                      type(instance).__name__, func.__name__)
             action = self.__actionType(
                 *args,
                 *self.__args,
                 func=func,
-                instance=instance,
+                name=func.__name__,
                 **self.__kwargs)
 
-            # and replace this ActionFactory
-            # with the Action on the instance.
-            setattr(instance, self.__func.__name__, action)
-            return functools.update_wrapper(action, self.__func)
+            action = functools.update_wrapper(action, self.__func)
+            instance.addAction(action)
+
+            return action
 
 
 class ActionButton(props.Button):
@@ -511,18 +544,17 @@ class ToggleActionButton(props.Toggle):
         ``ToggleAction`` instance.
         """
         import wx
-        import fsleyes_widgets.bitmaptoggle as bmptoggle
+        import fsleyes_widgets as fw
 
         if isinstance(widget, wx.CheckBox):
             ev = wx.EVT_BUTTON
         elif isinstance(widget, wx.ToggleButton):
             ev = wx.EVT_TOGGLEBUTTON
-        elif isinstance(widget, bmptoggle.BitmapToggleButton):
-            ev = bmptoggle.EVT_BITMAP_TOGGLE
+        elif isinstance(widget, fw.BitmapToggleButton):
+            ev = fw.EVT_BITMAP_TOGGLE
 
         else:
-            raise RuntimeError(
-                'Unknown widget {}'.format(type(widget).__name__))
+            raise RuntimeError(f'Unknown widget {type(widget).__name__}')
 
         instance.getAction(self.__name).bindToWidget(parent, ev, widget)
 

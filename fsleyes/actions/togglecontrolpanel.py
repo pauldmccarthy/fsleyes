@@ -34,7 +34,6 @@ class ToggleControlPanelAction(base.ToggleAction):
                  cpType,
                  func=None,
                  name=None,
-                 instance=None,
                  **kwargs):
         """Create a ``ToggleControlPanelAction``.
 
@@ -46,7 +45,6 @@ class ToggleControlPanelAction(base.ToggleAction):
         :arg func:        The function which toggles the control panel. If
                           not provided, a default function is used.
         :arg name:        Name of this action - defaults to ``func.__name__``.
-        :arg instance:    Reference to the object that owns ``func``.
 
         All other arguments will be passed to the
         :meth:`.ViewPanel.togglePanel` method.
@@ -56,7 +54,7 @@ class ToggleControlPanelAction(base.ToggleAction):
             func = self.__togglePanel
 
         base.ToggleAction.__init__(
-            self, overlayList, displayCtx, func, name=name, instance=instance)
+            self, overlayList, displayCtx, func, name=name)
 
         self.__viewPanel = viewPanel
         self.__cpType    = cpType

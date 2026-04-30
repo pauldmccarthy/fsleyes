@@ -256,13 +256,11 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         plugin-provided control panels and tools which support this
         ``ViewPanel`` are looked up via the :mod:`.plugins.` module. Then, for
         each control, we create a :class:`.ToggleControlPanelAction`, and add
-        it as an attribute on this ``ViewPanel``.
+        it as actions on this ``ViewPanel`` (see
+        :meth:`.ActionProvider.addAction`).
 
         Similarly, all plugin-provided tools which support this ``ViewPanel``
-        are created and added as attributes.
-
-        In both cases, the class name of the control/tool is used as the
-        attribute name.
+        are created and added as actions.
 
         This is done so that these actions will work with the
         :class:`.ActionProvider` interface, and hence the
@@ -277,7 +275,7 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # controls
         for ctrlTitle, ctrlType in plugins.listControls(type(self)).items():
             name = ctrlType.__name__
-            if not hasattr(self, name):
+            if not self.hasAction(name):
                 act = actions.ToggleControlPanelAction(
                     self.overlayList,
                     self.displayCtx,
@@ -285,20 +283,14 @@ class ViewPanel(fslpanel.FSLeyesPanel):
                     ctrlType,
                     name=name,
                     title=ctrlTitle)
-                setattr(self, name, act)
+                self.addAction(act, name)
 
         # tools
         for toolType in plugins.listTools(type(self)).values():
             name = toolType.__name__
-            if not hasattr(self, name):
+            if not self.hasAction(name):
                 act = toolType(self.overlayList, self.displayCtx, self)
-                setattr(self, name, act)
-
-                # This ViewPanel effectively owns this
-                # action.  Set ourselves as the action
-                # instance to ensure that the FSLeyesFrame
-                # doesn't delete it on refreshes.
-                act.instance = self
+                self.addAction(act, name)
 
 
     def destroy(self):

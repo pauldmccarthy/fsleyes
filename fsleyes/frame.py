@@ -696,7 +696,7 @@ class FSLeyesFrame(wx.Frame, actions.ActionProvider):
             # methods, and so cannot be re-created -
             # we don't destroy actions which invoke a
             # function that is owned by something else.
-            if action.instance is action:
+            if action.provider is None:
                 action.destroy()
 
         # all items from self.__toolMenuActions
