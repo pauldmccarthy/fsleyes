@@ -171,7 +171,7 @@ class Action(props.HasProperties):
 
     def __str__(self):
         """Returns a string representation of this ``Action``. """
-        return f'{type(self).__name__}({self.__name__})'
+        return f'{type(self).__name__}({self.__actionName})'
 
 
     def __repr__(self):
