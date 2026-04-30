@@ -174,18 +174,15 @@ class ActionProvider:
         self.__overlayList = None
         self.__displayCtx  = None
 
-        for name, actionz in ActionProvider.getActions(self):
+        for name, act in ActionProvider.getActions(self):
 
             # Entries in getActions may be (None, None)
-            if actionz is None:
+            if act is None:
                 continue
 
             # Or may be ('actionName', action)
             else:
-                actionz = [actionz]
-
-            for a in actionz:
-                a.destroy()
+                act.destroy()
 
 
     def getAction(self, name):
