@@ -42,7 +42,7 @@ from   fsleyes.views    import viewpanel
 log = logging.getLogger(__name__)
 
 
-class FSLeyesFrame(wx.Frame):
+class FSLeyesFrame(wx.Frame, actions.ActionProvider):
     """A ``FSLeyesFrame`` is a simple :class:`wx.Frame` which acts as a
     container for :class:`.ViewPanel` instances.
 
@@ -162,7 +162,9 @@ class FSLeyesFrame(wx.Frame):
                             Otherwise the user might cancel the close, but
                             your handler will still get called.
         """
+
         wx.Frame.__init__(self, parent, title='FSLeyes')
+        actions.ActionProvider.__init__(self, overlayList, displayCtx)
         tooltips.initTooltips()
 
         # Default application font - this is
@@ -293,22 +295,6 @@ class FSLeyesFrame(wx.Frame):
                                 self.__selectedOverlayChanged)
 
         self.Layout()
-
-
-    @property
-    def overlayList(self):
-        """Returns the :class:`.OverlayList` which contains the overlays
-        being displayed by this ``FSLeyesFrame``.
-        """
-        return self.__overlayList
-
-
-    @property
-    def displayCtx(self):
-        """Returns the top-level :class:`.DisplayContext` associated with this
-        ``FSLeyesFrame``.
-        """
-        return self.__displayCtx
 
 
     @property
@@ -881,8 +867,8 @@ class FSLeyesFrame(wx.Frame):
                 pluginCtrls = sorted(zip(indices, names, clss))
                 pluginCtrls = {t[1] : t[2] for t in pluginCtrls}
 
-            # ViewPanels have a ToggleControlPanelAction added as
-            # an attributee for every supported control panel
+            # ViewPanels have a ToggleControlPanelAction added
+            # as an action for every supported control panel
             for ctrlName, ctrlType in pluginCtrls.items():
                 name = ctrlType.__name__
                 actionNames.append(name)
@@ -1581,7 +1567,7 @@ class FSLeyesFrame(wx.Frame):
              shortcuts.actions.get(UpdateCheckAction),
              wx.ID_ANY),
             (self.setFSLDIR,
-             strings.actions[self, 'setFSLDIR'],
+             strings.actions[       self, 'setFSLDIR'],
              shortcuts.actions.get((self, 'setFSLDIR')),
              wx.ID_ANY),
             (self.openHelp,
@@ -2006,7 +1992,7 @@ class FSLeyesFrame(wx.Frame):
             toolTitles = {}
 
             # Plugin-provided tools, which are created
-            # by the ViewPanel and added as attributes
+            # by the ViewPanel and added as actions
             # to itself (see ViewPanel.reloadPlugins)
             pluginTools = plugins.listTools(vpType)
 
@@ -2022,9 +2008,9 @@ class FSLeyesFrame(wx.Frame):
                 pluginTools = {t[1] : t[2] for t in pluginTools}
 
             # See ViewPanel.reloadPlugins. and LoadPluginAction.
-            # All supported tools are added as attributes to the
+            # All supported tools are added as actions to the
             # ViewPanel instance, with the class name used as
-            # the attribute name.
+            # the action name.
             for toolName, cls in pluginTools.items():
                 name = cls.__name__
                 toolNames.append(name)
