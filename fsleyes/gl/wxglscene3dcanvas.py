@@ -9,7 +9,6 @@
 """
 
 
-import wx.siplib   as sip
 import wx.glcanvas as wxgl
 
 import fsleyes.gl               as fslgl
@@ -25,7 +24,6 @@ class WXGLScene3DCanvas(scene3dcanvas.Scene3DCanvas,
     you should use a ``WXGLScene3DCanvas``.
     """
 
-    __metaclass__ = sip.wrappertype
 
     def __init__(self, parent, overlayList, displayCtx):
         """Create a ``WXGLScene3DCanvas``. See :meth:`.Scene3DCanvas.__init__`

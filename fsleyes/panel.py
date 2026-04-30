@@ -43,8 +43,7 @@ should be made available available to the user can be added as
 
 import logging
 
-import              wx
-import wx.siplib as sip
+import wx
 
 import fsleyes_props               as props
 import fsleyes_widgets.floatspin   as floatspin
@@ -292,9 +291,6 @@ class FSLeyesPanel(_FSLeyesPanel, wx.Panel):
 
     See also the :class:`.ViewPanel` and :class:`.ControlPanel` classes.
     """
-
-    __metaclass__ = sip.wrappertype
-
 
     def __init__(self,
                  parent,
