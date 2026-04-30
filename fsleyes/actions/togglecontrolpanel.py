@@ -119,4 +119,4 @@ class ToggleControlPanelAction(base.ToggleAction):
 
         controlPanels = self.__viewPanel.getPanels()
         controlPanels = [type(cp) for cp in controlPanels]
-        self.toggled = self.__cpType in controlPanels
+        self.toggled  = self.__cpType in controlPanels

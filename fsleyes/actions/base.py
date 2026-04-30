@@ -144,14 +144,14 @@ class Action(props.HasProperties):
         self.__overlayList  = overlayList
         self.__displayCtx   = displayCtx
         self.__func         = func
-        self.__name         = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name         = f'{type(self).__name__}_{id(self)}'
         self.__actionName   = name
         self.__destroyed    = False
         self.__instance     = instance
         self.__boundWidgets = []
 
         self.addListener('enabled',
-                         'Action_{}_internal'.format(id(self)),
+                         f'Action_{id(self)}_internal',
                          self.__enabledChanged)
 
     @property
@@ -176,7 +176,7 @@ class Action(props.HasProperties):
 
     def __str__(self):
         """Returns a string representation of this ``Action``. """
-        return '{}({})'.format(type(self).__name__, self.__name)
+        return f'{type(self).__name__}({self.__name__})'
 
 
     def __repr__(self):
@@ -220,8 +220,7 @@ class Action(props.HasProperties):
         """
 
         if not self.enabled:
-            raise ActionDisabledError('Action {} is disabled'.format(
-                self.__name))
+            raise ActionDisabledError(f'Action {self.__name} is disabled')
 
         log.debug('Action %s called', self.__name)
 
@@ -280,8 +279,8 @@ class Action(props.HasProperties):
                 break
 
         if index == -1:
-            raise ValueError('Widget {} [{}] is not bound'
-                             .format(type(widget).__name__, id(widget)))
+            raise ValueError(
+                f'Widget {type(widget).__name__} [{id(widget)}] is not bound')
 
         self.__unbindWidget(    index)
         self.__boundWidgets.pop(index)
@@ -361,7 +360,7 @@ class ToggleAction(Action):
         self.__autoToggle = autoToggle
 
         self.addListener('toggled',
-                         'ToggleAction_{}_internal'.format(id(self)),
+                         f'ToggleAction_{id(self)}_internal',
                          self.__toggledChanged)
 
 
@@ -462,8 +461,7 @@ class NeedOverlayAction(Action):
         Action.__init__(self, overlayList, displayCtx, func, **kwargs)
 
         self.__overlayType = overlayType
-        self.__name        = 'NeedOverlayAction_{}_{}'.format(
-            type(self).__name__, id(self))
+        self.__name        = f'NeedOverlayAction_{type(self).__name__}_{id(self)}'
 
         displayCtx .addListener('selectedOverlay',
                                 self.__name,
