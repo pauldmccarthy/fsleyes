@@ -14,12 +14,15 @@ performed, enabled and disabled, and may be bound to a GUI menu item or
 button. The :class:`ActionProvider` class represents some entity which can
 perform one or more actions.  As the :class:`.FSLeyesPanel` class derives from
 :class:`ActionProvider` pretty much everything in FSLeyes is an
-:class:`ActionProvider`.
+``ActionProvider``.
+
+The actions provided by an ``ActionProvider`` may be automatically discovered
+and added as menu items in the FSLeyes interface.
 
 
-Many of the modules in this package also contain standalone functions for doing
-various things, such as the :func:`.screenshot.screenshot` function, and the
-:func:`.loadoverlay.loadImage` function.
+Many of the modules in the `fsleyes.actions`` package also contain standalone
+functions for doing various things, such as the :func:`.screenshot.screenshot`
+function, and the :func:`.loadoverlay.loadImage` function.
 
 
 The :func:`action` and :func:`toggleAction` functions are intended to be used
@@ -85,9 +88,34 @@ All bound widgets of an ``Action`` can be accessed through the
 :meth:`.Action.unbindAllWidgets` method.
 
 
+As an alternative to using the ``@action`` decorators, it is also possible to
+manually create ``Action`` objects. However when doing so, you must register
+them via the :meth:`.ActionProvider.addAction` method, e.g.::
+
+    >>> from fsleyes.actions import ActionProvider, Action
+    >>> class Thing(ActionProvider):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+
+                self.addAction(
+                    Action(self.overlayList, self.displayCtx, self.doThing))
+
+            def doThing(self):
+                print('Doing thing')
+
+    >>> t = Thing(overlayList, displayCtx)
+    >>> t.hasAction('doThing')
+    True
+
+    >>> t.getActions()
+    [('doThing', Action(doThing))]
+
+This manual registration is necessary to allow for automatic action discovery.
+
+
 This module also provides two classes which allow a widget to be automatically
 created for, and bound to an ``Action`` or ``ToggleAction`` (through the
-:mod:`props.build` package):
+:mod:`fsleyes_props.build` package):
 
  .. autosummary::
     :nosignatures:
@@ -100,7 +128,6 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
 import logging
 import types
 import functools
-from   collections import defaultdict
 
 import fsleyes_props   as props
 import fsleyes.strings as strings
