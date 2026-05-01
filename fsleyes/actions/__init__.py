@@ -128,6 +128,7 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
 import logging
 import types
 import functools
+from collections import defaultdict
 
 import fsleyes_props   as props
 import fsleyes.strings as strings
@@ -178,6 +179,11 @@ class ActionProvider:
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
         self.__actions     = {}
+
+        # Initialise any @action-decorated actions
+        # (see ActionFactory).
+        for name in ActionFactory.registeredActions(type(self)):
+            getattr(self, name)
 
 
     def addAction(self, action, name=None):
@@ -291,8 +297,8 @@ class ActionProvider:
 class ActionFactory:
     """The ``ActionFactory`` is used by the :func:`action`,
     :func:`toggleAction`, and :func:`toggleControlPanelAction` decorators.
-    Its job is to create :class:`Action` instances for :class:`ActionProvider`
-    instances.
+    Its job is to create :class:`Action` instances for `@action`-decorated
+    methods of :class:`ActionProvider` instances.
 
 
     .. warning:: This class contains difficult-to-understand code. Read up
@@ -332,18 +338,24 @@ class ActionFactory:
 
 
     So when the :func:`action` or :func:`toggleAction` is used in a class
-    definition, an ``ActionFactory`` is created, and used as the decorator
-    of the unbound class method.
+    definition, an ``ActionFactory`` is created, and used as the decorator of
+    the unbound class method.  The ``ActionFactory`` records both the class
+    and method in the :attr:`ActionFactory.registry` dictionary (this is
+    achieved via :meth:`__set_name__`, which is called when the
+    ``ActionProvider`` sub-class is created).
 
 
-    Later on, when the ``ActionFactory`` detects that it being is accessed
-    through an instance of the class (a ``MyThing`` instance in the example
-    above), it creates an :class:`Action` instance, and then replaces itself
-    with this ``Action`` instance - the ``Action`` instance becomes the
-    decorator of the bound method. This is possible because the
-    ``ActionFactory`` is a descriptor - it uses the :meth:`__get__` method
-    so it can differentiate between class-level and instance-level accesses
-    of the decorated method.
+    Later on, when the ``ActionProvider`` instance is created (``MyThing`` in
+    the above example), it scans through the ``registry`` and accesses every
+    registered action via ``getattr``. This induces a call to the
+    :meth:`__get__` method of the ``ActionFactory`` , which creates an
+    :class:`Action` instance, and then replaces itself with the ``Action``
+    instance.
+
+    The ``Action`` instance then becomes the decorator of the bound
+    method. This is possible because the ``ActionFactory`` is a descriptor -
+    it uses the :meth:`__get__` method so it can differentiate between
+    class-level and instance-level accesses of the decorated method.
 
 
     The ``ActionFactory`` supports class-method decorators both with and
@@ -364,11 +376,28 @@ class ActionFactory:
             @otherCustomAction(arg1=8)
             def myAction3(self):
                 # do things here
-
-
-    .. todo:: Merge/replace this class with the :class:`.memoize.Instanceify`
-              decorator.
     """
+
+
+    registry = defaultdict(dict)
+    """Registry which tracks all class methods that have been decorated with
+    an ``@action`` decorator.
+    """
+
+
+    @staticmethod
+    def registeredActions(cls):
+        """Called by :meth:`ActionProvider.__init__`. Returns a dictionary of
+        ``{name : method}`` mappings, containing all methods of ``cls``
+        (including its base classes) that have been decorated with an
+        ``@action`` decorator.
+        """
+        actionz = {}
+
+        for c in reversed(cls.__mro__):
+            actionz.update(ActionFactory.registry[c])
+
+        return actionz
 
 
     def __init__(self, actionType, *args, **kwargs):
@@ -383,10 +412,10 @@ class ActionFactory:
         used).
         """
 
-        self.__actionType  = actionType
-        self.__args        = args
-        self.__kwargs      = kwargs
-        self.__func        = None
+        self.__actionType = actionType
+        self.__args       = args
+        self.__kwargs     = kwargs
+        self.__func       = None
 
         # A no-brackets style
         # decorator was used
@@ -394,8 +423,7 @@ class ActionFactory:
            len(args)   == 1 and \
            isinstance(args[0], (types.FunctionType,
                                 types.MethodType)):
-
-            self.__func = args[0]
+            self(args[0])
             self.__args = self.__args[1:]
 
 
@@ -406,14 +434,18 @@ class ActionFactory:
         function. Otherwise, (an ``@action`` style decorator was used), this
         method should never be called.
         """
-
-        if self.__func is not None:
-            log.warning('ActionFactory.__call__ was called, but function is '
-                        'alreday set (%s)! I\'m really confused.',
-                        self.__func.__name__)
-
         self.__func = func
         return self
+
+
+    def __set_name__(self, owner, name):
+        """Called when a class which has ``ActionFactory``-decorated methods
+        is created. Records the class and method in the
+        :attr:`ActionFactory.registry`.
+        """
+        func = self.__func
+        name = func.__name__
+        ActionFactory.registry[owner][name] = func
 
 
     def __get__(self, instance, cls):
@@ -423,6 +455,9 @@ class ActionFactory:
 
         If this ``ActionFactory`` is accessed through a class, the
         encapsulated function is returned.
+
+        This is invoked in :meth:`ActionProvider.__init__` for all
+        ``@action``-decorated methods.
         """
 
         # Class-level access

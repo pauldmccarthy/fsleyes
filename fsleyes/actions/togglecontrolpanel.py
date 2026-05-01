@@ -62,11 +62,7 @@ class ToggleControlPanelAction(base.ToggleAction):
 
         # Listen for changes to the view panel layout
         # so we can detect when the user closes our
-        # control panel. The granularity of AuiManager
-        # event notifications is somewhat coarse, so
-        # this callback will be called whenever the
-        # perspective changes. This includes sash
-        # resizes :(
+        # control panel.
         viewPanel.events.register(self.name,
                                   self.__viewPanelChanged,
                                   topic='aui_perspective')

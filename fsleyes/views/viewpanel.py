@@ -177,9 +177,6 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         :arg frame:          The :class:`.FSLeyesFrame`
         """
 
-        fslpanel.FSLeyesPanel.__init__(
-            self, parent, overlayList, displayCtx, frame)
-
         # Currently only two profiles are allowed at
         # any one time - the default profile, passed
         # to initProfiles. and one more profile
@@ -221,6 +218,13 @@ class ViewPanel(fslpanel.FSLeyesPanel):
         # emitting these events via the
         # profilemanager.
         self.__events = self.__profileManager
+
+        # We init here after self.__events has
+        # been created, as this will cause
+        # ToggleControlPanelAction objects to
+        # be created, which will register event
+        # callbacks.
+        super().__init__(parent, overlayList, displayCtx, frame)
 
         # AUI manager for control panel management
         self.__auiMgr = aui.AuiManager(

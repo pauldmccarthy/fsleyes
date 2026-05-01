@@ -846,14 +846,36 @@ class FSLeyesFrame(wx.Frame, actions.ActionProvider):
             return None, []
 
         # The settings menu for a view is a list of its
-        # actions, followed by a list of supported control
-        # types. followed by a "removeAllPanels" action
-        actionItems  = []
+        # actions as reported by its getActions()
+        # method, followed by a list of supported
+        # control types, followed by a "removeAllPanels"
+        # and "removeFromFrame" action.
         actionNames  = [name for (name, obj) in panel.getActions()]
-        actionTitles = {}
         pluginCtrls  = plugins.listControls(type(panel))
+        actionItems  = []
+        actionTitles = {}
+
+        # The default ActionProvider.getActions method
+        # will return *all* actions which, for a view
+        # panel, will include toggle actions for control
+        # panels, and the ViewPanel.removeAllPanels/
+        # removeFromFrame actions.  Remove any dupes
+        # here - all are listed together after anything
+        # returned by getActions.
+        if 'removeAllPanels' in actionNames:
+            actionNames.remove('removeAllPanels')
+        if 'removeFromFrame' in actionNames:
+            actionNames.remove('removeFromFrame')
+
+        for ctrlType in pluginCtrls.values():
+            name = ctrlType.__name__
+            if name in actionNames:
+                log.debug('Removing duplicate control panel menu item: %s',
+                          name)
+                actionNames.remove(name)
 
         if len(pluginCtrls) > 0:
+
             actionNames.append(None)
 
             # ViewPanel.controlOrder can suggest an ordering
@@ -875,6 +897,7 @@ class FSLeyesFrame(wx.Frame, actions.ActionProvider):
                 actionTitles[name] = ctrlName
 
             # add a "remove all panels" item
+            # (ViewPanel.removeAllPanels())
             actionNames.append('removeAllPanels')
 
         if len(actionNames) == 0:
@@ -886,6 +909,7 @@ class FSLeyesFrame(wx.Frame, actions.ActionProvider):
         # We add a 'Close' action to the
         # menu for every panel, but put
         # another separator before it
+        # (ViewPanel.removeFromFrame())
         actionNames.append(None)
         actionNames.append('removeFromFrame')
 
