@@ -13,7 +13,6 @@
 
 
 import wx
-import wx.siplib   as sip
 import wx.glcanvas as wxgl
 
 import fsleyes.gl  as fslgl
@@ -31,8 +30,6 @@ class WXGLLightBoxCanvas(lightboxcanvas.LightBoxCanvas,
     .. note:: The ``WXGLLightBoxCanvas`` assumes the existence of the
               :meth:`.LightBoxCanvas._updateDisplayBounds` method.
     """
-
-    __metaclass__ = sip.wrappertype
 
     def __init__(self, parent, overlayList, displayCtx, zax=None):
         """Create a ``WXGLLightBoxCanvas``. See

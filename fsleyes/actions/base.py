@@ -112,8 +112,7 @@ class Action(props.HasProperties):
                  overlayList,
                  displayCtx,
                  func,
-                 name=None,
-                 instance=None):
+                 name=None):
         """Create an ``Action``.
 
         :arg overlayList: The :class:`.OverlayList`.
@@ -126,10 +125,6 @@ class Action(props.HasProperties):
 
         :arg name:        Action name. Defaults to ``func.__name__``.
 
-        :arg instance:    Reference to the object that owns ``func``. If not
-                          provided, it is assumed that this ``Action`` object
-                          owns ``func``.
-
         .. note:: If an ``Action`` encapsulates a method of an
                   :class:`.ActionProvider` instance, it is assumed that the
                   ``name`` is the name of the method on the instance.
@@ -138,35 +133,35 @@ class Action(props.HasProperties):
         if name is None:
             name = func.__name__
 
-        if instance is None:
-            instance = self
-
         self.__overlayList  = overlayList
         self.__displayCtx   = displayCtx
         self.__func         = func
-        self.__name         = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name         = f'{type(self).__name__}_{id(self)}_[{name}]'
         self.__actionName   = name
         self.__destroyed    = False
-        self.__instance     = instance
+        self.__provider     = None
         self.__boundWidgets = []
 
         self.addListener('enabled',
-                         'Action_{}_internal'.format(id(self)),
+                         f'Action_{id(self)}_internal',
                          self.__enabledChanged)
 
-    @property
-    def instance(self):
-        """Returns the instance that owns the function that this ``Action``
-        invokes.
-        """
-        return self.__instance
 
-    @instance.setter
-    def instance(self, instance):
-        """Set the instance that owns the function that this ``Action``
-        invokes.
+    @property
+    def provider(self):
+        """Returns :class:`.ActionProvider` that owns this ``Action``,
+        or ``None`` if this ``Action`` is not owned.
         """
-        self.__instance = instance
+        return self.__provider
+
+
+    @provider.setter
+    def provider(self, provider):
+        """Set the :class:`.ActionProvider` that owns this ``Action``. """
+        if self.__provider is not None:
+            raise RuntimeError('An Action\'s provider cannot be changed!')
+        self.__provider = provider
+
 
     @property
     def function(self):
@@ -176,7 +171,7 @@ class Action(props.HasProperties):
 
     def __str__(self):
         """Returns a string representation of this ``Action``. """
-        return '{}({})'.format(type(self).__name__, self.__name)
+        return f'{type(self).__name__}({self.__actionName})'
 
 
     def __repr__(self):
@@ -220,8 +215,7 @@ class Action(props.HasProperties):
         """
 
         if not self.enabled:
-            raise ActionDisabledError('Action {} is disabled'.format(
-                self.__name))
+            raise ActionDisabledError(f'Action {self.__name} is disabled')
 
         log.debug('Action %s called', self.__name)
 
@@ -244,7 +238,7 @@ class Action(props.HasProperties):
         self.__overlayList = None
         self.__displayCtx  = None
         self.__func        = None
-        self.__instance    = None
+        self.__provider    = None
 
 
     def bindToWidget(self, parent, evType, widget, wrapper=None):
@@ -280,8 +274,8 @@ class Action(props.HasProperties):
                 break
 
         if index == -1:
-            raise ValueError('Widget {} [{}] is not bound'
-                             .format(type(widget).__name__, id(widget)))
+            raise ValueError(
+                f'Widget {type(widget).__name__} [{id(widget)}] is not bound')
 
         self.__unbindWidget(    index)
         self.__boundWidgets.pop(index)
@@ -361,7 +355,7 @@ class ToggleAction(Action):
         self.__autoToggle = autoToggle
 
         self.addListener('toggled',
-                         'ToggleAction_{}_internal'.format(id(self)),
+                         f'ToggleAction_{id(self)}_internal',
                          self.__toggledChanged)
 
 
@@ -462,8 +456,7 @@ class NeedOverlayAction(Action):
         Action.__init__(self, overlayList, displayCtx, func, **kwargs)
 
         self.__overlayType = overlayType
-        self.__name        = 'NeedOverlayAction_{}_{}'.format(
-            type(self).__name__, id(self))
+        self.__name        = f'NeedOverlayAction_{type(self).__name__}_{id(self)}'
 
         displayCtx .addListener('selectedOverlay',
                                 self.__name,

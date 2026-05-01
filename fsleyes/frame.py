@@ -15,38 +15,39 @@ from __future__ import division
 import functools as ft
 import itertools as it
 import              logging
+import              sys
 
 from typing import Type
 
-import wx
-import wx.lib.agw.aui               as aui
+import           wx
+import wx.aui as aui
 
-import fsl.utils.idle               as idle
-import fsl.utils.settings           as fslsettings
-import fsleyes_widgets              as fwidgets
-import fsleyes_widgets.dialog       as fsldlg
-import fsleyes_widgets.utils.status as status
+import fsl.utils.idle             as idle
+import fsl.utils.settings         as fslsettings
+import fsleyes_widgets            as fw
 
-import fsleyes.strings              as strings
-import fsleyes.plugins              as plugins
-import fsleyes.autodisplay          as autodisplay
-import fsleyes.profiles.shortcuts   as shortcuts
-import fsleyes.views.viewpanel      as viewpanel
-import fsleyes.actions              as actions
-import fsleyes.tooltips             as tooltips
-import fsleyes.layouts              as layouts
-import fsleyes.displaycontext       as displaycontext
+import fsleyes
+from   fsleyes          import actions
+from   fsleyes          import autodisplay
+from   fsleyes          import displaycontext
+from   fsleyes          import layouts
+from   fsleyes          import plugins
+from   fsleyes          import strings
+from   fsleyes          import tooltips
+from   fsleyes.profiles import shortcuts
+from   fsleyes.views    import viewpanel
+
 
 
 log = logging.getLogger(__name__)
 
 
-class FSLeyesFrame(wx.Frame):
+class FSLeyesFrame(wx.Frame, actions.ActionProvider):
     """A ``FSLeyesFrame`` is a simple :class:`wx.Frame` which acts as a
     container for :class:`.ViewPanel` instances.
 
 
-    A :class:`wx.lib.agw.aui.AuiManager` is used so that ``ViewPanel`` panels
+    A :class:`wx.aui.AuiManager` is used so that ``ViewPanel`` panels
     can be dynamically laid out and reconfigured by the user.
 
 
@@ -126,6 +127,7 @@ class FSLeyesFrame(wx.Frame):
               keep file sizes down.
     """
 
+
     def __init__(self,
                  parent,
                  overlayList,
@@ -160,7 +162,9 @@ class FSLeyesFrame(wx.Frame):
                             Otherwise the user might cancel the close, but
                             your handler will still get called.
         """
+
         wx.Frame.__init__(self, parent, title='FSLeyes')
+        actions.ActionProvider.__init__(self, overlayList, displayCtx)
         tooltips.initTooltips()
 
         # Default application font - this is
@@ -180,45 +184,8 @@ class FSLeyesFrame(wx.Frame):
         self.__mainPanel     = wx.Panel(self)
         self.__statusBar     = wx.StaticText(self)
         self.__closeHandlers = closeHandlers
-
-        # Even though the FSLeyesFrame does not allow
-        # panels to be floated, I am specifying the
-        # docking guide style for complicated reasons...
-        #
-        # Each ViewPanel contained in this FSLeyesFrame
-        # has an AuiManager of its own; these child
-        # AuiManagers do support floating of their
-        # child panels. However, it seems that when
-        # a floating child panel of a ViewPanel is
-        # docked, this top-level AuiManager is called
-        # to draw the docking guides. This is because
-        # the wx.lib.agw.aui.framemanager.GetManager
-        # function uses the wx event handling system
-        # to figure out which AuiManager should be used
-        # to manage the docking (which is a ridiculous
-        # way to do this, in my opinion).
-        #
-        # Anyway, this means that the docking guides
-        # will be drawn according to the style set up
-        # in this AuiManager, instead of the ViewPanel
-        # AuiManager, which is the one that is actually
-        # managing the panel being docked.
-        #
-        # This wouldn't be a problem, if not for the fact
-        # that, when running over SSH/X11, the default
-        # docking guides seem to get sized incorrectly,
-        # and look terrible (probably related to the
-        # AuiDockingGuide monkey-patch at the bottom of
-        # viewpanel.py).
-        #
-        # This problem does not occur with the aero/
-        # whidbey guides.
-        self.__auiManager = aui.AuiManager(
-            self.__mainPanel,
-            agwFlags=(aui.AUI_MGR_RECTANGLE_HINT          |
-                      aui.AUI_MGR_NO_VENETIAN_BLINDS_FADE |
-                      aui.AUI_MGR_AERO_DOCKING_GUIDES     |
-                      aui.AUI_MGR_LIVE_RESIZE))
+        self.__auiManager    = aui.AuiManager(
+            self.__mainPanel, flags=fsleyes.auiManagerStyle())
 
         self.__auiManager.SetDockSizeConstraint(0.5, 0.5)
 
@@ -248,7 +215,7 @@ class FSLeyesFrame(wx.Frame):
                     pass
 
             wx.CallAfter(realUpdate)
-        status.setTarget(update)
+        fw.status.setTarget(update)
 
         # Keeping track of all open view panels
         #
@@ -331,22 +298,6 @@ class FSLeyesFrame(wx.Frame):
 
 
     @property
-    def overlayList(self):
-        """Returns the :class:`.OverlayList` which contains the overlays
-        being displayed by this ``FSLeyesFrame``.
-        """
-        return self.__overlayList
-
-
-    @property
-    def displayCtx(self):
-        """Returns the top-level :class:`.DisplayContext` associated with this
-        ``FSLeyesFrame``.
-        """
-        return self.__displayCtx
-
-
-    @property
     def viewPanels(self):
         """Returns a list of all :class:`.ViewPanel` instances that are
         currenlty displayed in this ``FSLeyesFrame``.
@@ -414,8 +365,8 @@ class FSLeyesFrame(wx.Frame):
 
     @property
     def auiManager(self):
-        """Returns the ``wx.lib.agw.aui.AuiManager` object which is managing
-        the layout of this ``FSLeyesFrame``.
+        """Returns the ``wx.aui.AuiManager` object which is managing the layout
+        of this ``FSLeyesFrame``.
         """
         return self.__auiManager
 
@@ -535,33 +486,29 @@ class FSLeyesFrame(wx.Frame):
         paneInfo = (aui.AuiPaneInfo()
                     .Name(name)
                     .Caption(title)
-                    .CloseButton()
-                    .Dockable()
                     .Resizable()
                     .DestroyOnClose())
 
-        # When there is only one view panel
-        # displayed, the AuiManager seems to
-        # have trouble drawing the caption
-        # bar - it is drawn, but then the
-        # panel is drawn over the top of it.
-        # So if we only have one panel, we
-        # hide the caption bar
-        if panelId == 1:
-            paneInfo.Centre().Dockable(False).CaptionVisible(False)
+        # The first panel opened is set to the
+        # centre. It cannot be re-docked, but
+        # subsequent panels can be floated and
+        # docked around the centre panel.
+        (paneInfo.CaptionVisible(panelId > 1)
+                 .CloseButton(   panelId > 1)
+                 .Floatable(     panelId > 1)
+                 .Dockable(      panelId > 1))
 
-        # But then re-show it when another
-        # panel is added. The __viewPanels
-        # dict is an OrderedDict, so the
-        # first key is the AuiPaneInfo of
-        # the first panel that was added.
-        else:
-            self.__auiManager.GetPane(self.__viewPanels[0])\
-                             .CaptionVisible(True)
+        if panelId == 1:
+            paneInfo.Centre()
 
         # If this is not the first view panel,
         # give it a sensible initial size.
-        if panelId > 1:
+        else:
+            # Additional panels - show the caption
+            # and close button on the first panel
+            (self.__auiManager.GetPane(self.__viewPanels[0])
+                              .CloseButton(   True)
+                              .CaptionVisible(True))
 
             width, height      = self.GetClientSize().Get()
             loc, width, height = self.viewPanelLocationAndSize(
@@ -662,11 +609,13 @@ class FSLeyesFrame(wx.Frame):
         if ctrls is None:
             return
 
-        ctrls = [plugins.lookupControl(c) for c in ctrls]
-
         for ctrl in ctrls:
+            cls = plugins.lookupControl(ctrl)
+            if cls is None:
+                log.warning(f'Unable to find control panel: {ctrl}')
+                continue
             title = plugins.pluginTitle(ctrl)
-            viewPanel.togglePanel(ctrl, title=title)
+            viewPanel.togglePanel(cls, title=title)
 
 
     def refreshViewMenu(self):
@@ -747,7 +696,7 @@ class FSLeyesFrame(wx.Frame):
             # methods, and so cannot be re-created -
             # we don't destroy actions which invoke a
             # function that is owned by something else.
-            if action.instance is action:
+            if action.provider is None:
                 action.destroy()
 
         # all items from self.__toolMenuActions
@@ -897,14 +846,36 @@ class FSLeyesFrame(wx.Frame):
             return None, []
 
         # The settings menu for a view is a list of its
-        # actions, followed by a list of supported control
-        # types. followed by a "removeAllPanels" action
-        actionItems  = []
+        # actions as reported by its getActions()
+        # method, followed by a list of supported
+        # control types, followed by a "removeAllPanels"
+        # and "removeFromFrame" action.
         actionNames  = [name for (name, obj) in panel.getActions()]
-        actionTitles = {}
         pluginCtrls  = plugins.listControls(type(panel))
+        actionItems  = []
+        actionTitles = {}
+
+        # The default ActionProvider.getActions method
+        # will return *all* actions which, for a view
+        # panel, will include toggle actions for control
+        # panels, and the ViewPanel.removeAllPanels/
+        # removeFromFrame actions.  Remove any dupes
+        # here - all are listed together after anything
+        # returned by getActions.
+        if 'removeAllPanels' in actionNames:
+            actionNames.remove('removeAllPanels')
+        if 'removeFromFrame' in actionNames:
+            actionNames.remove('removeFromFrame')
+
+        for ctrlType in pluginCtrls.values():
+            name = ctrlType.__name__
+            if name in actionNames:
+                log.debug('Removing duplicate control panel menu item: %s',
+                          name)
+                actionNames.remove(name)
 
         if len(pluginCtrls) > 0:
+
             actionNames.append(None)
 
             # ViewPanel.controlOrder can suggest an ordering
@@ -918,14 +889,15 @@ class FSLeyesFrame(wx.Frame):
                 pluginCtrls = sorted(zip(indices, names, clss))
                 pluginCtrls = {t[1] : t[2] for t in pluginCtrls}
 
-            # ViewPanels have a ToggleControlPanelAction added as
-            # an attributee for every supported control panel
+            # ViewPanels have a ToggleControlPanelAction added
+            # as an action for every supported control panel
             for ctrlName, ctrlType in pluginCtrls.items():
                 name = ctrlType.__name__
                 actionNames.append(name)
                 actionTitles[name] = ctrlName
 
             # add a "remove all panels" item
+            # (ViewPanel.removeAllPanels())
             actionNames.append('removeAllPanels')
 
         if len(actionNames) == 0:
@@ -937,6 +909,7 @@ class FSLeyesFrame(wx.Frame):
         # We add a 'Close' action to the
         # menu for every panel, but put
         # another separator before it
+        # (ViewPanel.removeFromFrame())
         actionNames.append(None)
         actionNames.append('removeFromFrame')
 
@@ -1072,15 +1045,9 @@ class FSLeyesFrame(wx.Frame):
                           :class:`.DisplayContext`.
         """
 
+        # Get the AuiPaneInfo and panel that triggered this event
         if ev is not None:
             ev.Skip()
-
-            # Undocumented - the window associated with an
-            # AuiPaneInfo is available as an attribute called
-            # 'window'. Honestly, I don't know why there is
-            # not a method available on the AuiPaneInfo or
-            # AuiManager to retrieve a managed Window given
-            # the associated AuiPaneInfo object.
             paneInfo = ev.GetPane()
             panel    = paneInfo.window
 
@@ -1128,17 +1095,20 @@ class FSLeyesFrame(wx.Frame):
         # If the removed panel was the centre
         # pane, move another panel to the centre
         numPanels = len(self.__viewPanels)
-        wasCentre = paneInfo.dock_direction_get() == aui.AUI_DOCK_CENTRE
+        wasCentre = paneInfo.dock_direction == aui.AUI_DOCK_CENTRE
 
-        if numPanels >= 1 and wasCentre:
+        if wasCentre and numPanels >= 1:
             paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
-            paneInfo.Centre()
 
-        # If there is only one panel
-        # left, hide its title bar
-        if numPanels == 1:
-            paneInfo = self.__auiManager.GetPane(self.__viewPanels[0])
-            paneInfo.Dockable(False).CaptionVisible(False)
+            if wasCentre:
+                paneInfo.Centre()
+
+            # If there is only one panel remaining,
+            # hide its title bar and close button
+            (paneInfo.CloseButton(   numPanels > 1)
+                     .CaptionVisible(numPanels > 1)
+                     .Floatable(     numPanels > 1)
+                     .Dockable(      numPanels > 1))
 
         # if there are no panels,
         # disable the menus
@@ -1310,7 +1280,7 @@ class FSLeyesFrame(wx.Frame):
 
                 # Give the user the option of suppressing
                 # this dialog forever more
-                dlg = fsldlg.CheckBoxMessageDialog(
+                dlg = fw.CheckBoxMessageDialog(
                     self,
                     strings.titles[self, 'saveLayout'],
                     message=strings.messages[self, 'saveLayout'],
@@ -1365,8 +1335,7 @@ class FSLeyesFrame(wx.Frame):
                 self.__onViewPanelClose(panel=vp, displaySync=False)
 
             self.__auiManager.UnInit()
-            self.__auiManager._frame = None
-            self.__auiManager        = None
+            self.__auiManager = None
 
             # Cleanly destroy all
             # menu action objects
@@ -1527,32 +1496,17 @@ class FSLeyesFrame(wx.Frame):
         menuBar = wx.MenuBar()
         self.SetMenuBar(menuBar)
 
-        # The menu bar on OSX/wxPython is a bit different
-        # than the menu bar on OSX/wxPhoenix, or on Linux.
-        # This is because under OSX/wxPython, we can't get
-        # access to the built-in application menu.
-        onOSX          = fwidgets.wxPlatform() in (fwidgets.WX_MAC_CARBON,
-                                                   fwidgets.WX_MAC_COCOA)
-        haveAppMenu    = (onOSX and
-                          fwidgets.wxFlavour() == fwidgets.WX_PHOENIX)
-        locationOffset = 0
-
-        # On linux, we create a FSLeyes menu
-        if not onOSX:
-            locationOffset  = 1
-            fsleyesMenu     = wx.Menu()
-            menuBar.Append(fsleyesMenu, 'FSLeyes')
-
-        # On OSX/wxPhoenix, we can
-        # get the built-in app menu
-        elif haveAppMenu:
-            fsleyesMenu = menuBar.OSXGetAppleMenu()
+        # On macOS, we use the built-in app menu
+        if sys.platform == 'darwin':
+            fsleyesMenu    = menuBar.OSXGetAppleMenu()
+            locationOffset = 0
             fsleyesMenu.SetTitle('FSLeyes')
 
-        # On OSX/wxPython, we fudge
-        # things a bit - see below.
+        # Otherwise we create a FSLeyes menu
         else:
-            fsleyesMenu = None
+            fsleyesMenu    = wx.Menu()
+            locationOffset = 1
+            menuBar.Append(fsleyesMenu, 'FSLeyes')
 
         fileMenu     = wx.Menu()
         overlayMenu  = wx.Menu()
@@ -1585,18 +1539,7 @@ class FSLeyesFrame(wx.Frame):
         }
 
         self.__makeFileMenu()
-
-        # We have a FSLeyes menu
-        if fsleyesMenu is not None:
-            self.__makeFSLeyesMenu(fsleyesMenu)
-
-        # We don't have a FSLeyes menu -
-        # throw all of the FSLeyes menu
-        # stuff onto the end of the File
-        # menu.
-        else:
-            fileMenu.AppendSeparator()
-            self.__makeFSLeyesMenu(fileMenu)
+        self.__makeFSLeyesMenu(fsleyesMenu)
 
         self.__makeOverlayMenu()
         self.refreshToolsMenu()
@@ -1648,7 +1591,7 @@ class FSLeyesFrame(wx.Frame):
              shortcuts.actions.get(UpdateCheckAction),
              wx.ID_ANY),
             (self.setFSLDIR,
-             strings.actions[self, 'setFSLDIR'],
+             strings.actions[       self, 'setFSLDIR'],
              shortcuts.actions.get((self, 'setFSLDIR')),
              wx.ID_ANY),
             (self.openHelp,
@@ -2073,7 +2016,7 @@ class FSLeyesFrame(wx.Frame):
             toolTitles = {}
 
             # Plugin-provided tools, which are created
-            # by the ViewPanel and added as attributes
+            # by the ViewPanel and added as actions
             # to itself (see ViewPanel.reloadPlugins)
             pluginTools = plugins.listTools(vpType)
 
@@ -2089,9 +2032,9 @@ class FSLeyesFrame(wx.Frame):
                 pluginTools = {t[1] : t[2] for t in pluginTools}
 
             # See ViewPanel.reloadPlugins. and LoadPluginAction.
-            # All supported tools are added as attributes to the
+            # All supported tools are added as actions to the
             # ViewPanel instance, with the class name used as
-            # the attribute name.
+            # the action name.
             for toolName, cls in pluginTools.items():
                 name = cls.__name__
                 toolNames.append(name)

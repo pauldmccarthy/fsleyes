@@ -10,7 +10,6 @@
 
 
 import wx
-import wx.siplib   as sip
 import wx.glcanvas as wxgl
 
 import fsleyes.gl                 as fslgl
@@ -28,8 +27,6 @@ class WXGLColourBarCanvas(cbarcanvas.ColourBarCanvas,
     .. note:: The ``WXGLColourBarCanvas`` assumes the existence of the
               :meth:`.ColourBarCanvas.updateColourBarTexture` method.
     """
-
-    __metaclass__ = sip.wrappertype
 
     def __init__(self, parent, overlayList, displayCtx):
 

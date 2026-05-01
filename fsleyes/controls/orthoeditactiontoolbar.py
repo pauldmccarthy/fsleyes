@@ -80,8 +80,10 @@ class OrthoEditActionToolBar(ctrlpanel.ControlToolBar):
                                           orient=wx.VERTICAL,
                                           kbFocus=True)
 
-        self.toggleEditPanel = actions.ToggleControlPanelAction(
-            overlayList, displayCtx, ortho, editpanel.OrthoEditSettingsPanel)
+        self.addAction(
+            actions.ToggleControlPanelAction(
+                overlayList, displayCtx, ortho, editpanel.OrthoEditSettingsPanel),
+            'toggleEditPanel')
 
         self.__ortho = ortho
         self.__createTools()

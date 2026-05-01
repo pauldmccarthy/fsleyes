@@ -198,9 +198,10 @@ TODO
 """
 
 
+import            logging
 import os.path as op
 import            os
-import            logging
+import            sys
 import            warnings
 
 import fsl.utils.settings as fslsettings
@@ -362,6 +363,26 @@ def configLogging(verbose=0, noisy=None):
     traceLogger = logging.getLogger('fsleyes_props.trace')
     if traceLogger.getEffectiveLevel() <= logging.DEBUG:
         import fsleyes_props.trace  # noqa
+
+
+def auiManagerStyle():
+    """Returns style flags used by the ``FSLeyesFrame`` and
+    :class:`.ViewPanel` when creating ``wx.aui.AuiManager`` instances.
+    """
+
+    from wx import aui
+
+    # wxpython 4.2.5
+    #  - segfaults on macOS with AUI_MGR_VENETIAN_BLINDS_HINT
+    #  - buggy/flaky rendering on Windows/WSL with AUI_MGR_TRANSPARENT_HINT
+    if sys.platform == 'darwin':
+        return (aui.AUI_MGR_ALLOW_FLOATING   |
+                aui.AUI_MGR_TRANSPARENT_HINT |
+                aui.AUI_MGR_LIVE_RESIZE)
+    else:
+        return (aui.AUI_MGR_ALLOW_FLOATING       |
+                aui.AUI_MGR_VENETIAN_BLINDS_HINT |
+                aui.AUI_MGR_LIVE_RESIZE)
 
 
 # Just for convenience

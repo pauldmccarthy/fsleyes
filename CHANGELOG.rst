@@ -11,6 +11,34 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+2.0.0 (Under development)
+-------------------------
+
+
+Changed
+^^^^^^^
+
+
+* FSLeyes now uses ``wx.aui`` instead of ``wx.lib.agw.aui`` for layout
+  management, which will hopefully result in a smoother user experience
+  (!502).
+* Third-party FSLeyes plugins must now register custom actions via the
+  :meth:`.ActionProvider.addAction` method. Any actions which use the
+  ``@action`` decorators are automatically registered (!502).
+
+
+Fixed
+^^^^^
+
+
+* Multiple data series from the same overlay are now grouped together in
+  plot legends (e.g. time series, and FEAT model fit) (!502).
+* Fixed a very strange rendering/flickering issue caused by unintentional
+  access of internal ``wxPython`` properties. This was achieved by refactoring
+  the action/menu item discovery logic, which was previously implemented by
+  looping over all attributes of view panel objects (!502).
+
+
 1.18.1 (Tuesday 14th April 2026)
 --------------------------------
 

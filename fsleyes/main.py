@@ -161,8 +161,6 @@ class FSLeyesApp(wx.App):
         if self.__overlayList is None:
             return
 
-        import fsleyes_widgets.utils.status     as status
-        import fsleyes.strings                  as strings
         import fsleyes.parseargs                as parseargs
         import fsleyes.actions.applycommandline as applycommandline
 
@@ -605,9 +603,11 @@ def initialise(splash, namespace, callback):
         callback()
 
     try:
+
         # Force the creation of a wx.glcanvas.GLContext object,
         # and initialise OpenGL version-specific module loads.
         fslgl.getGLContext(ready=realCallback,
+                           parent=splash,
                            requestVersion=namespace.glversion)
 
     except Exception:
@@ -735,18 +735,17 @@ def makeDisplayContext(namespace, splash, onLoad=None):
                 - the master :class:`.DisplayContext`
     """
 
-    import fsleyes_widgets.utils.status as status
-    import fsleyes.overlay              as fsloverlay
-    import fsleyes.parseargs            as parseargs
-    import fsleyes.displaycontext       as displaycontext
+    import fsleyes.overlay        as fsloverlay
+    import fsleyes.parseargs      as parseargs
+    import fsleyes.displaycontext as displaycontext
 
-    # Splash status update must be
-    # performed on the main thread.
+    # Redirect status updates to the splash frame
+    # Splash status update must be performed on
+    # the main thread - overlays may be loaded on
+    # a separate thread which calls status.update().
     def splashStatus(msg):
         wx.CallAfter(splash.SetStatus, msg)
 
-    # Redirect status updates
-    # to the splash frame
     status.setTarget(splashStatus)
 
     # Create the overlay list (only one of these
@@ -849,27 +848,7 @@ def makeFrame(namespace, displayCtx, overlayList, splash, closeHandlers):
     frame.Show(True)
     frame.Refresh()
     frame.Update()
-
-    # In certain instances under Linux/GTK,
-    # closing the splash screen will crash
-    # the application. No idea why. So we
-    # leave the splash screen hidden, but
-    # not closed, and close it when the main
-    # frame is closed. This also works under
-    # OSX.
-    splash.Hide()
-    splash.Refresh()
-    splash.Update()
-
-    def onFrameDestroy(ev):
-        ev.Skip()
-
-        # splash screen may already
-        # have been destroyed
-        try:              splash.Close()
-        except Exception: pass
-
-    frame.Bind(wx.EVT_WINDOW_DESTROY, onFrameDestroy)
+    wx.CallAfter(splash.Close)
 
     status.update('Setting up scene...')
 

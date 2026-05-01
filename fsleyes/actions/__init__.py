@@ -14,12 +14,15 @@ performed, enabled and disabled, and may be bound to a GUI menu item or
 button. The :class:`ActionProvider` class represents some entity which can
 perform one or more actions.  As the :class:`.FSLeyesPanel` class derives from
 :class:`ActionProvider` pretty much everything in FSLeyes is an
-:class:`ActionProvider`.
+``ActionProvider``.
+
+The actions provided by an ``ActionProvider`` may be automatically discovered
+and added as menu items in the FSLeyes interface.
 
 
-Many of the modules in this package also contain standalone functions for doing
-various things, such as the :func:`.screenshot.screenshot` function, and the
-:func:`.loadoverlay.loadImage` function.
+Many of the modules in the `fsleyes.actions`` package also contain standalone
+functions for doing various things, such as the :func:`.screenshot.screenshot`
+function, and the :func:`.loadoverlay.loadImage` function.
 
 
 The :func:`action` and :func:`toggleAction` functions are intended to be used
@@ -85,9 +88,34 @@ All bound widgets of an ``Action`` can be accessed through the
 :meth:`.Action.unbindAllWidgets` method.
 
 
+As an alternative to using the ``@action`` decorators, it is also possible to
+manually create ``Action`` objects. However when doing so, you must register
+them via the :meth:`.ActionProvider.addAction` method, e.g.::
+
+    >>> from fsleyes.actions import ActionProvider, Action
+    >>> class Thing(ActionProvider):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+
+                self.addAction(
+                    Action(self.overlayList, self.displayCtx, self.doThing))
+
+            def doThing(self):
+                print('Doing thing')
+
+    >>> t = Thing(overlayList, displayCtx)
+    >>> t.hasAction('doThing')
+    True
+
+    >>> t.getActions()
+    [('doThing', Action(doThing))]
+
+This manual registration is necessary to allow for automatic action discovery.
+
+
 This module also provides two classes which allow a widget to be automatically
 created for, and bound to an ``Action`` or ``ToggleAction`` (through the
-:mod:`props.build` package):
+:mod:`fsleyes_props.build` package):
 
  .. autosummary::
     :nosignatures:
@@ -99,9 +127,8 @@ created for, and bound to an ``Action`` or ``ToggleAction`` (through the
 
 import logging
 import types
-import inspect
-import warnings
 import functools
+from collections import defaultdict
 
 import fsleyes_props   as props
 import fsleyes.strings as strings
@@ -143,7 +170,6 @@ class ActionProvider:
     actions.
     """
 
-
     def __init__(self, overlayList, displayCtx):
         """Create an ``ActionProvider``.
 
@@ -152,6 +178,49 @@ class ActionProvider:
         """
         self.__overlayList = overlayList
         self.__displayCtx  = displayCtx
+        self.__actions     = {}
+
+        # Initialise any @action-decorated actions
+        # (see ActionFactory).
+        for name in ActionFactory.registeredActions(type(self)):
+            getattr(self, name)
+
+
+    def addAction(self, action, name=None):
+        """Register an :class:`.Action` object with this ``ActionProvider``.
+
+        Actions defined via the :func:`action` decorators are automatically
+        registered - this method can be used to register an ``Action`` which
+        was created separately.
+
+        All registered ``Action`` instances of an ``ActionProvider`` are made
+        available as attributes of the provider, with the
+        :meth:`.Action.actionName` the attribute name.
+
+        Once an ``Action`` is registered with an ``ActionProvider``, the
+        provider effectively owns the ``Action`` and is responsible for its
+        lifecycle. This means that when the ``ActionProvider`` is destroyed,
+        it will call the :meth:`.Action.destroy` method of all registered
+        ``Action`` instances.
+
+        :arg action: An :class:`.Action` object
+        :arg name:   The action name - used as the attribute name on this
+                     ``ActionProvider``. Defaults to :meth:`.Action.actionName`
+        """
+        if name is None:
+            name = action.actionName
+
+        if name in self.__actions:
+            raise ValueError(f'An action with name {name} is already '
+                             f'registered with this {type(self).__name__}')
+
+
+        log.debug('%s: registering action %s', type(self).__name__, name)
+
+        self.__actions[name] = action
+        action.provider      = self
+
+        setattr(self, name, action)
 
 
     @property
@@ -168,45 +237,45 @@ class ActionProvider:
 
     def destroy(self):
         """Must be called when this ``ActionProvider`` is no longer needed.
-        Calls the :meth:`Action.destroy` method of all ``Action`` instances.
+        Calls the :meth:`Action.destroy` method of all ``Action`` instances
+        owned by this ``ActionProvider``.
         """
+
+        for name, act in self.__actions.items():
+            if not act.destroyed:
+                act.destroy()
 
         self.__overlayList = None
         self.__displayCtx  = None
-
-        for name, actionz in ActionProvider.getActions(self):
-
-            # Entries in getActions may be (None, None)
-            if actionz is None:
-                continue
-
-            # Or may be ('actionName', action)
-            else:
-                actionz = [actionz]
-
-            for a in actionz:
-                a.destroy()
+        self.__actions     = None
 
 
     def getAction(self, name):
         """Return the :class:`Action` instance with the specified name. """
-        return getattr(self, name)
+
+        # getattr in case this is a decorated ActionFactory
+        # instance that hasn't yet been accesseed.
+        getattr(self, name, None)
+        return self.__actions[name]
 
 
     def hasAction(self, name):
         """Return ``True`` if this ``ActionProvider`` has an action with the
         given name, ``False`` otherwise
         """
-        return getattr(self, name, None) is not None
+        getattr(self, name, None)
+        return name in self.__actions
 
 
     def enableAction(self, name, enable=True):
         """Enable/disable the named :class:`Action`. """
-        self.getAction(name).enabled = enable
+        getattr(self, name, None)
+        self[name].enabled = enable
 
 
     def disableAction(self, name):
         """Disable the named :class:`Action`. """
+        getattr(self, name, None)
         self.enableAction(name, False)
 
 
@@ -222,23 +291,14 @@ class ActionProvider:
                       :class:`.FSLeyesFrame`, which creates menu items, to
                       indicate that a separator should be inserted.
         """
-
-        acts = []
-
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            for name, attr in inspect.getmembers(self):
-                if isinstance(attr, Action):
-                    acts.append((name, attr))
-
-        return acts
+        return list(self.__actions.items())
 
 
 class ActionFactory:
     """The ``ActionFactory`` is used by the :func:`action`,
     :func:`toggleAction`, and :func:`toggleControlPanelAction` decorators.
-    Its job is to create :class:`Action` instances for :class:`ActionProvider`
-    instances.
+    Its job is to create :class:`Action` instances for `@action`-decorated
+    methods of :class:`ActionProvider` instances.
 
 
     .. warning:: This class contains difficult-to-understand code. Read up
@@ -278,18 +338,24 @@ class ActionFactory:
 
 
     So when the :func:`action` or :func:`toggleAction` is used in a class
-    definition, an ``ActionFactory`` is created, and used as the decorator
-    of the unbound class method.
+    definition, an ``ActionFactory`` is created, and used as the decorator of
+    the unbound class method.  The ``ActionFactory`` records both the class
+    and method in the :attr:`ActionFactory.registry` dictionary (this is
+    achieved via :meth:`__set_name__`, which is called when the
+    ``ActionProvider`` sub-class is created).
 
 
-    Later on, when the ``ActionFactory`` detects that it being is accessed
-    through an instance of the class (a ``MyThing`` instance in the example
-    above), it creates an :class:`Action` instance, and then replaces itself
-    with this ``Action`` instance - the ``Action`` instance becomes the
-    decorator of the bound method. This is possible because the
-    ``ActionFactory`` is a descriptor - it uses the :meth:`__get__` method
-    so it can differentiate between class-level and instance-level accesses
-    of the decorated method.
+    Later on, when the ``ActionProvider`` instance is created (``MyThing`` in
+    the above example), it scans through the ``registry`` and accesses every
+    registered action via ``getattr``. This induces a call to the
+    :meth:`__get__` method of the ``ActionFactory`` , which creates an
+    :class:`Action` instance, and then replaces itself with the ``Action``
+    instance.
+
+    The ``Action`` instance then becomes the decorator of the bound
+    method. This is possible because the ``ActionFactory`` is a descriptor -
+    it uses the :meth:`__get__` method so it can differentiate between
+    class-level and instance-level accesses of the decorated method.
 
 
     The ``ActionFactory`` supports class-method decorators both with and
@@ -310,11 +376,28 @@ class ActionFactory:
             @otherCustomAction(arg1=8)
             def myAction3(self):
                 # do things here
-
-
-    .. todo:: Merge/replace this class with the :class:`.memoize.Instanceify`
-              decorator.
     """
+
+
+    registry = defaultdict(dict)
+    """Registry which tracks all class methods that have been decorated with
+    an ``@action`` decorator.
+    """
+
+
+    @staticmethod
+    def registeredActions(cls):
+        """Called by :meth:`ActionProvider.__init__`. Returns a dictionary of
+        ``{name : method}`` mappings, containing all methods of ``cls``
+        (including its base classes) that have been decorated with an
+        ``@action`` decorator.
+        """
+        actionz = {}
+
+        for c in reversed(cls.__mro__):
+            actionz.update(ActionFactory.registry[c])
+
+        return actionz
 
 
     def __init__(self, actionType, *args, **kwargs):
@@ -329,10 +412,10 @@ class ActionFactory:
         used).
         """
 
-        self.__actionType  = actionType
-        self.__args        = args
-        self.__kwargs      = kwargs
-        self.__func        = None
+        self.__actionType = actionType
+        self.__args       = args
+        self.__kwargs     = kwargs
+        self.__func       = None
 
         # A no-brackets style
         # decorator was used
@@ -340,8 +423,7 @@ class ActionFactory:
            len(args)   == 1 and \
            isinstance(args[0], (types.FunctionType,
                                 types.MethodType)):
-
-            self.__func = args[0]
+            self(args[0])
             self.__args = self.__args[1:]
 
 
@@ -352,14 +434,18 @@ class ActionFactory:
         function. Otherwise, (an ``@action`` style decorator was used), this
         method should never be called.
         """
-
-        if self.__func is not None:
-            log.warning('ActionFactory.__call__ was called, but function is '
-                        'alreday set (%s)! I\'m really confused.',
-                        self.__func.__name__)
-
         self.__func = func
         return self
+
+
+    def __set_name__(self, owner, name):
+        """Called when a class which has ``ActionFactory``-decorated methods
+        is created. Records the class and method in the
+        :attr:`ActionFactory.registry`.
+        """
+        func = self.__func
+        name = func.__name__
+        ActionFactory.registry[owner][name] = func
 
 
     def __get__(self, instance, cls):
@@ -369,6 +455,9 @@ class ActionFactory:
 
         If this ``ActionFactory`` is accessed through a class, the
         encapsulated function is returned.
+
+        This is invoked in :meth:`ActionProvider.__init__` for all
+        ``@action``-decorated methods.
         """
 
         # Class-level access
@@ -376,28 +465,31 @@ class ActionFactory:
             return self.__func
 
         else:
-
             # first argument will be the
             # instance (the "self" argument)
             func = functools.partial(self.__func, instance)
             func = functools.update_wrapper(func, self.__func)
-
             args = [instance.overlayList, instance.displayCtx]
+
+            # ToggleControlPanelAction for a ViewPanel instance
             if self.__actionType is ToggleControlPanelAction:
                 args.append(instance)
 
-            # Create an Action for the instance
+            # Create an Action for the ActionProvider
+            # instance and register it with the provider
+            log.debug('Creating @action %s.%s',
+                      type(instance).__name__, func.__name__)
             action = self.__actionType(
                 *args,
                 *self.__args,
                 func=func,
-                instance=instance,
+                name=func.__name__,
                 **self.__kwargs)
 
-            # and replace this ActionFactory
-            # with the Action on the instance.
-            setattr(instance, self.__func.__name__, action)
-            return functools.update_wrapper(action, self.__func)
+            action = functools.update_wrapper(action, self.__func)
+            instance.addAction(action)
+
+            return action
 
 
 class ActionButton(props.Button):
@@ -514,18 +606,17 @@ class ToggleActionButton(props.Toggle):
         ``ToggleAction`` instance.
         """
         import wx
-        import fsleyes_widgets.bitmaptoggle as bmptoggle
+        import fsleyes_widgets as fw
 
         if isinstance(widget, wx.CheckBox):
             ev = wx.EVT_BUTTON
         elif isinstance(widget, wx.ToggleButton):
             ev = wx.EVT_TOGGLEBUTTON
-        elif isinstance(widget, bmptoggle.BitmapToggleButton):
-            ev = bmptoggle.EVT_BITMAP_TOGGLE
+        elif isinstance(widget, fw.BitmapToggleButton):
+            ev = fw.EVT_BITMAP_TOGGLE
 
         else:
-            raise RuntimeError(
-                'Unknown widget {}'.format(type(widget).__name__))
+            raise RuntimeError(f'Unknown widget {type(widget).__name__}')
 
         instance.getAction(self.__name).bindToWidget(parent, ev, widget)
 

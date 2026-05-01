@@ -18,7 +18,6 @@ import fsl.data.mesh                        as fslmesh
 import fsl.data.melodicimage                as fslmelimage
 import fsleyes_props                        as props
 
-import fsleyes.actions                      as actions
 import fsleyes.views.plotpanel              as plotpanel
 import fsleyes.profiles.plotprofile         as plotprofile
 import fsleyes.plotting.powerspectrumseries as psseries

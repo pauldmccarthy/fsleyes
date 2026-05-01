@@ -9,15 +9,13 @@
 """
 
 
-import wx
-import wx.siplib   as sip
-import wx.glcanvas as wxgl
+import                  wx
+import wx.glcanvas   as wxgl
 
-import fsleyes_widgets as     fwidgets
-import fsleyes_props   as     props
+import fsleyes_props as props
 
-import fsleyes.gl      as     fslgl
-from   .               import slicecanvas
+import fsleyes.gl    as     fslgl
+from   fsleyes.gl    import slicecanvas
 
 
 class WXGLSliceCanvas(slicecanvas.SliceCanvas,
@@ -32,7 +30,6 @@ class WXGLSliceCanvas(slicecanvas.SliceCanvas,
               :meth:`.SliceCanvas._updateDisplayBounds` method.
     """
 
-    __metaclass__ = sip.wrappertype
 
     def __init__(self, parent, overlayList, displayCtx, zax=0):
         """Create a ``WXGLSliceCanvas``. See :meth:`.SliceCanvas.__init__` for

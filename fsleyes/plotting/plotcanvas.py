@@ -215,7 +215,7 @@ class PlotCanvas(props.HasProperties):
         figure.subplots_adjust(top=1.0, bottom=0.0, left=0.0, right=1.0)
         figure.patch.set_visible(False)
 
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name        = f'{type(self).__name__}_{id(self)}'
         self.__figure      = figure
         self.__axis        = axis
         self.__canvas      = canvas
@@ -405,7 +405,7 @@ class PlotCanvas(props.HasProperties):
 
         # don't run the task if it's
         # already scheduled on the idle loop
-        idleName = '{}.draw'.format(id(self))
+        idleName = f'{id(self)}.draw'
         if not self.destroyed and not idle.idleLoop.inIdle(idleName):
             idle.idle(self.draw, name=idleName)
 
@@ -629,7 +629,7 @@ class PlotCanvas(props.HasProperties):
                                  axxlim,
                                  axylim,
                                  refresh,
-                                 taskName='{}.wait'.format(id(self)),
+                                 taskName=f'{id(self)}.wait',
                                  wait_direct=True,
                                  **plotArgs)
 
@@ -824,15 +824,15 @@ class PlotCanvas(props.HasProperties):
             return (0, 0), (0, 0)
 
         if len(xdata) != len(ydata) or len(xdata) == 0:
-            log.debug('{}: data series length mismatch, or '
-                      'no data points (x: {}, y: {})'.format(
-                          ds.overlay.name, len(xdata), len(ydata)))
+            log.debug('%s: data series length mismatch, or '
+                      'no data points (x: %s, y: %s)',
+                      ds.overlay.name, len(xdata), len(ydata))
             return (0, 0), (0, 0)
 
         xdata = np.asarray(xdata, dtype=float)
         ydata = np.asarray(ydata, dtype=float)
 
-        log.debug('Drawing {} for {}'.format(type(ds).__name__, ds.overlay))
+        log.debug('Drawing %s for %s', type(ds).__name__, ds.overlay)
 
         # Note to self: If the smoothed data is
         # filled with NaNs, it is possibly due

@@ -381,8 +381,8 @@ class OverlayPlotPanel(PlotPanel):
 
 
     def getDataSeriesToPlot(self):
-        """Convenience method which returns a list of overlays which have
-        :class:`.DataSeries` that should be plotted.
+        """Convenience method which returns a list of all :class:`.DataSeries`
+        to be plotted.
         """
 
         overlays = self.overlayList[:]
@@ -399,6 +399,8 @@ class OverlayPlotPanel(PlotPanel):
         dss = [self.getDataSeries(o) for o in overlays]
         dss = [ds for ds in dss if ds is not None]
 
+        toPlot = []
+
         # Gather any extra time series
         # associated with the base time
         # series objects.
@@ -407,6 +409,9 @@ class OverlayPlotPanel(PlotPanel):
             extras = ds.extraSeries()
             dss    = dss[:i + 1] + extras + dss[i + 1:]
 
+            toPlot.append(ds)
+            toPlot.extend(extras)
+
             # If a base time series is disabled,
             # its additional ones should also
             # be disabled
@@ -414,12 +419,13 @@ class OverlayPlotPanel(PlotPanel):
                 eds.enabled = ds.enabled
 
         # Remove duplicates
-        unique = []
+        dss    = toPlot
+        toPlot = []
         for ds in dss:
-            if ds not in unique:
-                unique.append(ds)
+            if ds not in toPlot:
+                toPlot.append(ds)
 
-        return unique
+        return toPlot
 
 
     def getDataSeries(self, overlay):
