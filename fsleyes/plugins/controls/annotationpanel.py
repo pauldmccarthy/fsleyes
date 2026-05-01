@@ -100,10 +100,10 @@ class AnnotationPanel(ctrlpanel.ControlPanel):
         self.__ortho = ortho
 
         # load/save actions are bound to buttons below
-        self.loadAnnotations = saveannotations.LoadAnnotationsAction(
-            overlayList, displayCtx, ortho)
-        self.saveAnnotations = saveannotations.SaveAnnotationsAction(
-            overlayList, displayCtx, ortho)
+        self.addAction(saveannotations.LoadAnnotationsAction(
+            overlayList, displayCtx, ortho), 'loadAnnotations')
+        self.addAction(saveannotations.SaveAnnotationsAction(
+            overlayList, displayCtx, ortho), 'saveAnnotations')
 
         # The interface comprises a list of annotations,
         # a set of controls below the list, a column of
