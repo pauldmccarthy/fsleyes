@@ -4,6 +4,9 @@ Plugin control = fsleyes_plugin_example.plugin:PluginControl
 [fsleyes_layouts]
 Plugin layout = fsleyes_plugin_example.plugin:PluginLayout
 
+[fsleyes_loaders]
+Plugin loader = fsleyes_plugin_example.plugin:pluginLoader
+
 [fsleyes_tools]
 Plugin tool = fsleyes_plugin_example.plugin:PluginTool
 

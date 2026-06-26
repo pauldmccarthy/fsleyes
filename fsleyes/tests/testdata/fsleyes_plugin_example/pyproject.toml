@@ -18,5 +18,8 @@ version = "1.0.0"
 [project.entry-points.fsleyes_layouts]
 "Plugin layout" = "fsleyes_plugin_example.plugin:PluginLayout"
 
+[project.entry-points.fsleyes_loaders]
+"Plugin loader" = "fsleyes_plugin_example.plugin:pluginLoader"
+
 [tool.setuptools.packages.find]
 include = ["fsleyes_plugin_example*"]
