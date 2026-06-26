@@ -135,13 +135,13 @@ definitions for custom views, controls, tools, layouts, and loaders.
 
    The typing annotations on the arguments *must* be present.
    If the ``check`` argument is ``False``, the function should load a FSLeyes
-   overlay from ``filename`` and return it. If ``check is False``, the function
+   overlay from ``filename`` and return it. If ``check is True``, the function
    should not load the overlay, but should return ``True`` if it is *capable*
    of loading the overlay, and ``False`` otherwise.
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply define
-your views, controls, tools, layouts, and loaders in the file. The file path can
-then be passed to the :func:`loadPlugin` or :func:`installPlugin` function.
+your views, controls, tools, layouts, and loaders in the file. The file path
+can then be passed to the :func:`loadPlugin` or :func:`installPlugin` function.
 
 
 To release a FSLeyes plugin as a library, you need to organise your code

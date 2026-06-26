@@ -8,7 +8,7 @@ FSLeyes plugins
 
 
 FSLeyes |version| has a simple plugin architecture, allowing you to write and
-install custom views, controls, tools, and layouts.
+install custom views, controls, tools, layouts, and loader functions.
 
 
 For users
@@ -58,7 +58,8 @@ Things plugins can provide
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-FSLeyes plugins can provide custom *views*, *controls*, *tools*, and *layouts*:
+FSLeyes plugins can provide custom *views*, *controls*, *tools*, *layouts*,
+and *loaders*:
 
  - A *view* is a top level panel, such as an
    :class:`~fsleyes.views.orthopanel.OrthoPanel`,
@@ -83,6 +84,10 @@ FSLeyes plugins can provide custom *views*, *controls*, *tools*, and *layouts*:
    view. Refer to the page on :ref:`customising FSLeyes
    <customising_layouts>`, and the :mod:`fsleyes.layouts` module for more
    details.
+
+  - A *loader* is a function which can be used to load an overlay file. When
+   the user loads a file, FSLeyes will attempt to use any registered loader
+   plugins before falling back to its default loading behaviour.
 
 
 FSLeyes plugin sources
@@ -146,14 +151,14 @@ Writing a FSLeyes plugin
           range of built-in plugins can be found in ``fsleyes/plugins/``.
 
 
-.. warning:: FSLeyes assumes that all views, controls, tools, and layouts have
-             unique class names.  So expect problems if, for example, you
-             define your own FSLeyes control with the name
+.. warning:: FSLeyes assumes that all views, controls, tools, layouts, and
+             loaders have unique class names.  So expect problems if, for
+             example, you define your own FSLeyes control with the name
              :class:`~fsleyes.controls.overlaylistpanel.OverlayListPanel`.
 
 
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
-definitions for custom views, controls, tools, and layouts.
+definitions for custom views, controls, tools, layouts, and loaders.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 
@@ -165,21 +170,35 @@ definitions for custom views, controls, tools, and layouts.
  - Layouts must be strings conforming to the FSLeyes layout specification (see
    the :mod:`fsleyes.layouts` module).
 
+ - Loaders must be functions with a signature of the form::
 
-To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply define
-your views, controls, and tools as Python classes in the file, and define
-layouts as module-level string values with a name beginning with
-``FSLEYES_LAYOUT_``. The file path can then be loaded via the *File*
-|right_arrow| *Load plugin* menu item.
+       def load(filename : str, check : bool) -> Any:
+           ...
 
+   The typing annotations on the arguments **must** be present.
+   If the ``check`` argument is ``False``, the function should load a FSLeyes
+   overlay from ``filename`` and return it. If ``check is True``, the function
+   should not load the overlay, but should return ``True`` if it is *capable*
+   of loading the overlay, and ``False`` otherwise.
+
+
+To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply define:
+
+ - your views, controls, and tools as Python classes in the file,
+ - your loaders as module-level functions
+ - your layouts as module-level string values with a name beginning with
+   ``FSLEYES_LAYOUT_``.
+
+The file path can then be loaded via the *File* |right_arrow| *Load plugin*
+menu item.
 
 To release a FSLeyes plugin as a library, you need to organise your code
 as a Python library. Minimally, this requires the following:
 
  - Arrange your ``.py`` file(s) into a Python package.
 
- - Expose your custom views, controls, tools, and layouts as `entry points
-   <https://packaging.python.org/specifications/entry-points/>`__.
+ - Expose your custom views, controls, tools, layouts, and loaders as `entry
+   points <https://packaging.python.org/specifications/entry-points/>`__.
 
 
 A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this:
@@ -187,11 +206,10 @@ A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this:
 
 .. sidebar:: FSLeyes plugin library naming conventions
 
-             Versions of FSLeyes older than 1.8.0 will only recognise plugin
-             libraries with a name beginning with ``fsleyes-plugin-``. As of
-             FSLeyes 1.8.0, this restriction no longer exists - you can
-             give your library any name you wish. All you need to do is expose
-             the relevant entry points.
+             You can give your FSLeyes plugin library any name you wish. All
+             you need to do is expose the relevant entry points. However,
+             versions of FSLeyes older than 1.8.0 will only recognise plugin
+             libraries with a name beginning with ``fsleyes-plugin-``.
 
 ::
 
@@ -200,25 +218,29 @@ A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this:
     build-backend = "setuptools.build_meta"
 
     [project]
-    name    = "my-cool-fsleyes-plugin"
+    name    = "my-fsleyes-plugin"
     version = "1.0.0"
 
-    # Views, controls, and tools must be exposed
+    # FSLeyes plugin items must be exposed
     # as entry points within groups called
-    # "fsleyes_views", "fsleyes_controls" and
-    # "fsleyes_tools" respectively.
+    # "fsleyes_views", "fsleyes_controls",
+    # "fsleyes_tools", "fsleyes_layouts",
+    # and "fsleyes_loaders".
 
     [project.entry-points.fsleyes_views]
-    "My cool view" = "myplugin:MyView"
+    "My view" = "myplugin:MyView"
 
     [project.entry-points.fsleyes_controls]
-    "My cool control" = "myplugin:MyControl"
+    "My control" = "myplugin:MyControl"
 
     [project.entry-points.fsleyes_tools]
-    "My cool tool" = "myplugin.MyTool"
+    "My tool" = "myplugin.MyTool"
 
     [project.entry-points.fsleyes_layouts]
-    "My cool layout" = "myplugin.MyLayout"
+    "My layout" = "myplugin.MyLayout"
+
+    [project.entry-points.fsleyes_loaders]
+    "My loader" = "myplugin.myLoadFunction"
 
 
 See the `Python Packaging guide
