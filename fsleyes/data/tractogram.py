@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`Tractogram` class, which is used by FSLeyes
-for displaying streamline tractography ``.trk`` or ``.tck`` files.
+for displaying streamline tractography ``.trk``, ``.tck``, or ``.trx`` files.
 
 The ``Tractogram`` class is just a thin wrapper around a
 ``nibabel.streamlines.Tractogram`` object.
@@ -17,13 +17,17 @@ import os.path   as op
 
 import numpy                as np
 import nibabel.streamlines  as nibstrm
+from nibabel.affines import apply_affine
+from trx.io import load as trx_load
 
 import fsl.transform.affine as affine
 import fsl.data.constants   as constants
 
 
-ALLOWED_EXTENSIONS     = ['.tck', '.trk']
-EXTENSION_DESCRIPTIONS = ['MRtrix .tck file', 'TrackVis .trk file']
+ALLOWED_EXTENSIONS     = ['.tck', '.trk', '.trx']
+EXTENSION_DESCRIPTIONS = ['MRtrix .tck file',
+                          'TrackVis .trk file',
+                          'TRX tractogram file']
 
 
 class Tractogram:
@@ -41,9 +45,28 @@ class Tractogram:
 
         self.dataSource = op.abspath(fname)
         self.name       = op.basename(fname)
-        self.tractFile  = nibstrm.load(fname)
 
-        # Bounding box is calculsted on first
+        ext = op.splitext(fname)[1].lower()
+
+        if ext == '.trx':
+            self.tractFile = trx_load(fname, reference=None)
+            self._is_trx   = True
+            # Convert to nibabel Tractogram (in-memory) and apply the
+            # voxel-to-RAS affine to transform streamlines from voxel
+            # to RASMM world space, matching nibabel's convention for
+            # TRK/TCK.
+            tractogram = self.tractFile.to_tractogram(resize=True)
+            affine_vox2ras = self.tractFile.header['VOXEL_TO_RASMM']
+            if not np.allclose(affine_vox2ras, np.eye(4)):
+                tractogram.streamlines._data[:] = apply_affine(
+                    affine_vox2ras, tractogram.streamlines.get_data())
+            self.tractFile = tractogram
+            self._trx_affine = affine_vox2ras.copy()
+        else:
+            self.tractFile = nibstrm.load(fname)
+            self._is_trx   = False
+
+        # Bounding box is calculated on first
         # call to bounds(), then cached for
         # subsequent calls.
         self.__bounds = None
@@ -64,13 +87,21 @@ class Tractogram:
         # values (i.e. one value per key per
         # streamline/vertex), and discard all
         # but the first value.
-        tractogram = self.tractFile.tractogram
-        for key in tractogram.data_per_streamline.keys():
-            data = tractogram.data_per_streamline[key]
-            self.addVertexData(key, data[:, 0].reshape(-1))
-        for key in tractogram.data_per_point.keys():
-            data = tractogram.data_per_point[key].get_data()
-            self.addVertexData(key, data[:, 0].reshape(-1))
+        if self._is_trx:
+            for key in self.tractFile.data_per_streamline.keys():
+                data = self.tractFile.data_per_streamline[key]
+                self.addVertexData(key, data[:, 0].reshape(-1))
+            for key in self.tractFile.data_per_point.keys():
+                data = self.tractFile.data_per_point[key].get_data()
+                self.addVertexData(key, data[:, 0].reshape(-1))
+        else:
+            tractogram = self.tractFile.tractogram
+            for key in tractogram.data_per_streamline.keys():
+                data = tractogram.data_per_streamline[key]
+                self.addVertexData(key, data[:, 0].reshape(-1))
+            for key in tractogram.data_per_point.keys():
+                data = tractogram.data_per_point[key].get_data()
+                self.addVertexData(key, data[:, 0].reshape(-1))
 
 
     def __str__(self):
@@ -86,6 +117,8 @@ class Tractogram:
         when loading a ``.trk``/`.tck`` file, so this affine generally
         shouldn't be needed.
         """
+        if self._is_trx:
+            return self._trx_affine
         return self.tractFile.affine
 
 
