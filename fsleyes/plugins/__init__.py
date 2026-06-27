@@ -229,7 +229,7 @@ The following functions can be used to access plugins:
    listLoaders
    lookupControl
    lookupTool
-   layoutModule
+   pluginModule
    pluginTitle
 """
 
@@ -608,7 +608,8 @@ def _listEntryPoints(
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
 
     :arg group:   One of ``'fsleyes_views'``, ``'fsleyes_controls``,
-                  ``'fsleyes_tools'``, or ``'fsleyes_layouts'``.
+                  ``'fsleyes_tools'``, ``'fsleyes_layouts'``, or
+                  ``'fsleyes_loaders'``.
 
     :arg showAll: If ``True``, all plugins, including from installed
                   third-party packages will be included. Otherwise (the
@@ -801,15 +802,16 @@ def lookupTool(clsName : str) -> Tool:
     return _lookupPlugin(clsName, 'tools')
 
 
-def layoutModule(name : str) -> str:
-    """Return the module that a given layout is defined within. """
-    layouts = _listEntryPoints('fsleyes_layouts', showAll=True, load=False)
+def pluginModule(name : str, group : str) -> str:
+    """Return the module that a given FSLeyes plugin item is defined within.
+    """
+    items = _listEntryPoints(group, showAll=True, load=False)
 
-    for ep in layouts.values():
+    for ep in items.values():
         if ep.name == name:
             return ep.value.split(':')[0].split('.')[0]
 
-    raise ValueError(f'Could not find layout with name {name}')
+    raise ValueError(f'Could not find plugin item {group}:{name}')
 
 
 def pluginTitle(plugin : Plugin) -> Optional[str]:
