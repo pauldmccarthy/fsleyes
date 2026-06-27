@@ -49,19 +49,10 @@ class Tractogram:
         ext = op.splitext(fname)[1].lower()
 
         if ext == '.trx':
-            self.tractFile = trx_load(fname, reference=None)
+            trx = trx_load(fname, reference=None)
             self._is_trx   = True
-            # Convert to nibabel Tractogram (in-memory) and apply the
-            # voxel-to-RAS affine to transform streamlines from voxel
-            # to RASMM world space, matching nibabel's convention for
-            # TRK/TCK.
-            tractogram = self.tractFile.to_tractogram(resize=True)
-            affine_vox2ras = self.tractFile.header['VOXEL_TO_RASMM']
-            if not np.allclose(affine_vox2ras, np.eye(4)):
-                tractogram.streamlines._data[:] = apply_affine(
-                    affine_vox2ras, tractogram.streamlines.get_data())
-            self.tractFile = tractogram
-            self._trx_affine = affine_vox2ras.copy()
+            self._trx_affine = trx.header['VOXEL_TO_RASMM'].copy()
+            self.tractFile = trx.to_tractogram(resize=True)
         else:
             self.tractFile = nibstrm.load(fname)
             self._is_trx   = False
