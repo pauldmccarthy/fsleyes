@@ -175,11 +175,15 @@ definitions for custom views, controls, tools, layouts, and loaders.
        def load(filename : str, check : bool) -> Any:
            ...
 
-   The typing annotations on the arguments **must** be present.
-   If the ``check`` argument is ``False``, the function should load a FSLeyes
-   overlay from ``filename`` and return it. If ``check is True``, the function
-   should not load the overlay, but should return ``True`` if it is *capable*
-   of loading the overlay, and ``False`` otherwise.
+   The typing annotations on the arguments **must** be present.  If the
+   ``check`` argument is ``False``, the function should load and return a
+   FSLeyes overlay from ``filename``. The returned object must be of a type
+   supported by FSLeyes, e.g. an instance of the ``fsl.data.image.Image``
+   class (or a subclass thereof).
+
+   If ``check is True``, the function should not load the overlay, but should
+   return ``True`` if it is *capable* of loading the overlay, and ``False``
+   otherwise.
 
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply define:
