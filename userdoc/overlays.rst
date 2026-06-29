@@ -19,6 +19,9 @@ capable of loading the following types of data:
  - `MGH <http://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/MghFormat>`_
    image files (``.mgh``, ``.mgz``).
 
+ - `MRtrix3 <https://www.mrtrix.org/>`__ image files (``.mif``, ``.mif.gz``,
+   ``.mih``).
+
  - `GIFTI <http://www.nitrc.org/projects/gifti/>`_ surface files
    (``.surf.gii``, ``.gii``).
 
@@ -28,7 +31,10 @@ capable of loading the following types of data:
 
  - `TrackVis <http://trackvis.org/>`_ ``.trk`` streamline tractography files.
 
- - `MRtrix3 <https://www.mrtrix.org/>`_ ``.tck`` streamline tractography
+ - `MRtrix3 <https://www.mrtrix.org/>`__ ``.tck`` streamline tractography
+   files.
+
+ - `TRX <https://tee-ar-ex.github.io/>`_ ``.trx`` streamline tractography
    files.
 
  - `FEAT <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_ analysis directories
@@ -1015,11 +1021,13 @@ Tractogram
 ^^^^^^^^^^
 
 
-FSLeyes can display `TrackVis <http://trackvis.org/>`_ ``.trk`` and `MRtrix3
-<https://www.mrtrix.org/>`_ ``.tck`` streamline tractography (*tractogram*)
-data sets. In the ortho and lightbox views, a 2D cross-section of the
-streamline vertices at the current location is displayed. Tractograms can also
-be visualised in 3D - see :ref:`here <3d_view_tractogram>` for more details.
+FSLeyes can display `TrackVis <http://trackvis.org/>`_ ``.trk``, `MRtrix3
+<https://www.mrtrix.org/>`__ ``.tck`` and `TRX
+<https://tee-ar-ex.github.io/>`__ ``.trx`` streamline tractography
+(*tractogram*) data sets. In the ortho and lightbox views, a 2D cross-section
+of the streamline vertices at the current location is displayed. Tractograms
+can also be visualised in 3D - see :ref:`here <3d_view_tractogram>` for more
+details.
 
 
 .. container:: image-strip
@@ -1112,6 +1120,7 @@ transparency by the data.
 The **Clip by** option can be set independently of the **Colour by** option,
 and can be used to clip/hide streamlines according to the data set, and
 **Clipping range** that you specify.
+
 
 The **Reference image** option allows you to associate a tractogram with a
 NIFTI reference image - if you set this to the image from which the tractogram
