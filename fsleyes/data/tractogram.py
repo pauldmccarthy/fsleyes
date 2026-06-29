@@ -17,8 +17,7 @@ import os.path   as op
 
 import numpy                as np
 import nibabel.streamlines  as nibstrm
-from nibabel.affines import apply_affine
-from trx.io import load as trx_load
+import trx.io               as trxio
 
 import fsl.transform.affine as affine
 import fsl.data.constants   as constants
@@ -45,17 +44,15 @@ class Tractogram:
 
         self.dataSource = op.abspath(fname)
         self.name       = op.basename(fname)
+        self.__fileType = op.splitext(fname)[1].lower().strip('.')
 
-        ext = op.splitext(fname)[1].lower()
-
-        if ext == '.trx':
-            trx = trx_load(fname, reference=None)
-            self._is_trx   = True
-            self._trx_affine = trx.header['VOXEL_TO_RASMM'].copy()
-            self.tractFile = trx.to_tractogram(resize=True)
+        if self.fileType == 'trx':
+            trxfile        = trxio.load(fname, reference=None)
+            self.__affine  = trxfile.header['VOXEL_TO_RASMM'].copy()
+            self.tractFile = trxfile.to_tractogram(resize=True)
         else:
             self.tractFile = nibstrm.load(fname)
-            self._is_trx   = False
+            self.__affine  = self.tractFile.affine
 
         # Bounding box is calculated on first
         # call to bounds(), then cached for
@@ -72,31 +69,33 @@ class Tractogram:
         # Load any per-vertex / per-streamline data
         # which is stored in the streamline file
 
+        if self.fileType == 'trx': tractogram = self.tractFile
+        else:                      tractogram = self.tractFile.tractogram
+
         # nibabel supports storage of multiple
         # values per key per streamline/vertex,
         # but we currently only support scalar
         # values (i.e. one value per key per
         # streamline/vertex), and discard all
         # but the first value.
-        if self._is_trx:
-            for key in self.tractFile.data_per_streamline.keys():
-                data = self.tractFile.data_per_streamline[key]
-                self.addVertexData(key, data[:, 0].reshape(-1))
-            for key in self.tractFile.data_per_point.keys():
-                data = self.tractFile.data_per_point[key].get_data()
-                self.addVertexData(key, data[:, 0].reshape(-1))
-        else:
-            tractogram = self.tractFile.tractogram
-            for key in tractogram.data_per_streamline.keys():
-                data = tractogram.data_per_streamline[key]
-                self.addVertexData(key, data[:, 0].reshape(-1))
-            for key in tractogram.data_per_point.keys():
-                data = tractogram.data_per_point[key].get_data()
-                self.addVertexData(key, data[:, 0].reshape(-1))
+        for key in tractogram.data_per_streamline.keys():
+            data = tractogram.data_per_streamline[key]
+            self.addVertexData(key, data[:, 0].reshape(-1))
+        for key in tractogram.data_per_point.keys():
+            data = tractogram.data_per_point[key].get_data()
+            self.addVertexData(key, data[:, 0].reshape(-1))
 
 
     def __str__(self):
         return f'{type(self).__name__}(self.name)'
+
+
+    @property
+    def fileType(self):
+        """Returns the tractogram file type - one of ``trx``, ``trk``, or
+        ``tck``.
+        """
+        return self.__fileType
 
 
     @property
@@ -108,9 +107,7 @@ class Tractogram:
         when loading a ``.trk``/`.tck`` file, so this affine generally
         shouldn't be needed.
         """
-        if self._is_trx:
-            return self._trx_affine
-        return self.tractFile.affine
+        return self.__affine
 
 
     @property
@@ -165,7 +162,7 @@ class Tractogram:
         """Returns codes indicating the orientation of the coordinate
         system in which the streamline vertices are defined.
         """
-        # Currently always RAS - mrtrix coordinates are always RAS
+        # Currently always RAS - TRX/mrtrix coordinates are always RAS
         # (and the affine is typically an identity transform), and
         # trackvis files contain a coordinate-to-RAS affine (which
         # is further adjusted by nibabel to encode a half-voxel shift):
