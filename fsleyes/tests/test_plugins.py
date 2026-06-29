@@ -90,9 +90,15 @@ def test_listLoaders():
     assert loaders['Plugin loader'] is pluginLoader
 
 
-def test_layoutModule():
+def test_pluginModule():
+    items = [('Plugin view',    'fsleyes_views'),
+             ('Plugin control', 'fsleyes_controls'),
+             ('Plugin tool',    'fsleyes_tools'),
+             ('Plugin layout',  'fsleyes_layouts'),
+             ('Plugin loader',  'fsleyes_loaders')]
     with mock.patch('fsleyes.plugins.SHOW_THIRD_PARTY_PLUGINS', True):
-        assert plugins.layoutModule('Plugin layout') == 'fsleyes_plugin_example'
+        for name, group in items:
+            assert plugins.pluginModule(name, group) == 'fsleyes_plugin_example'
 
 
 def test_filterThirdParty():
