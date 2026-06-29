@@ -21,6 +21,7 @@ dependencies = [
   "fslpy >=3.22",
   "matplotlib >=3.5",
   "nibabel >=2.3",
+  "trx-python >=0.4",
   "numpy >=1.14",
   "pyparsing >=3",
   "scipy >=0.18",

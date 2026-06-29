@@ -94,8 +94,8 @@ Install from ``conda-forge`` (recommended)
 
 
 FSLeyes is available on `conda-forge <https://conda-forge.org/>`_ - if you use
-an `anaconda <https://www.anaconda.com/>`_ or `miniconda
-<https://docs.conda.io/en/latest/miniconda.html>`_ environment, you can
+an `anaconda <https://www.anaconda.com/>`__ or `miniconda
+<https://docs.conda.io/en/latest/miniconda.html>`__ environment, you can
 install FSLeyes into it like so::
 
     conda install -c conda-forge fsleyes
@@ -134,8 +134,8 @@ do this in a number of ways, including:
  - Using an official Python installer from https://www.python.org/
  - Installing the XCode Command-Line Tools, by running ``xcode-select --install``
    in a terminal.
- - Installing `Anaconda <https://www.anaconda.com/download>`_ or `Miniconda
-   <https://docs.anaconda.com/miniconda/>`_.
+ - Installing `Anaconda <https://www.anaconda.com/download>`__ or `Miniconda
+   <https://docs.anaconda.com/miniconda/>`__.
 
 
 Once you have installed Python, you can create and activate a virtual

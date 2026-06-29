@@ -5,7 +5,7 @@
 # Author: Paul McCarthy <pauldmccarthy@gmail.com>
 #
 """This module provides the :class:`Tractogram` class, which is used by FSLeyes
-for displaying streamline tractography ``.trk`` or ``.tck`` files.
+for displaying streamline tractography ``.trk``, ``.tck``, or ``.trx`` files.
 
 The ``Tractogram`` class is just a thin wrapper around a
 ``nibabel.streamlines.Tractogram`` object.
@@ -17,13 +17,16 @@ import os.path   as op
 
 import numpy                as np
 import nibabel.streamlines  as nibstrm
+import trx.io               as trxio
 
 import fsl.transform.affine as affine
 import fsl.data.constants   as constants
 
 
-ALLOWED_EXTENSIONS     = ['.tck', '.trk']
-EXTENSION_DESCRIPTIONS = ['MRtrix .tck file', 'TrackVis .trk file']
+ALLOWED_EXTENSIONS     = ['.tck', '.trk', '.trx']
+EXTENSION_DESCRIPTIONS = ['MRtrix .tck file',
+                          'TrackVis .trk file',
+                          'TRX tractogram file']
 
 
 class Tractogram:
@@ -41,9 +44,17 @@ class Tractogram:
 
         self.dataSource = op.abspath(fname)
         self.name       = op.basename(fname)
-        self.tractFile  = nibstrm.load(fname)
+        self.__fileType = op.splitext(fname)[1].lower().strip('.')
 
-        # Bounding box is calculsted on first
+        if self.fileType == 'trx':
+            trxfile        = trxio.load(fname, reference=None)
+            self.__affine  = trxfile.header['VOXEL_TO_RASMM'].copy()
+            self.tractFile = trxfile.to_tractogram(resize=True)
+        else:
+            self.tractFile = nibstrm.load(fname)
+            self.__affine  = self.tractFile.affine
+
+        # Bounding box is calculated on first
         # call to bounds(), then cached for
         # subsequent calls.
         self.__bounds = None
@@ -58,13 +69,15 @@ class Tractogram:
         # Load any per-vertex / per-streamline data
         # which is stored in the streamline file
 
+        if self.fileType == 'trx': tractogram = self.tractFile
+        else:                      tractogram = self.tractFile.tractogram
+
         # nibabel supports storage of multiple
         # values per key per streamline/vertex,
         # but we currently only support scalar
         # values (i.e. one value per key per
         # streamline/vertex), and discard all
         # but the first value.
-        tractogram = self.tractFile.tractogram
         for key in tractogram.data_per_streamline.keys():
             data = tractogram.data_per_streamline[key]
             self.addVertexData(key, data[:, 0].reshape(-1))
@@ -78,6 +91,14 @@ class Tractogram:
 
 
     @property
+    def fileType(self):
+        """Returns the tractogram file type - one of ``trx``, ``trk``, or
+        ``tck``.
+        """
+        return self.__fileType
+
+
+    @property
     def affine(self):
         """Returns an affine transformation matrix which defines the
         voxel->world transformation of the image from which the tractogram
@@ -86,7 +107,7 @@ class Tractogram:
         when loading a ``.trk``/`.tck`` file, so this affine generally
         shouldn't be needed.
         """
-        return self.tractFile.affine
+        return self.__affine
 
 
     @property
@@ -141,7 +162,7 @@ class Tractogram:
         """Returns codes indicating the orientation of the coordinate
         system in which the streamline vertices are defined.
         """
-        # Currently always RAS - mrtrix coordinates are always RAS
+        # Currently always RAS - TRX/mrtrix coordinates are always RAS
         # (and the affine is typically an identity transform), and
         # trackvis files contain a coordinate-to-RAS affine (which
         # is further adjusted by nibabel to encode a half-voxel shift):

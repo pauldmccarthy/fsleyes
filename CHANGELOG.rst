@@ -10,6 +10,23 @@
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
+The numbers following each change (e.g. `!504`) refer to merge
+requests on GitLab, which can be viewed at
+https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/-/merge_requests.
+
+
+1.20.0 (Under development)
+--------------------------
+
+
+Added
+^^^^^
+
+
+* FSLeyes can now load `TRX tractogram files <https://tee-ar-ex.github.io/>`_,
+  courtesy of Ariel Rokem (!504, `GitHub PR
+  <https://github.com/pauldmccarthy/fsleyes/pull/150>`__).
+
 
 1.19.0 (Monday 8th June 2026)
 -----------------------------
