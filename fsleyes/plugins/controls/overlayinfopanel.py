@@ -788,6 +788,27 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
         return info
 
 
+    def __getMIFImageInfo(self, overlay, display):
+        """Creates and returns an :class:`OverlayInfo` object containing
+        information about the given :class:`.MIFImage` overlay.
+
+        :arg overlay: A :class:`.MIFImage` instance.
+        :arg display: The :class:`.Display` instance assocated with the
+                      ``MGHImage``.
+        """
+
+        info   = self.__getImageInfo(overlay, display)
+        header = overlay.mifHeader
+
+        if len(header) > 0:
+            secName = strings.labels[self, overlay, 'headerInfo']
+            info.addSection(secName)
+            for k, v in header.items():
+                info.addInfo(k, v, section=secName)
+
+        return info
+
+
     def __getTractogramInfo(self, overlay, display):
         """Creates and returns an :class:`OverlayInfo` object containing
         information about the given :class:`.Tractogram` overlay.
@@ -894,7 +915,7 @@ class OverlayInfoPanel(ctrlpanel.ControlPanel):
         return '\n'.join(lines)
 
 
-class OverlayInfo(object):
+class OverlayInfo:
     """A little class which encapsulates human-readable information about
     one overlay. ``OverlayInfo`` objects are created and returned by the
     ``OverlayInfoPanel.__get*Info`` methods.

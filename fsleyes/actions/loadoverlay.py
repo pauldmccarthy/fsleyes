@@ -102,6 +102,7 @@ def makeWildcard(allowedExts=None, descs=None):
     import fsl.data.gifti          as fslgifti
     import fsl.data.freesurfer     as fslfs
     import fsl.data.bitmap         as fslbmp
+    import fsleyes.data.mif        as mif
     import fsleyes.data.tractogram as tractogram
 
     # Hack - the wx wildcard logic doesn't support
@@ -115,6 +116,7 @@ def makeWildcard(allowedExts=None, descs=None):
                         fslmgh     .ALLOWED_EXTENSIONS +
                         fslgifti   .ALLOWED_EXTENSIONS +
                         tractogram .ALLOWED_EXTENSIONS +
+                        mif        .ALLOWED_EXTENSIONS +
                         fslbmp     .BITMAP_EXTENSIONS  +
                         fsfiles                        +
                         ['.gz'])
@@ -124,6 +126,7 @@ def makeWildcard(allowedExts=None, descs=None):
                         fslmgh     .EXTENSION_DESCRIPTIONS     +
                         fslgifti   .EXTENSION_DESCRIPTIONS     +
                         tractogram .EXTENSION_DESCRIPTIONS     +
+                        mif        .EXTENSION_DESCRIPTIONS     +
                         fslbmp     .BITMAP_DESCRIPTIONS        +
                         fslfs      .CORE_GEOMETRY_DESCRIPTIONS +
                         ['Compressed images'])
@@ -192,9 +195,10 @@ def loadOverlays(paths,
                     objects.
     """
 
-    import fsl.data.image  as fslimage
-    import fsl.data.mesh   as fslmesh
-    import fsl.data.bitmap as fslbmp
+    import fsl.data.image   as fslimage
+    import fsl.data.mesh    as fslmesh
+    import fsl.data.bitmap  as fslbmp
+    import fsleyes.data.mif as mif
 
     # The default load function updates
     # the dialog window created above
@@ -237,6 +241,8 @@ def loadOverlays(paths,
 
             if pluginLoader is not None:
                 loaded = [pluginLoader[1](path, check=False)]
+            elif issubclass(dtype, mif.MIFImage):
+                loaded = [mif.MIFImage(path)]
             elif issubclass(dtype, fslimage.Image):
                 loaded = loadImage(dtype, path, inmem=inmem)
             elif issubclass(dtype, fslmesh.Mesh):

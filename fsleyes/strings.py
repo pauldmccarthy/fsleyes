@@ -820,6 +820,9 @@ labels = TypeDict({
     'OverlayInfoPanel.MGHImage'                 : 'NIFTI Image (from MGH)',
     'OverlayInfoPanel.MGHImage.filename'        : 'MGH image file',
 
+    'OverlayInfoPanel.MIFImage'                 : 'NIFTI Image (from MRtrix)',
+    'OverlayInfoPanel.MIFImage.headerInfo'      : 'MRtrix header fields',
+
     'OverlayInfoPanel.Tractogram'                : 'Trqctogram',
     'OverlayInfoPanel.Tractogram.dataSource'     : 'Data source',
     'OverlayInfoPanel.Tractogram.numStreamlines' : 'Total number of streamlines',
