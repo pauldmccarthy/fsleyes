@@ -7,10 +7,15 @@
 
 from unittest import mock
 import itertools as it
+import os.path as op
 import random
+import shutil
+
 import numpy as np
 
 import pytest
+
+import trx.fetcher as trxfetch
 
 from fsleyes.tests import run_cli_tests, haveGL
 
@@ -97,6 +102,8 @@ tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk              -lw 10
 tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -lw 10
 tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk              -lw 10
 tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -cs pixdim -lw 10
+
+{{trx_gs('gs.nii')}} {{trx_gs('gs.trx')}} -ri gs
 """
 
 cli_pseudo3d_tests = """
@@ -149,8 +156,22 @@ def reseed(f):
     np.random.seed(124)
     random   .seed(124)
     return f
-extras  = {'reseed' : reseed}
 
+
+def trx_gold_standard(filename):
+    homedir   = trxfetch.get_home()
+    testfiles = trxfetch.get_testing_files_dict()
+
+    trxfetch.fetch_data(testfiles, keys="gold_standard.zip")
+
+    shutil.copy(op.join(homedir, 'gold_standard', filename), '.')
+
+    return filename
+
+extras = {
+    'reseed' : reseed,
+    'trx_gs' : trx_gold_standard
+}
 
 @pytest.mark.skipif('(not haveGL(2.1)) or haveGL(3.3)')
 def test_overlay_tractogram_2d_gl21():
