@@ -77,8 +77,8 @@ class MIFImage(fslimage.Image):
 
         header = loadMIFHeader(filename)
         data   = loadMIFImage(filename, header)
-        name   = op.basename(filename)
         xform  = createAffine(header)
+        name   = op.basename(filename)
 
         super().__init__(data,
                          xform=xform,
@@ -114,6 +114,9 @@ def createAffine(hdr : MIFHeader) -> np.ndarray:
     given header.
     """
 
+    # https://mrtrix.readthedocs.io/en/latest/\
+    #   getting_started/image_data.html#the-image-transfom
+
     # "In MRtrix3, the transform shown always
     # corresponds to the transformation from
     # image coordinates in millimeters to
@@ -145,8 +148,6 @@ def createAffine(hdr : MIFHeader) -> np.ndarray:
 def loadMIFHeader(filename : str) -> MIFHeader:
     """Loads MIF header information from the given file. The key-value
     pairs contained within are returned as a dict.
-
-
     """
 
     header = {}
