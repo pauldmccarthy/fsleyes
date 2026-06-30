@@ -16,9 +16,10 @@ try:
 except ImportError:
     import mock
 
-import fsl.utils.tempdir  as tempdir
-import fsl.utils.settings as fslsettings
-import fsleyes.plugins    as plugins
+import fsl.utils.tempdir   as tempdir
+import fsl.utils.settings  as fslsettings
+import fsleyes.plugins     as plugins
+from   fsleyes.actions import loadoverlay
 
 from fsleyes.tests import run_with_fsleyes, realYield
 
@@ -122,6 +123,8 @@ from fsleyes.views.viewpanel       import ViewPanel
 from fsleyes.controls.controlpanel import ControlPanel
 from fsleyes.actions               import Action
 
+from fsl.data.image import Image
+
 FSLEYES_LAYOUT_{prefix}_layout1 = '{prefix} layout 1'
 
 FSLEYES_LAYOUT_{prefix}_layout2 = ('{prefix} layout 2','{prefix} layout 2')
@@ -138,6 +141,17 @@ class {prefix}Tool(Action):
 
     def func(self):
         pass
+
+
+def {prefix}Load(filename : str, check : bool):
+    if check:
+        print("CHECKO")
+        return True
+    else:
+        image = Image(filename)
+        print('YABBA BOM')
+        image.LOADED_FROM_LOADER = True
+        return image
 """).strip()
 
 
@@ -153,8 +167,10 @@ def test_loadPlugin():
         assert plugins.listTools()[   'LoadTool']      is mod.LoadTool
         assert plugins.listControls()['LoadControl']   is mod.LoadControl
         assert plugins.listViews()[   'LoadView']      is mod.LoadView
+        assert plugins.listLoaders()[ 'LoadLoad']      is mod.LoadLoad
         assert plugins.listLayouts()[ 'Load_layout1']  == mod.FSLEYES_LAYOUT_Load_layout1
         assert plugins.listLayouts()[ 'Load layout 2'] == mod.FSLEYES_LAYOUT_Load_layout2[1]
+
 
 
 def test_installPlugin():
@@ -173,6 +189,7 @@ def test_installPlugin():
             assert plugins.listTools()[   'InstallTool']      is mod.InstallTool
             assert plugins.listControls()['InstallControl']   is mod.InstallControl
             assert plugins.listViews()[   'InstallView']      is mod.InstallView
+            assert plugins.listLoaders()[ 'InstallLoad']      is mod.InstallLoad
             assert plugins.listLayouts()[ 'Install_layout1']  == mod.FSLEYES_LAYOUT_Install_layout1
             assert plugins.listLayouts()[ 'Install layout 2'] == mod.FSLEYES_LAYOUT_Install_layout2[1]
             assert op.exists(op.join(td, 'plugins', 'test_plugins_installplugin.py'))
@@ -196,9 +213,10 @@ def test_initialise():
             p1 = lookup_plugin_module('plugin1')
             p2 = lookup_plugin_module('plugin2')
 
-            views = plugins.listViews()
-            ctrls = plugins.listControls()
-            tools = plugins.listTools()
+            views   = plugins.listViews()
+            ctrls   = plugins.listControls()
+            tools   = plugins.listTools()
+            loaders = plugins.listLoaders()
 
             assert views['Plugin1View']    is p1.Plugin1View
             assert views['Plugin2View']    is p2.Plugin2View
@@ -206,12 +224,12 @@ def test_initialise():
             assert ctrls['Plugin2Control'] is p2.Plugin2Control
             assert tools['Plugin1Tool']    is p1.Plugin1Tool
             assert tools['Plugin2Tool']    is p2.Plugin2Tool
+            assert loaders['Plugin1Load']  is p1.Plugin1Load
+            assert loaders['Plugin2Load']  is p2.Plugin2Load
             assert plugins.listLayouts()[ 'Plugin1_layout1']  == p1.FSLEYES_LAYOUT_Plugin1_layout1
             assert plugins.listLayouts()[ 'Plugin1 layout 2'] == p1.FSLEYES_LAYOUT_Plugin1_layout2[1]
             assert plugins.listLayouts()[ 'Plugin2_layout1']  == p2.FSLEYES_LAYOUT_Plugin2_layout1
             assert plugins.listLayouts()[ 'Plugin2 layout 2'] == p2.FSLEYES_LAYOUT_Plugin2_layout2[1]
-
-
 
 
 def test_runPlugin():
@@ -230,8 +248,15 @@ def _test_runPlugin(frame, overlayList, displayCtx):
         view = frame.addViewPanel(mod.RunView, title='View')
         realYield()
         ctrl = view.togglePanel(mod.RunControl)
+
         realYield()
         mod.RunTool(overlayList, displayCtx, frame)()
+        realYield()
+
+        filename = op.join(op.dirname(__file__), 'testdata', '3d')
+
+        img = loadoverlay.loadOverlays([filename], blocking=True)
+        assert img[0].LOADED_FROM_LOADER
 
 
 #fsl/fsleyes/fsleyes!400
