@@ -24,6 +24,7 @@
    fsleyes.displaycontext.shopts
    fsleyes.displaycontext.tensoropts
    fsleyes.displaycontext.tractogramopts
+   fsleyes.displaycontext.transformer
    fsleyes.displaycontext.vectoropts
    fsleyes.displaycontext.volume3dopts
    fsleyes.displaycontext.volumeopts
