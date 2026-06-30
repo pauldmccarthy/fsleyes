@@ -17,8 +17,8 @@ The ``editor`` package provides the following two classes:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.editor.selection.Selection
-   ~fsleyes.editor.editor.Editor
+   ~selection.Selection
+   ~editor.Editor
 
 
 Making an edit to an ``Image`` requires two stages:

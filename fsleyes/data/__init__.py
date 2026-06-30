@@ -15,7 +15,8 @@ FSLeyes:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.data.tractogram.Tractogram
+   ~tractogram.Tractogram
+   ~mif.MIFImage
 """
 
 import os.path as op
