@@ -44,15 +44,37 @@ class Tractogram:
 
         self.dataSource = op.abspath(fname)
         self.name       = op.basename(fname)
-        self.__fileType = op.splitext(fname)[1].lower().strip('.')
+        fileType        = op.splitext(fname)[1].lower().strip('.')
 
-        if self.fileType == 'trx':
-            trxfile        = trxio.load(fname, reference=None)
-            self.__affine  = trxfile.header['VOXEL_TO_RASMM'].copy()
-            self.tractFile = trxfile.to_tractogram(resize=True)
+        if fileType not in ('trx', 'trk', 'tck'):
+            raise ValueError('Unrecognised tractogram file '
+                             f'type: {self.fileType}')
+
+        # use trx-python for .trx files
+        if fileType == 'trx':
+            trxfile    = trxio.load(fname, reference=None)
+            tractFile  = trxfile.to_tractogram(resize=True)
+            affine     = trxfile.header['VOXEL_TO_RASMM'].copy()
+            shape      = trxfile.header['DIMENSIONS']    .copy()
+
+        # use nibabel for .trk / .tck files
+        elif fileType == 'trk':
+            tractFile = nibstrm.load(fname)
+            shape     = np.array(tractFile.header['dimensions'])
+            affine    = np.array(tractFile.header['voxel_to_rasmm'])
+
+        # tck files contain no information about
+        # the reference image from which the
+        # tractkgram was derived.
         else:
-            self.tractFile = nibstrm.load(fname)
-            self.__affine  = self.tractFile.affine
+            tractFile = nibstrm.load(fname)
+            shape     = None
+            affine    = None
+
+        self.tractFile  = tractFile
+        self.__fileType = fileType
+        self.__shape    = shape
+        self.__affine   = affine
 
         # Bounding box is calculated on first
         # call to bounds(), then cached for
@@ -68,7 +90,6 @@ class Tractogram:
 
         # Load any per-vertex / per-streamline data
         # which is stored in the streamline file
-
         if self.fileType == 'trx': tractogram = self.tractFile
         else:                      tractogram = self.tractFile.tractogram
 
@@ -87,7 +108,7 @@ class Tractogram:
 
 
     def __str__(self):
-        return f'{type(self).__name__}(self.name)'
+        return f'{type(self).__name__}({self.name})'
 
 
     @property
@@ -96,6 +117,13 @@ class Tractogram:
         ``tck``.
         """
         return self.__fileType
+
+    @property
+    def shape(self):
+        """Returns the reference image shape/dimensions for the tractogram,
+        or ``None`` if unknown.
+        """
+        return self.__shape
 
 
     @property
