@@ -231,8 +231,7 @@ def loadOverlays(paths,
             pluginLoader = None
             for name, loader in plugins.listLoaders().items():
                 if loader(path, check=True):
-                    log.debug('Loading overlay with loader plugin: %s',
-                              pluginLoader[0])
+                    log.debug('Loading overlay with loader plugin: %s', name)
                     pluginLoader = name, loader
                     break
 
