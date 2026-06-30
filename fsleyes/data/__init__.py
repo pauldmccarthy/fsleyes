@@ -15,7 +15,8 @@ FSLeyes:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.data.tractogram.Tractogram
+   ~tractogram.Tractogram
+   ~mif.MIFImage
 """
 
 import os.path as op
@@ -28,6 +29,7 @@ import fsl.data.vtk            as fslvtk
 import fsl.data.freesurfer     as fslfs
 import fsl.data.bitmap         as fslbmp
 import fsleyes.data.tractogram as tractogram
+import fsleyes.data.mif        as mif
 import fsleyes.displaycontext  as fsldisplay
 
 
@@ -53,6 +55,8 @@ def guessType(path):
     if op.isfile(path):
         if fslpath.hasExt(path.lower(), tractogram.ALLOWED_EXTENSIONS):
             dtype = tractogram.Tractogram
+        elif fslpath.hasExt(path.lower(), mif.ALLOWED_EXTENSIONS):
+            dtype = mif.MIFImage
 
     if dtype is None:
         dtype, path = dutils.guessType(path)

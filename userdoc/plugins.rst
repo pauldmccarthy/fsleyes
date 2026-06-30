@@ -85,7 +85,7 @@ and *loaders*:
    <customising_layouts>`, and the :mod:`fsleyes.layouts` module for more
    details.
 
-  - A *loader* is a function which can be used to load an overlay file. When
+ - A *loader* is a function which can be used to load an overlay file. When
    the user loads a file, FSLeyes will attempt to use any registered loader
    plugins before falling back to its default loading behaviour.
 

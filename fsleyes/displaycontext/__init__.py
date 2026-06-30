@@ -72,22 +72,22 @@ new one accordingly.  The following ``DisplayOpts`` sub-classes exist:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.displaycontext.niftiopts.NiftiOpts
-   ~fsleyes.displaycontext.volumeopts.VolumeOpts
-   ~fsleyes.displaycontext.volumeopts.VolumeRGBOpts
-   ~fsleyes.displaycontext.volumeopts.ComplexOpts
-   ~fsleyes.displaycontext.volume3dopts.Volume3DOpts
-   ~fsleyes.displaycontext.maskopts.MaskOpts
-   ~fsleyes.displaycontext.vectoropts.RGBVectorOpts
-   ~fsleyes.displaycontext.vectoropts.LineVectorOpts
-   ~fsleyes.displaycontext.meshopts.MeshOpts
-   ~fsleyes.displaycontext.giftiopts.GiftiOpts
-   ~fsleyes.displaycontext.freesurferopts.FreesurferOpts
-   ~fsleyes.displaycontext.labelopts.LabelOpts
-   ~fsleyes.displaycontext.tensoropts.TensorOpts
-   ~fsleyes.displaycontext.shopts.SHOpts
-   ~fsleyes.displaycontext.mipopts.MIPOpts
-   ~fsleyes.displaycontext.tractogramopts.TractogramOpts
+   ~niftiopts.NiftiOpts
+   ~volumeopts.VolumeOpts
+   ~volumeopts.VolumeRGBOpts
+   ~volumeopts.ComplexOpts
+   ~volume3dopts.Volume3DOpts
+   ~maskopts.MaskOpts
+   ~vectoropts.RGBVectorOpts
+   ~vectoropts.LineVectorOpts
+   ~meshopts.MeshOpts
+   ~giftiopts.GiftiOpts
+   ~freesurferopts.FreesurferOpts
+   ~labelopts.LabelOpts
+   ~tensoropts.TensorOpts
+   ~shopts.SHOpts
+   ~mipopts.MIPOpts
+   ~tractogramopts.TractogramOpts
 
 
 --------------
@@ -117,13 +117,13 @@ define *scene* options:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.displaycontext.canvasopts.SliceCanvasOpts
-   ~fsleyes.displaycontext.canvasopts.LightBoxCanvasOpts
-   ~fsleyes.displaycontext.canvasopts.Scene3DCanvasOpts
-   ~fsleyes.displaycontext.sceneopts.SceneOpts
-   ~fsleyes.displaycontext.orthoopts.OrthoOpts
-   ~fsleyes.displaycontext.lightboxopts.LightBoxOpts
-   ~fsleyes.displaycontext.scene3dopts.Scene3DOpts
+   ~canvasopts.SliceCanvasOpts
+   ~canvasopts.LightBoxCanvasOpts
+   ~canvasopts.Scene3DCanvasOpts
+   ~sceneopts.SceneOpts
+   ~orthoopts.OrthoOpts
+   ~lightboxopts.LightBoxOpts
+   ~scene3dopts.Scene3DOpts
 
 
 .. note:: Aside from an increase in code modularity and cleanliness, another

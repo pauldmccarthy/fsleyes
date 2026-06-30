@@ -63,10 +63,10 @@ canvases are defined in the ``gl`` package:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.gl.slicecanvas.SliceCanvas
-   ~fsleyes.gl.lightboxcanvas.LightBoxCanvas
-   ~fsleyes.gl.scene3dcanvas.Scene3DCanvas
-   ~fsleyes.gl.colourbarcanvas.ColourBarCanvas
+   ~slicecanvas.SliceCanvas
+   ~lightboxcanvas.LightBoxCanvas
+   ~scene3dcanvas.Scene3DCanvas
+   ~colourbarcanvas.ColourBarCanvas
 
 
 These classes are not intended to be used directly. This is because the ``gl``
@@ -96,14 +96,14 @@ implementations for each of the available canvases:
 .. autosummary::
    :nosignatures:
 
-   ~fsleyes.gl.wxglslicecanvas.WXGLSliceCanvas
-   ~fsleyes.gl.wxgllightboxcanvas.WXGLLightBoxCanvas
-   ~fsleyes.gl.wxglscene3dcanvas.WXGLScene3DCanvas
-   ~fsleyes.gl.wxglcolourbarcanvas.WXGLColourBarCanvas
-   ~fsleyes.gl.offscreenslicecanvas.OffScreenSliceCanvas
-   ~fsleyes.gl.offscreenlightboxcanvas.OffScreenLightBoxCanvas
-   ~fsleyes.gl.offscreenscene3dcanvas.OffScreenScene3DCanvas
-   ~fsleyes.gl.offscreencolourbarcanvas.OffScreenColourBarCanvas
+   ~wxglslicecanvas.WXGLSliceCanvas
+   ~wxgllightboxcanvas.WXGLLightBoxCanvas
+   ~wxglscene3dcanvas.WXGLScene3DCanvas
+   ~wxglcolourbarcanvas.WXGLColourBarCanvas
+   ~offscreenslicecanvas.OffScreenSliceCanvas
+   ~offscreenlightboxcanvas.OffScreenLightBoxCanvas
+   ~offscreenscene3dcanvas.OffScreenScene3DCanvas
+   ~offscreencolourbarcanvas.OffScreenColourBarCanvas
 
 
 The classes listed above are the ones which are intended to be instantiated
@@ -125,18 +125,18 @@ be displayed as:
 
 .. autosummary::
 
-   ~fsleyes.gl.glvolume.GLVolume
-   ~fsleyes.gl.glrgbvolume.GLRGBVolume
-   ~fsleyes.gl.glcomplex.GLComplex
-   ~fsleyes.gl.glmask.GLMask
-   ~fsleyes.gl.gllabel.GLLabel
-   ~fsleyes.gl.gllinevector.GLLineVector
-   ~fsleyes.gl.glrgbvector.GLRGBVector
-   ~fsleyes.gl.glmesh.GLMesh
-   ~fsleyes.gl.glmip.GLMIP
-   ~fsleyes.gl.gltensor.GLTensor
-   ~fsleyes.gl.glsh.GLSH
-   ~fsleyes.gl.gltractogram.GLTractogram
+   ~glvolume.GLVolume
+   ~glrgbvolume.GLRGBVolume
+   ~glcomplex.GLComplex
+   ~glmask.GLMask
+   ~gllabel.GLLabel
+   ~gllinevector.GLLineVector
+   ~glrgbvector.GLRGBVector
+   ~glmesh.GLMesh
+   ~glmip.GLMIP
+   ~gltensor.GLTensor
+   ~glsh.GLSH
+   ~gltractogram.GLTractogram
 
 
 These objects are created and destroyed automatically by the canvas classes

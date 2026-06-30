@@ -16,6 +16,8 @@ import datetime
 
 from importlib import metadata as impmeta
 
+from docutils import nodes
+
 date = datetime.date.today()
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -59,6 +61,18 @@ master_doc = 'index'
 project = u'fsleyes'
 copyright = u'{}, Paul McCarthy, University of Oxford, Oxford, UK'.format(
     date.year)
+
+# Type :mr:`123` to link to GitLab
+# FSLeyes merge request !123
+def mr_role(name, rawtext, text, lineno, inliner, options={}, content=[]):
+    url  = f'https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/-/merge_requests/{text}'
+    node = nodes.reference(
+        rawtext,
+        f"!{text}",
+        refuri=url,
+        **options
+    )
+    return [node], []
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -398,6 +412,7 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
 
 
 def setup(app):
+    app.add_role('mr', mr_role)
     app.connect('autodoc-skip-member', autodoc_skip_member)
 
 graphviz_output_format = 'svg'

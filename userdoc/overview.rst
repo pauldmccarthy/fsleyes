@@ -31,9 +31,9 @@ images [*]_.  These files can be displayed in a variety of different ways -
 see the page on :ref:`overlays <overlays>` for more information.
 
 
-.. [*] FSLeyes |version| is able to load NIFTI, MGH, GIFTI, Freesurfer, and
-       VTK files.  Future versions of FSLeyes will be able to load more file
-       types.
+.. [*] FSLeyes |version| is able to load NIFTI, MRtrix3, TrackVis, MGH, GIFTI,
+       Freesurfer, and VTK files.  Future versions of FSLeyes will be able to
+       load more file types.
 
 
 .. sidebar:: Modifier keys

@@ -173,6 +173,12 @@ cli_tests = """
 
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -d -n copy {{zero_centre('3d.nii.gz')}} -cr 0    1500 -cm red-yellow -nc blue-lightblue -un -cl copy
 -bg 1 1 1 {{zero_centre('3d.nii.gz')}} -d -n copy {{zero_centre('3d.nii.gz')}} -cr 1500 3688 -cm red-yellow -nc blue-lightblue -un -cl copy
+
+# MRtrix3 .mif images
+3d.mif
+4d.mif                       -cm random
+4d_time_fastest_changing.mif -cm random
+4d_time_fastest_changing.mif -cm random -v 7
 """  # noqa
 
 
