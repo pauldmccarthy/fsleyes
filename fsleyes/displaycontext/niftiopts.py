@@ -125,6 +125,146 @@ from . import display       as fsldisplay
 log = logging.getLogger(__name__)
 
 
+def createTransforms(image, displayCtx, postmat=None):
+    """Creates affine matrices to transform between all coordinate systems.
+
+    This function is used by the :class:`NiftiOpts` class to set up affine
+    matrices which can be used to transform coordinates from the given image's
+    voxel and world coordinate systems into the FSLeyes display coordinate
+    system. Refer to the :meth:`.NiftiOpts.getTransform` method for more
+    details.
+
+    :arg image:      :class:`.Nifti` instance to create transformations for.
+
+    :arg displayCtx: The :class:`.DisplayContext` responsible for displaying
+                     ``image``.
+
+    :arg postmat:    Optional world->world transformation concatenated onto
+                     the voxel->world affine - the :class:`NiftiOpts` class
+                     uses this option for its ``displayXform`` property.
+    """
+
+    if postmat is None:
+        postmat = np.eye(4)
+
+    xforms          = {}
+    shape           = np.array(image.shape[:3])
+    voxToIdMat      = np.eye(4)
+    voxToPixdimMat  = image.getAffine('voxel', 'scaled')
+    voxToPixFlipMat = image.getAffine('voxel', 'fsl')
+    voxToWorldMat   = image.getAffine('voxel', 'world')
+    voxToWorldMat   = affine.concat(postmat, voxToWorldMat)
+    ds              = displayCtx.displaySpace
+
+    # The reference transforms depend
+    # on the value of displaySpace
+    if ds == 'world':
+        voxToRefMat = voxToWorldMat
+    elif ds == 'scaledVoxel':
+        voxToRefMat = voxToPixdimMat
+    elif ds == 'fslview':
+        voxToRefMat = voxToPixFlipMat
+    elif ds is image:
+        voxToRefMat = voxToPixFlipMat
+    else:
+        voxToRefMat = affine.concat(ds.getAffine('voxel', 'fsl'),
+                                    ds.getAffine('world', 'voxel'),
+                                    voxToWorldMat)
+
+    # When going from voxels to textures,
+    # we add 0.5 to centre the voxel (see
+    # the note on coordinate systems at
+    # the top of this file).
+    voxToTexMat        = affine.scaleOffsetXform(tuple(1.0 / shape),
+                                                 tuple(0.5 / shape))
+
+    idToVoxMat         = affine.invert(voxToIdMat)
+    idToPixdimMat      = affine.concat(voxToPixdimMat,  idToVoxMat)
+    idToPixFlipMat     = affine.concat(voxToPixFlipMat, idToVoxMat)
+    idToWorldMat       = affine.concat(voxToWorldMat,   idToVoxMat)
+    idToRefMat         = affine.concat(voxToRefMat,     idToVoxMat)
+    idToTexMat         = affine.concat(voxToTexMat,     idToVoxMat)
+
+    pixdimToVoxMat     = affine.invert(voxToPixdimMat)
+    pixdimToIdMat      = affine.concat(voxToIdMat,      pixdimToVoxMat)
+    pixdimToPixFlipMat = affine.concat(voxToPixFlipMat, pixdimToVoxMat)
+    pixdimToWorldMat   = affine.concat(voxToWorldMat,   pixdimToVoxMat)
+    pixdimToRefMat     = affine.concat(voxToRefMat,     pixdimToVoxMat)
+    pixdimToTexMat     = affine.concat(voxToTexMat,     pixdimToVoxMat)
+
+    pixFlipToVoxMat    = affine.invert(voxToPixFlipMat)
+    pixFlipToIdMat     = affine.concat(voxToIdMat,      pixFlipToVoxMat)
+    pixFlipToPixdimMat = affine.concat(voxToPixdimMat,  pixFlipToVoxMat)
+    pixFlipToWorldMat  = affine.concat(voxToWorldMat,   pixFlipToVoxMat)
+    pixFlipToRefMat    = affine.concat(voxToRefMat,     pixFlipToVoxMat)
+    pixFlipToTexMat    = affine.concat(voxToTexMat,     pixFlipToVoxMat)
+
+    worldToVoxMat      = affine.invert(voxToWorldMat)
+    worldToIdMat       = affine.concat(voxToIdMat,      worldToVoxMat)
+    worldToPixdimMat   = affine.concat(voxToPixdimMat,  worldToVoxMat)
+    worldToPixFlipMat  = affine.concat(voxToPixFlipMat, worldToVoxMat)
+    worldToRefMat      = affine.concat(voxToRefMat,     worldToVoxMat)
+    worldToTexMat      = affine.concat(voxToTexMat,     worldToVoxMat)
+
+    refToVoxMat        = affine.invert(voxToRefMat)
+    refToIdMat         = affine.concat(voxToIdMat,      refToVoxMat)
+    refToPixdimMat     = affine.concat(voxToPixdimMat,  refToVoxMat)
+    refToPixFlipMat    = affine.concat(voxToPixFlipMat, refToVoxMat)
+    refToWorldMat      = affine.concat(voxToWorldMat,   refToVoxMat)
+    refToTexMat        = affine.concat(voxToTexMat,     refToVoxMat)
+
+    texToVoxMat        = affine.invert(voxToTexMat)
+    texToIdMat         = affine.concat(voxToIdMat,      texToVoxMat)
+    texToPixdimMat     = affine.concat(voxToPixdimMat,  texToVoxMat)
+    texToPixFlipMat    = affine.concat(voxToPixFlipMat, texToVoxMat)
+    texToWorldMat      = affine.concat(voxToWorldMat,   texToVoxMat)
+    texToRefMat        = affine.concat(voxToRefMat,     texToVoxMat)
+
+    xforms['id',  'id']          = np.eye(4)
+    xforms['id',  'pixdim']      = idToPixdimMat
+    xforms['id',  'pixdim-flip'] = idToPixFlipMat
+    xforms['id',  'affine']      = idToWorldMat
+    xforms['id',  'reference']   = idToRefMat
+    xforms['id',  'texture']     = idToTexMat
+
+    xforms['pixdim', 'pixdim']      = np.eye(4)
+    xforms['pixdim', 'id']          = pixdimToIdMat
+    xforms['pixdim', 'pixdim-flip'] = pixdimToPixFlipMat
+    xforms['pixdim', 'affine']      = pixdimToWorldMat
+    xforms['pixdim', 'reference']   = pixdimToRefMat
+    xforms['pixdim', 'texture']     = pixdimToTexMat
+
+    xforms['pixdim-flip', 'pixdim-flip'] = np.eye(4)
+    xforms['pixdim-flip', 'id']          = pixFlipToIdMat
+    xforms['pixdim-flip', 'pixdim']      = pixFlipToPixdimMat
+    xforms['pixdim-flip', 'affine']      = pixFlipToWorldMat
+    xforms['pixdim-flip', 'reference']   = pixFlipToRefMat
+    xforms['pixdim-flip', 'texture']     = pixFlipToTexMat
+
+    xforms['affine', 'affine']      = np.eye(4)
+    xforms['affine', 'id']          = worldToIdMat
+    xforms['affine', 'pixdim']      = worldToPixdimMat
+    xforms['affine', 'pixdim-flip'] = worldToPixFlipMat
+    xforms['affine', 'reference']   = worldToRefMat
+    xforms['affine', 'texture']     = worldToTexMat
+
+    xforms['reference', 'reference']   = np.eye(4)
+    xforms['reference', 'id']          = refToIdMat
+    xforms['reference', 'pixdim']      = refToPixdimMat
+    xforms['reference', 'pixdim-flip'] = refToPixFlipMat
+    xforms['reference', 'affine']      = refToWorldMat
+    xforms['reference', 'texture']     = refToTexMat
+
+    xforms['texture', 'texture']     = np.eye(4)
+    xforms['texture', 'id']          = texToIdMat
+    xforms['texture', 'pixdim']      = texToPixdimMat
+    xforms['texture', 'pixdim-flip'] = texToPixFlipMat
+    xforms['texture', 'affine']      = texToWorldMat
+    xforms['texture', 'reference']   = texToRefMat
+
+    return xforms
+
+
 class NiftiOpts(fsldisplay.DisplayOpts):
     """The ``NiftiOpts`` class describes how a :class:`.Nifti` overlay
     should be displayed.
@@ -261,7 +401,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
             # The __displaySpaceChanged method registers
             # a listener with the current display space
             # (if it is an overlay)
-            self.__xforms    = {}
+            self.__xforms    = None
             self.__dsOverlay = None
             self.__displaySpaceChanged(refresh=False)
             self.__setupTransforms()
@@ -434,121 +574,9 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         These matrices are accessible via the :meth:`getTransform` method.
         """
 
-        image = self.overlay
-        shape = np.array(image.shape[:3])
-
-        voxToIdMat      = np.eye(4)
-        voxToPixdimMat  = image.getAffine('voxel', 'scaled')
-        voxToPixFlipMat = image.getAffine('voxel', 'fsl')
-        voxToWorldMat   = image.getAffine('voxel', 'world')
-        voxToWorldMat   = affine.concat(self.displayXform, voxToWorldMat)
-        ds              = self.displayCtx.displaySpace
-
-        # The reference transforms depend
-        # on the value of displaySpace
-        if ds == 'world':
-            voxToRefMat = voxToWorldMat
-        elif ds == 'scaledVoxel':
-            voxToRefMat = voxToPixdimMat
-        elif ds == 'fslview':
-            voxToRefMat = voxToPixFlipMat
-        elif ds is self.overlay:
-            voxToRefMat = voxToPixFlipMat
-        else:
-            voxToRefMat = affine.concat(ds.getAffine('voxel', 'fsl'),
-                                        ds.getAffine('world', 'voxel'),
-                                        voxToWorldMat)
-
-        # When going from voxels to textures,
-        # we add 0.5 to centre the voxel (see
-        # the note on coordinate systems at
-        # the top of this file).
-        voxToTexMat        = affine.scaleOffsetXform(tuple(1.0 / shape),
-                                                     tuple(0.5 / shape))
-
-        idToVoxMat         = affine.invert(voxToIdMat)
-        idToPixdimMat      = affine.concat(voxToPixdimMat,  idToVoxMat)
-        idToPixFlipMat     = affine.concat(voxToPixFlipMat, idToVoxMat)
-        idToWorldMat       = affine.concat(voxToWorldMat,   idToVoxMat)
-        idToRefMat         = affine.concat(voxToRefMat,     idToVoxMat)
-        idToTexMat         = affine.concat(voxToTexMat,     idToVoxMat)
-
-        pixdimToVoxMat     = affine.invert(voxToPixdimMat)
-        pixdimToIdMat      = affine.concat(voxToIdMat,      pixdimToVoxMat)
-        pixdimToPixFlipMat = affine.concat(voxToPixFlipMat, pixdimToVoxMat)
-        pixdimToWorldMat   = affine.concat(voxToWorldMat,   pixdimToVoxMat)
-        pixdimToRefMat     = affine.concat(voxToRefMat,     pixdimToVoxMat)
-        pixdimToTexMat     = affine.concat(voxToTexMat,     pixdimToVoxMat)
-
-        pixFlipToVoxMat    = affine.invert(voxToPixFlipMat)
-        pixFlipToIdMat     = affine.concat(voxToIdMat,      pixFlipToVoxMat)
-        pixFlipToPixdimMat = affine.concat(voxToPixdimMat,  pixFlipToVoxMat)
-        pixFlipToWorldMat  = affine.concat(voxToWorldMat,   pixFlipToVoxMat)
-        pixFlipToRefMat    = affine.concat(voxToRefMat,     pixFlipToVoxMat)
-        pixFlipToTexMat    = affine.concat(voxToTexMat,     pixFlipToVoxMat)
-
-        worldToVoxMat      = affine.invert(voxToWorldMat)
-        worldToIdMat       = affine.concat(voxToIdMat,      worldToVoxMat)
-        worldToPixdimMat   = affine.concat(voxToPixdimMat,  worldToVoxMat)
-        worldToPixFlipMat  = affine.concat(voxToPixFlipMat, worldToVoxMat)
-        worldToRefMat      = affine.concat(voxToRefMat,     worldToVoxMat)
-        worldToTexMat      = affine.concat(voxToTexMat,     worldToVoxMat)
-
-        refToVoxMat        = affine.invert(voxToRefMat)
-        refToIdMat         = affine.concat(voxToIdMat,      refToVoxMat)
-        refToPixdimMat     = affine.concat(voxToPixdimMat,  refToVoxMat)
-        refToPixFlipMat    = affine.concat(voxToPixFlipMat, refToVoxMat)
-        refToWorldMat      = affine.concat(voxToWorldMat,   refToVoxMat)
-        refToTexMat        = affine.concat(voxToTexMat,     refToVoxMat)
-
-        texToVoxMat        = affine.invert(voxToTexMat)
-        texToIdMat         = affine.concat(voxToIdMat,      texToVoxMat)
-        texToPixdimMat     = affine.concat(voxToPixdimMat,  texToVoxMat)
-        texToPixFlipMat    = affine.concat(voxToPixFlipMat, texToVoxMat)
-        texToWorldMat      = affine.concat(voxToWorldMat,   texToVoxMat)
-        texToRefMat        = affine.concat(voxToRefMat,     texToVoxMat)
-
-        self.__xforms['id',  'id']          = np.eye(4)
-        self.__xforms['id',  'pixdim']      = idToPixdimMat
-        self.__xforms['id',  'pixdim-flip'] = idToPixFlipMat
-        self.__xforms['id',  'affine']      = idToWorldMat
-        self.__xforms['id',  'reference']   = idToRefMat
-        self.__xforms['id',  'texture']     = idToTexMat
-
-        self.__xforms['pixdim', 'pixdim']      = np.eye(4)
-        self.__xforms['pixdim', 'id']          = pixdimToIdMat
-        self.__xforms['pixdim', 'pixdim-flip'] = pixdimToPixFlipMat
-        self.__xforms['pixdim', 'affine']      = pixdimToWorldMat
-        self.__xforms['pixdim', 'reference']   = pixdimToRefMat
-        self.__xforms['pixdim', 'texture']     = pixdimToTexMat
-
-        self.__xforms['pixdim-flip', 'pixdim-flip'] = np.eye(4)
-        self.__xforms['pixdim-flip', 'id']          = pixFlipToIdMat
-        self.__xforms['pixdim-flip', 'pixdim']      = pixFlipToPixdimMat
-        self.__xforms['pixdim-flip', 'affine']      = pixFlipToWorldMat
-        self.__xforms['pixdim-flip', 'reference']   = pixFlipToRefMat
-        self.__xforms['pixdim-flip', 'texture']     = pixFlipToTexMat
-
-        self.__xforms['affine', 'affine']      = np.eye(4)
-        self.__xforms['affine', 'id']          = worldToIdMat
-        self.__xforms['affine', 'pixdim']      = worldToPixdimMat
-        self.__xforms['affine', 'pixdim-flip'] = worldToPixFlipMat
-        self.__xforms['affine', 'reference']   = worldToRefMat
-        self.__xforms['affine', 'texture']     = worldToTexMat
-
-        self.__xforms['reference', 'reference']   = np.eye(4)
-        self.__xforms['reference', 'id']          = refToIdMat
-        self.__xforms['reference', 'pixdim']      = refToPixdimMat
-        self.__xforms['reference', 'pixdim-flip'] = refToPixFlipMat
-        self.__xforms['reference', 'affine']      = refToWorldMat
-        self.__xforms['reference', 'texture']     = refToTexMat
-
-        self.__xforms['texture', 'texture']     = np.eye(4)
-        self.__xforms['texture', 'id']          = texToIdMat
-        self.__xforms['texture', 'pixdim']      = texToPixdimMat
-        self.__xforms['texture', 'pixdim-flip'] = texToPixFlipMat
-        self.__xforms['texture', 'affine']      = texToWorldMat
-        self.__xforms['texture', 'reference']   = texToRefMat
+        self.__xforms = createTransforms(self.overlay,
+                                         self.displayCtx,
+                                         self.displayXform)
 
 
     @classmethod
@@ -583,7 +611,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         ``affine``      World coordinates, as defined by the NIFTI
                         ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
 
-        ``world``       Equivalent to ``affine``.
+       ``world``       Equivalent to ``affine``.
 
         ``reference``   ``pixdim-flip`` coordinates of the reference image
                         specified by the :attr:`.DisplayContext.displaySpace`
