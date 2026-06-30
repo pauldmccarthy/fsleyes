@@ -12,9 +12,11 @@ The ``Transformer`` class is used by the :class:`.NiftiOpts` class to manage
 transformations for :class:`.Nifti` / :class:`.Image` overlays.
 """
 
+
 import numpy as np
 
-from fsl.transform import affine
+from   fsl.transform     import affine
+import fsl.data.mghimage as     fslmgh
 
 
 class Transformer:
@@ -62,7 +64,7 @@ class Transformer:
         associated with this Transformer is being displayed in.
         """
         if displaySpace not in ('affine', 'pixdim', 'pixdim-flip',
-                                'id', 'reference'):
+                                'id', 'reference', 'torig'):
             raise ValueError(f'Invalid displaySpace value: {displaySpace}')
         self.__displaySpace = displaySpace
 
@@ -107,6 +109,8 @@ class Transformer:
                         ``qform``/``sform``. See :attr:`.Image.voxToWorldMat`.
 
         ``world``       Equivalent to ``affine``.
+
+        ``torig``       Refers to the Freesurfer coordinate system.
 
         ``reference``   ``pixdim-flip`` coordinates of the reference image
                         specified by the :attr:`.DisplayContext.displaySpace`
@@ -375,6 +379,7 @@ def createTransforms(image, displayCtx, postmat=None):
     voxToPixFlipMat = image.getAffine('voxel', 'fsl')
     voxToWorldMat   = image.getAffine('voxel', 'world')
     voxToWorldMat   = affine.concat(postmat, voxToWorldMat)
+    voxToTorigMat   = fslmgh.voxToSurfMat(image)
     ds              = displayCtx.displaySpace
 
     # The reference transforms depend
@@ -405,6 +410,7 @@ def createTransforms(image, displayCtx, postmat=None):
     idToWorldMat       = affine.concat(voxToWorldMat,   idToVoxMat)
     idToRefMat         = affine.concat(voxToRefMat,     idToVoxMat)
     idToTexMat         = affine.concat(voxToTexMat,     idToVoxMat)
+    idToTorigMat       = affine.concat(voxToTorigMat,   idToVoxMat)
 
     pixdimToVoxMat     = affine.invert(voxToPixdimMat)
     pixdimToIdMat      = affine.concat(voxToIdMat,      pixdimToVoxMat)
@@ -412,6 +418,7 @@ def createTransforms(image, displayCtx, postmat=None):
     pixdimToWorldMat   = affine.concat(voxToWorldMat,   pixdimToVoxMat)
     pixdimToRefMat     = affine.concat(voxToRefMat,     pixdimToVoxMat)
     pixdimToTexMat     = affine.concat(voxToTexMat,     pixdimToVoxMat)
+    pixdimToTorigMat   = affine.concat(voxToTorigMat,   pixdimToVoxMat)
 
     pixFlipToVoxMat    = affine.invert(voxToPixFlipMat)
     pixFlipToIdMat     = affine.concat(voxToIdMat,      pixFlipToVoxMat)
@@ -419,6 +426,7 @@ def createTransforms(image, displayCtx, postmat=None):
     pixFlipToWorldMat  = affine.concat(voxToWorldMat,   pixFlipToVoxMat)
     pixFlipToRefMat    = affine.concat(voxToRefMat,     pixFlipToVoxMat)
     pixFlipToTexMat    = affine.concat(voxToTexMat,     pixFlipToVoxMat)
+    pixFlipToTorigMat  = affine.concat(voxToTorigMat,   pixFlipToVoxMat)
 
     worldToVoxMat      = affine.invert(voxToWorldMat)
     worldToIdMat       = affine.concat(voxToIdMat,      worldToVoxMat)
@@ -426,6 +434,7 @@ def createTransforms(image, displayCtx, postmat=None):
     worldToPixFlipMat  = affine.concat(voxToPixFlipMat, worldToVoxMat)
     worldToRefMat      = affine.concat(voxToRefMat,     worldToVoxMat)
     worldToTexMat      = affine.concat(voxToTexMat,     worldToVoxMat)
+    worldToTorigMat    = affine.concat(voxToTorigMat,   worldToVoxMat)
 
     refToVoxMat        = affine.invert(voxToRefMat)
     refToIdMat         = affine.concat(voxToIdMat,      refToVoxMat)
@@ -433,6 +442,7 @@ def createTransforms(image, displayCtx, postmat=None):
     refToPixFlipMat    = affine.concat(voxToPixFlipMat, refToVoxMat)
     refToWorldMat      = affine.concat(voxToWorldMat,   refToVoxMat)
     refToTexMat        = affine.concat(voxToTexMat,     refToVoxMat)
+    refToTorigMat      = affine.concat(voxToTorigMat,   refToVoxMat)
 
     texToVoxMat        = affine.invert(voxToTexMat)
     texToIdMat         = affine.concat(voxToIdMat,      texToVoxMat)
@@ -440,6 +450,15 @@ def createTransforms(image, displayCtx, postmat=None):
     texToPixFlipMat    = affine.concat(voxToPixFlipMat, texToVoxMat)
     texToWorldMat      = affine.concat(voxToWorldMat,   texToVoxMat)
     texToRefMat        = affine.concat(voxToRefMat,     texToVoxMat)
+    texToTorigMat      = affine.concat(voxToTorigMat,   texToVoxMat)
+
+    torigToVoxMat        = affine.invert(voxToTorigMat)
+    torigToIdMat         = affine.concat(voxToIdMat,      torigToVoxMat)
+    torigToPixdimMat     = affine.concat(voxToPixdimMat,  torigToVoxMat)
+    torigToPixFlipMat    = affine.concat(voxToPixFlipMat, torigToVoxMat)
+    torigToWorldMat      = affine.concat(voxToWorldMat,   torigToVoxMat)
+    torigToTexMat        = affine.concat(voxToTexMat,     torigToVoxMat)
+    torigToRefMat        = affine.concat(voxToRefMat,     torigToVoxMat)
 
     xforms['id',  'id']          = np.eye(4)
     xforms['id',  'pixdim']      = idToPixdimMat
@@ -447,6 +466,7 @@ def createTransforms(image, displayCtx, postmat=None):
     xforms['id',  'affine']      = idToWorldMat
     xforms['id',  'reference']   = idToRefMat
     xforms['id',  'texture']     = idToTexMat
+    xforms['id',  'torig']       = idToTorigMat
 
     xforms['pixdim', 'pixdim']      = np.eye(4)
     xforms['pixdim', 'id']          = pixdimToIdMat
@@ -454,6 +474,7 @@ def createTransforms(image, displayCtx, postmat=None):
     xforms['pixdim', 'affine']      = pixdimToWorldMat
     xforms['pixdim', 'reference']   = pixdimToRefMat
     xforms['pixdim', 'texture']     = pixdimToTexMat
+    xforms['pixdim', 'torig']       = pixdimToTorigMat
 
     xforms['pixdim-flip', 'pixdim-flip'] = np.eye(4)
     xforms['pixdim-flip', 'id']          = pixFlipToIdMat
@@ -461,6 +482,7 @@ def createTransforms(image, displayCtx, postmat=None):
     xforms['pixdim-flip', 'affine']      = pixFlipToWorldMat
     xforms['pixdim-flip', 'reference']   = pixFlipToRefMat
     xforms['pixdim-flip', 'texture']     = pixFlipToTexMat
+    xforms['pixdim-flip', 'torig']       = pixFlipToTorigMat
 
     xforms['affine', 'affine']      = np.eye(4)
     xforms['affine', 'id']          = worldToIdMat
@@ -468,6 +490,7 @@ def createTransforms(image, displayCtx, postmat=None):
     xforms['affine', 'pixdim-flip'] = worldToPixFlipMat
     xforms['affine', 'reference']   = worldToRefMat
     xforms['affine', 'texture']     = worldToTexMat
+    xforms['affine', 'torig']       = worldToTorigMat
 
     xforms['reference', 'reference']   = np.eye(4)
     xforms['reference', 'id']          = refToIdMat
@@ -475,6 +498,7 @@ def createTransforms(image, displayCtx, postmat=None):
     xforms['reference', 'pixdim-flip'] = refToPixFlipMat
     xforms['reference', 'affine']      = refToWorldMat
     xforms['reference', 'texture']     = refToTexMat
+    xforms['reference', 'torig']       = refToTorigMat
 
     xforms['texture', 'texture']     = np.eye(4)
     xforms['texture', 'id']          = texToIdMat
@@ -482,5 +506,14 @@ def createTransforms(image, displayCtx, postmat=None):
     xforms['texture', 'pixdim-flip'] = texToPixFlipMat
     xforms['texture', 'affine']      = texToWorldMat
     xforms['texture', 'reference']   = texToRefMat
+    xforms['texture', 'torig']       = texToTorigMat
+
+    xforms['torig', 'torig']       = np.eye(4)
+    xforms['torig', 'id']          = torigToIdMat
+    xforms['torig', 'pixdim']      = torigToPixdimMat
+    xforms['torig', 'pixdim-flip'] = torigToPixFlipMat
+    xforms['torig', 'affine']      = torigToWorldMat
+    xforms['torig', 'texture']     = torigToTexMat
+    xforms['torig', 'reference']   = torigToRefMat
 
     return xforms

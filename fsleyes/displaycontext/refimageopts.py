@@ -14,7 +14,6 @@ import numpy                as np
 
 import fsl.transform.affine as affine
 import fsl.data.image       as fslimage
-import fsl.data.mghimage    as fslmgh
 import fsleyes_props        as props
 
 
@@ -199,8 +198,7 @@ class RefImageOpts:
         ``DisplayOpts``.
 
         The ``from_`` and ``to`` parameters may be set to any value accepted
-        by :meth:`.NiftiOpts.getTransform`, in addition to ``'torig'``, which
-        refers to the Freesurfer coordinate system.
+        by :meth:`.NiftiOpts.getTransform`.
 
         If ``from_`` or ``to`` are not provided, they are set to the current
         value of :attr:`coordSpace`.
@@ -214,24 +212,9 @@ class RefImageOpts:
         if from_ is None: from_ = self.coordSpace
         if to    is None: to    = self.coordSpace
 
-        pre  = None
-        post = None
-
-        if from_ == 'torig':
-            from_ = 'world'
-            pre   = affine.concat(
-                ref.getAffine('voxel', 'world'),
-                affine.invert(fslmgh.voxToSurfMat(ref)))
-
-        if to == 'torig':
-            to   = 'world'
-            post = affine.concat(
-                fslmgh.voxToSurfMat(ref),
-                ref.getAffine('world', 'voxel'))
-
         opts = self.displayCtx.getOpts(ref)
         return opts.transformCoords(
-            coords, from_, to, pre=pre, post=post, **kwargs)
+            coords, from_, to, **kwargs)
 
 
     def getTransform(self, from_=None, to=None):
@@ -242,8 +225,7 @@ class RefImageOpts:
         returned.
 
         The ``from_`` and ``to`` parameters may be set to any value accepted
-        by :meth:`.NiftiOpts.getTransform`, in addition to ``'torig'``, which
-        refers to the Freesurfer coordinate system.
+        by :meth:`.NiftiOpts.getTransform`.
 
         If ``from_`` or ``to`` are not provided, they are set to the current
         value of :attr:`coordSpace`.
@@ -256,24 +238,8 @@ class RefImageOpts:
         if from_ is None: from_ = self.coordSpace
         if to    is None: to    = self.coordSpace
 
-        pre  = np.eye(4)
-        post = np.eye(4)
-
-        if from_ == 'torig':
-            from_ = 'world'
-            pre   = affine.concat(
-                ref.getAffine('voxel', 'world'),
-                affine.invert(fslmgh.voxToSurfMat(ref)))
-
-        if to == 'torig':
-            to   = 'world'
-            post = affine.concat(
-                fslmgh.voxToSurfMat(ref),
-                ref.getAffine('world', 'voxel'))
-
         ropts = self.displayCtx.getOpts(ref)
-        xform = ropts.getTransform(from_, to)
-        return affine.concat(post, xform, pre)
+        return ropts.getTransform(from_, to)
 
 
     def getBounds(self):
