@@ -109,7 +109,7 @@ class Display(props.SyncableHasProperties):
         ovlTypes    = getOverlayTypes(overlay)
         ovlTypeProp = self.getProp('overlayType')
 
-        log.debug('Enabling overlay types for {}: '.format(overlay, ovlTypes))
+        log.debug('Enabling overlay types for %s: %s', overlay, ovlTypes)
         ovlTypeProp.setChoices(ovlTypes, instance=self)
 
         # Call the super constructor after our own
@@ -164,7 +164,7 @@ class Display(props.SyncableHasProperties):
         # synchronisation
         self.addListener(
             'overlayType',
-            'Display_{}'.format(id(self)),
+            f'Display_{id(self)}',
             self.__overlayTypeChanged)
 
         # The __overlayTypeChanged method creates
@@ -177,13 +177,13 @@ class Display(props.SyncableHasProperties):
         self.__displayOpts = None
         self.__overlayTypeChanged()
 
-        log.debug('{}.init ({})'.format(type(self).__name__, id(self)))
+        log.debug('%s.init (%s)', type(self).__name__, id(self))
 
 
     def __del__(self):
         """Prints a log message."""
         if log:
-            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
+            log.debug('%s.del (%s)', type(self).__name__, id(self))
 
 
     def destroy(self):
@@ -197,7 +197,7 @@ class Display(props.SyncableHasProperties):
         if self.__displayOpts is not None:
             self.__displayOpts.destroy()
 
-        self.removeListener('overlayType', 'Display_{}'.format(id(self)))
+        self.removeListener('overlayType', f'Display_{id(self)}')
 
         self.detachAllFromParent()
 
@@ -264,10 +264,10 @@ class Display(props.SyncableHasProperties):
 
         optType = DISPLAY_OPTS_MAP[self.__overlay, self.overlayType]
 
-        log.debug('Creating {} instance (synced: {}) for overlay '
-                  '{} ({})'.format(optType.__name__,
-                                   self.__displayCtx.syncOverlayDisplay,
-                                   self.__overlay, self.overlayType))
+        log.debug('Creating %s instance (synced: %s) for overlay %s (%s)',
+                  optType.__name__,
+                  self.__displayCtx.syncOverlayDisplay,
+                  self.__overlay, self.overlayType)
 
         volProps  = optType.getVolumeProps()
         allProps  = optType.getAllProperties()[0]
@@ -328,8 +328,8 @@ class Display(props.SyncableHasProperties):
             base = base.__name__
             val  = getattr(opts, propName)
 
-            log.debug('Saving {}.{} = {} [{} {}]'.format(
-                base, propName, val, type(opts).__name__, id(self)))
+            log.debug('Saving %s.%s = %s [%s %s]', base, propName,
+                      val, type(opts).__name__, id(self))
 
             self.__oldOptProps[base, propName] = val
 
@@ -354,8 +354,8 @@ class Display(props.SyncableHasProperties):
                 if not opts.propertyIsEnabled(propName):
                     continue
 
-                log.debug('Restoring {}.{} = {} [{}]'.format(
-                    type(opts).__name__, propName, value, id(self)))
+                log.debug('Restoring %s.%s = %s [%s]', type(opts).__name__,
+                          propName, value, id(self))
 
                 setattr(opts, propName, value)
 
@@ -443,19 +443,19 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         self.__overlay     = overlay
         self.__display     = display
         self.__overlayType = display.overlayType
-        self.__name        = '{}_{}'.format(type(self).__name__, id(self))
+        self.__name        = f'{type(self).__name__}_{id(self)}'
 
         props.SyncableHasProperties.__init__(self, **kwargs)
         actions.ActionProvider     .__init__(self, overlayList, displayCtx)
 
-        log.debug('{}.init [DC: {}] ({})'.format(
-            type(self).__name__, id(displayCtx), id(self)))
+        log.debug('%s.init [DC: %s] (%s)', type(self).__name__,
+                  id(displayCtx), id(self))
 
 
     def __del__(self):
         """Prints a log message."""
         if log:
-            log.debug('{}.del ({})'.format(type(self).__name__, id(self)))
+            log.debug('%s.del (%s)', type(self).__name__, id(self))
 
 
     def destroy(self):
