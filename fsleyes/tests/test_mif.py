@@ -24,7 +24,7 @@ def test_mif_3d():
     assert np.all(np.isclose(bmimg.data, testimg.data))
     assert testimg.sameSpace(bmimg)
 
-
+
 def test_mif_4d():
     datadir = op.join(op.dirname(__file__), 'testdata')
 
