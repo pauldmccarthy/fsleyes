@@ -145,6 +145,8 @@ def createAffine(hdr : MIFHeader) -> np.ndarray:
 def loadMIFHeader(filename : str) -> MIFHeader:
     """Loads MIF header information from the given file. The key-value
     pairs contained within are returned as a dict.
+
+
     """
 
     header = {}
@@ -218,9 +220,10 @@ def loadMIFImage(filename : str, header : MIFHeader) -> np.ndarray:
 
     shape    = header['dim']
     dtype    = header['datatype']
-    layout   = header['layout']
     datafile = header['file'][0]
     offset   = header['file'][1]
+    layout   = np.abs(header['layout'])
+    shape    = [s for d, s in sorted(zip(layout, shape))]
 
     if datafile == '.':
         datafile = filename
@@ -235,11 +238,9 @@ def loadMIFImage(filename : str, header : MIFHeader) -> np.ndarray:
 
     data = data.reshape(shape, order='F')
 
-    # Make sure first three data
-    # dimensions are XYZ
+    # Make sure first three
+    # data dimensions are XYZ.
     if len(layout) >= 4:
-        dims   = [d for d in layout if d < 3]
-        layout = dims + [d for d in layout if d not in dims]
-        data   = data.transpose(np.abs(layout))
+        data = data.transpose(layout)
 
     return data
