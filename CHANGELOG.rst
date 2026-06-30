@@ -10,10 +10,6 @@
 This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
-The numbers following each change (e.g. `!504`) refer to merge
-requests on GitLab, which can be viewed at
-https://git.fmrib.ox.ac.uk/fsl/fsleyes/fsleyes/-/merge_requests.
-
 
 1.20.0 (Under development)
 --------------------------
@@ -24,11 +20,12 @@ Added
 
 
 * FSLeyes can now load `TRX tractogram files <https://tee-ar-ex.github.io/>`_,
-  courtesy of Ariel Rokem (!504, `GitHub PR
+  courtesy of Ariel Rokem (:mr:`504`, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/150>`__).
+* FSLeyes can now load MRtrix3 ``.mif`` image files (:mr:`506`).
 * FSLeyes plugins can now register "loader" functions which load and
   return an overlay. These functions can be added as ``fsleyes_loader``
-  entry points (!505).
+  entry points (:mr:`505`).
 
 
 1.19.0 (Monday 8th June 2026)
@@ -41,10 +38,10 @@ Changed
 
 * FSLeyes now uses ``wx.aui`` instead of ``wx.lib.agw.aui`` for layout
   management, which will hopefully result in a smoother user experience
-  (!502).
+  (:mr:`502`).
 * Third-party FSLeyes plugins must now register custom actions via the
   :meth:`.ActionProvider.addAction` method. Any actions which use the
-  ``@action`` decorators are automatically registered (!502).
+  ``@action`` decorators are automatically registered (:mr:`502`).
 
 
 Fixed
@@ -52,11 +49,11 @@ Fixed
 
 
 * Multiple data series from the same overlay are now grouped together in
-  plot legends (e.g. time series, and FEAT model fit) (!502).
+  plot legends (e.g. time series, and FEAT model fit) (:mr:`502`).
 * Fixed a very strange rendering/flickering issue caused by unintentional
   access of internal ``wxPython`` properties. This was achieved by refactoring
   the action/menu item discovery logic, which was previously implemented by
-  looping over all attributes of view panel objects (!502).
+  looping over all attributes of view panel objects (:mr:`502`).
 
 
 1.18.1 (Tuesday 14th April 2026)
@@ -68,9 +65,9 @@ Fixed
 
 
 * Make sure that overlays with a name starting with an underscore (``_``)
-  appear in plot legends (!500).
+  appear in plot legends (:mr:`500`).
 * Fixed a bug when displaying RGB volumes with prefiltered spline
-  interpolation (!500).
+  interpolation (:mr:`500`).
 
 
 1.18.0 (Thursday 12th March 2026)
@@ -83,7 +80,7 @@ Added
 
 * New ``--robustRange``/``-rr`` option, which uses ``fslstats -r`` to set the
   initial display range for ``volume`` overlays. This is a global option
-  applied to all loaded images (!499).
+  applied to all loaded images (:mr:`499`).
 
 
 Fixed
@@ -91,10 +88,10 @@ Fixed
 
 
 * Prevent the ``--autoName`` option from renaming overlays that have already
-  been given an explicit name by the user (!497).
+  been given an explicit name by the user (:mr:`497`).
 * Fixed a bug in the display of 4D complex-valued NIfTI images - when the
   volume was changed, the real values would be displayed regardless of the
-  selected component (!498).
+  selected component (:mr:`498`).
 
 
 1.17.1 (Thursday 5th March 2026)
@@ -105,7 +102,7 @@ Fixed
 ^^^^^
 
 
-* Fixed a bug in the new *Copy coordinates* location panel feature (!495).
+* Fixed a bug in the new *Copy coordinates* location panel feature (:mr:`495`).
 
 
 1.17.0 (Friday 27th February 2026)
@@ -116,7 +113,7 @@ Added
 ^^^^^
 
 * New *Copy coordinates* button on the location panel, which copies the
-  currently displayeed world/voxel coordinates to the system clipboard (!493).
+  currently displayeed world/voxel coordinates to the system clipboard (:mr:`493`).
 
 
 Changed
@@ -124,14 +121,14 @@ Changed
 
 
 * Added the ability for overlays to be programmatically hidden from the overlay
-  list (!492).
+  list (:mr:`492`).
 
 
 Fixed
 ^^^^^
 
 
-* Minor updates to the File Tree panel to work with pandas 3.x (!493).
+* Minor updates to the File Tree panel to work with pandas 3.x (:mr:`493`).
 
 
 1.16.3 (Friday 21st November 2025)
@@ -142,9 +139,9 @@ Fixed
 ^^^^^
 
 
-* Fixed some compatibility issues with recent versions of IPython (!489).
+* Fixed some compatibility issues with recent versions of IPython (:mr:`489`).
 * Fixed an error which could occur when opening edit mode on an image with
-  fixed-width integer type (!488).
+  fixed-width integer type (:mr:`488`).
 
 
 1.16.2 (Friday 10th October 2025)
@@ -154,7 +151,7 @@ Fixed
 Changed
 ^^^^^^^
 
-* Minor updates to the documentation (!486).
+* Minor updates to the documentation (:mr:`486`).
 
 
 1.16.1 (Wednesday 10th September 2025)
@@ -164,7 +161,7 @@ Changed
 Fixed
 ^^^^^
 
-* Fixes to API and user documentation generation (!484).
+* Fixes to API and user documentation generation (:mr:`484`).
 
 
 1.16.0 (Tuesday 9th September 2025)
@@ -176,7 +173,7 @@ Added
 
 * The width of line vectors can now be modulated by another image. This
   is achieved by setting the *Modulation mode* to *Line width*, and on
-  the command-line via ``--modulateMode lineWidth`` (!479).
+  the command-line via ``--modulateMode lineWidth`` (:mr:`479`).
 
 
 Changed
@@ -185,7 +182,7 @@ Changed
 
 * The :meth:`FSLeyesFrame.addViewPanel` method now allows the caller to
   specify the location (top/bottom/left/right) and proportional size of
-  newly added views (!478).
+  newly added views (:mr:`478`).
 
 
 Fixed
@@ -193,12 +190,12 @@ Fixed
 
 
 * FSLeyes can now load tractogram (``.trk``/``.tck``) files which contain
-  "degenerate" streamlines that only have one vertex (!477).
+  "degenerate" streamlines that only have one vertex (:mr:`477`).
 * Avoid a (harmless) error being printed when a tractogram overlay is
   selected, and the user shift+clicks on a 3D view (which would select the
-  nearest vertex/voxel when an image/mesh overlay is selected) (!477).
+  nearest vertex/voxel when an image/mesh overlay is selected) (:mr:`477`).
 * Fixed a bug where opening a new view would cause *Tools* menu items from
-  already existing views to break (!480).
+  already existing views to break (:mr:`480`).
 
 
 1.15.0 (Thursday 29th May 2025)
@@ -212,7 +209,7 @@ Added
 * New *Prefiltered spline interpolation* option for volume interpolation
   (``-in true_spline`` on the command-line), which applies a pre-filter to
   image data. This results in less smooth interpolation, but which is equal
-  to the underlying image data at voxel centres (!473).
+  to the underlying image data at voxel centres (:mr:`473`).
 
 
 Changed
@@ -220,7 +217,7 @@ Changed
 
 
 * The volume *Modulate range* limits can now be set to values smaller/greater
-  than the minimum/maximum image voxel intensities (!473).
+  than the minimum/maximum image voxel intensities (:mr:`473`).
 
 
 1.14.2 (Wednesday 26th February 2025)
@@ -232,7 +229,7 @@ Added
 
 * New *Slice width* option for tractogram overlays (``--sliceWidth`` / ``-sw``
   on the command-line), which controls the width of the cross-section through
-  the tractogram when drawing 2D slices (!471).
+  the tractogram when drawing 2D slices (:mr:`471`).
 
 
 Changed
@@ -241,10 +238,10 @@ Changed
 
 * FEAT ``cluster_mask`` images are now shown as mask outlines when the
   ``--autoDisplay`` flag is used, or when loaded from the FEAT cluster
-  panel (!471).
+  panel (:mr:`471`).
 * Plot panels will now use a solid line style by default for all overlays,
   rather than cycling through all possible line styles.  The default line
-  colour scheme has also been expanded and improved (!471).
+  colour scheme has also been expanded and improved (:mr:`471`).
 
 
 1.14.1 (Monday 24th February 2025)
@@ -254,7 +251,7 @@ Changed
 Fixed
 ^^^^^
 
-* Fixed some errors which could occur when adding/removing overlays (!469).
+* Fixed some errors which could occur when adding/removing overlays (:mr:`469`).
 
 
 1.14.0 (Monday 24th February 2025)
@@ -267,21 +264,21 @@ Added
 
 * Improved support for tractograms (TrackVis ``.trk`` and Mrtrix3 ``.tck``
   files). Tractograms can now be associated with a reference image, and so
-  will be re-positioned as needed with changes to the display space (!466).
+  will be re-positioned as needed with changes to the display space (:mr:`466`).
 * New *Pseudo-3D* option for tractograms (``--pseudo3D`` on the command-line),
   which causes it to be displayed in 3D in the ortho and lightbox views. When
   using this option, the tractogram can be clipped above, below, or near the
-  currently displayed slice (!466).
+  currently displayed slice (:mr:`466`).
 
 
 Changed
 ^^^^^^^
 
 * Alpha modulation settings (e.g. *Modulate alpha by intensity*) are now
-  applied to the colour bar if it is displayed (!464).
+  applied to the colour bar if it is displayed (:mr:`464`).
 * The ``--autoDisplay`` / ``-ad`` command-line option will now enable
   alpha-modulation on FEAT statistic images (e.g. ``stats/zstat1.nii.gz`` etc)
-  and MELODIC ICA images (``melodic_IC.nii.gz``) (!464, !467).
+  and MELODIC ICA images (``melodic_IC.nii.gz``) (:mr:`464`, :mr:`467`).
 
 
 Fixed
@@ -289,9 +286,9 @@ Fixed
 
 * The `melodic_IC` file should now be selected by default when using Melodic
   mode in conjunction with ``--autoDisplay`` (e.g. ``fsleyes -smelodic -ad
-  ..``) (!465).
+  ..``) (:mr:`465`).
 * Fixed an issue with tractogram overlay vertices being clipped when the
-  *Colour by* option weas set, but *Clip by* was set to *None* (!466).
+  *Colour by* option weas set, but *Clip by* was set to *None* (:mr:`466`).
 
 
 1.13.0 (Thursday 14th November 2024)
@@ -303,14 +300,14 @@ Added
 
 * The length of line vectors can now be modulated by another image. This
   is achieved by setting the *Modulation mode* to *Line length*, and on
-  the command-line via ``--modulateMode lineLength`` (!461).
+  the command-line via ``--modulateMode lineLength`` (:mr:`461`).
 * The colour/brightness and line vector length can now be normalised
   independently for line vector and RGB vector overlays. Colour and vector
   magnitude were previously both normalised by the *Scale vectors to unit
   length* option - this option now normalises vector magnitude/length, and
   the new *Normalise RGB brightness* option normalises the vector colours
   to uniform brightness. This option is available on the command-line via the
-  ``--normaliseColour`` / ``-nr`` flag (!461).
+  ``--normaliseColour`` / ``-nr`` flag (:mr:`461`).
 
 
 Fixed
@@ -321,12 +318,12 @@ Fixed
   As part of this change, the logic controlling the display space has
   been adjusted so that, when the current reference image is removed,
   the display space will be changed to another loaded image instead of
-  being reset to ``"world"`` (!460).
+  being reset to ``"world"`` (:mr:`460`).
 * Fixed an issue which could cause occasional (harmless) errors to
   be emitted, where a texture object was being destroyed before its
-  data was (asynchronously) generated (!461).
+  data was (asynchronously) generated (:mr:`461`).
 * Fixed an issue where changing some line vector settings would have no
-  effect. This was only occurring under OpenGL 1.4 (!461).
+  effect. This was only occurring under OpenGL 1.4 (:mr:`461`).
 
 
 1.12.6 (Friday 4th October 2024)
@@ -337,7 +334,7 @@ Fixed
 ^^^^^
 
 
-* Fixed the top-level application menu title on macOS (!457).
+* Fixed the top-level application menu title on macOS (:mr:`457`).
 
 
 1.12.5 (Monday 30th September 2024)
@@ -349,7 +346,7 @@ Changed
 
 
 * Updated the FEAT cluster panel to allow browsing of F-test results
-  (previously, only COPE results were displayed) (!452).
+  (previously, only COPE results were displayed) (:mr:`452`).
 
 
 Fixed
@@ -358,10 +355,10 @@ Fixed
 
 * Fixed an issue with command-line argument parsing when the
   ``--linkLowRanges`` / ``-ll`` and/or ``--linkHighRanges`` / ``-lh`` options
-  are used (!453).
+  are used (:mr:`453`).
 * Fixed an alignment refresh issue when adjust the voxel->world transformatoin
   of an image (e.g. via the *Nudge* panel, or when applying a FLIRT
-  transformation) (!451).
+  transformation) (:mr:`451`).
 
 
 1.12.4 (Wednesday 26th June 2024)
@@ -372,7 +369,7 @@ Fixed
 ^^^^^
 
 
-* Fixed some incompatibilities with the new `numpy` 2.0 release (!447).
+* Fixed some incompatibilities with the new `numpy` 2.0 release (:mr:`447`).
 
 
 1.12.3 (Wednesday 12th June 2024)
@@ -384,8 +381,8 @@ Fixed
 
 
 * Fixed an issue with lookup table labels being read incorrectly from `.lut` files
-  which contain comments (!443).
-* More adjustments to avoid corrupt display of 4D images on macOS (!444).
+  which contain comments (:mr:`443`).
+* More adjustments to avoid corrupt display of 4D images on macOS (:mr:`444`).
 
 
 1.12.2 (Thursday 6th June 2024)
@@ -397,7 +394,7 @@ Fixed
 
 
 * Work around a macOS issue where display of 4D images could be corrupted
-  (!439, !107).
+  (:mr:`439`, :mr:`107`).
 
 
 1.12.1 (Friday 24th May 2024)
@@ -408,9 +405,9 @@ Fixed
 ^^^^^
 
 
-* Fixed some issues related to GL initialisation under Wayland (!437).
+* Fixed some issues related to GL initialisation under Wayland (:mr:`437`).
 * Resolved an issue with floating windows being frozen under WSL/Wayland
-  (!437).
+  (:mr:`437`).
 
 
 1.12.0 (Wednesday 8th May 2024)
@@ -422,7 +419,7 @@ Added
 
 
 * New ``--autoName`` / ``-an`` command-line option, which causes overlays that
-  would otherwise have the same name to be automatically renamed (!434).
+  would otherwise have the same name to be automatically renamed (:mr:`434`).
 
 
 Fixed
@@ -430,7 +427,7 @@ Fixed
 
 
 * Updated the *Show command-line for scene* menu item to support the
-  ``--asVoxels`` flag for lightbox views (!435).
+  ``--asVoxels`` flag for lightbox views (:mr:`435`).
 
 
 1.11.0 (Monday 22nd April 2024)
@@ -443,10 +440,10 @@ Added
 
 * New *Choose lightbox slices* option, available under the *Tools* menu, which
   allows lightbox slices to be specified via voxel coordinates instead of
-  proportions (!432).
+  proportions (:mr:`432`).
 * New ``--asVoxels`` command-line option for use with lightbox views, which
   causes the ``--zrange`` and ``--sliceSpacing`` options to be interpreted
-  as voxel coordinates instead of proportions (!432).
+  as voxel coordinates instead of proportions (:mr:`432`).
 
 
 Changed
@@ -454,7 +451,7 @@ Changed
 
 
 * FSLeyes will now attempt to automatically set ``$FSLDIR`` if it is not set
-  (e.g. when started from a desktop launcher) (!428).
+  (e.g. when started from a desktop launcher) (:mr:`428`).
 
 
 Fixed
@@ -462,8 +459,8 @@ Fixed
 
 
 * Voxels with high values are no longer clipped when loading a probabilistic
-  atlas overlay from the atlas panel (!431).
-* Fixed an issue with argument parsing under Python 3.12 (!432).
+  atlas overlay from the atlas panel (:mr:`431`).
+* Fixed an issue with argument parsing under Python 3.12 (:mr:`432`).
 
 
 1.10.4 (Monday 25th March 2024)
@@ -475,7 +472,7 @@ Fixed
 
 
 * Added a work-around to avoid send2trash-related crashes on old versions of
-  macOS (!426, see https://github.com/arsenetar/send2trash/issues/83).
+  macOS (:mr:`426`, see https://github.com/arsenetar/send2trash/issues/83).
 
 
 1.10.3 (Thursday 29th February 2024)
@@ -490,7 +487,7 @@ Added
   overlays to be unlinked by default (via the overlay list chain-link
   |chain_icon| button). This has the effect that properties such as
   interpolation, which are normally linked across all overlays, can be set
-  independently for each overlay (!422).
+  independently for each overlay (:mr:`422`).
 
 
 Changed
@@ -500,16 +497,16 @@ Changed
 * Some additional display properties are now linked by default across
   overlays, including mesh outline and outline width and line vector width and
   L/R orientation flip. These properties can be unlinked for a specific overlay
-  via the overlay list chain-link |chain_icon| button (!424).
+  via the overlay list chain-link |chain_icon| button (:mr:`424`).
 
 
 Fixed
 ^^^^^
 
 
-* Fixed an issue with overlay depth-sorting in the 3D view (!422).
+* Fixed an issue with overlay depth-sorting in the 3D view (:mr:`422`).
 * Fixed an issue in the lightbox view when displaying label and mask overlays and
-  overlapping lightbox slices (!424).
+  overlapping lightbox slices (:mr:`424`).
 
 
 1.10.2 (Thursdy 18th January 2024)
@@ -520,11 +517,11 @@ Fixed
 ^^^^^
 
 * Fixed a bug which made edit mode inaccessible when more than one view was
-  open (!418).
+  open (:mr:`418`).
 * Fixed a bug affecting the lookup table panel, and *Load colour map* option
-  (!419).
+  (:mr:`419`).
 * Fixed a mask overlay bug where, when specifying both `--alpha` and
-  `--maskColour` would cause the `--alpha` value to be ignored (!419).
+  `--maskColour` would cause the `--alpha` value to be ignored (:mr:`419`).
 
 
 1.10.1 (Thursday 16th November 2023)
@@ -536,7 +533,7 @@ Changed
 
 
 * Adjust initialisation logic to prevent FSLeyes from crashing due to a
-  corrupt third-party plugin (!416).
+  corrupt third-party plugin (:mr:`416`).
 
 
 1.10.0 (Tuesday 14th November 2023)
@@ -550,22 +547,22 @@ Changed
 * FSLeyes colour map and lookup table files can now be stored in a site-specific
   configuration directory, which can be set by a ``$FSLEYES_SITE_CONFIG_DIR``
   environment variable, by
-  Rob Reid (@captainnova) (!412, `GitHub PR
+  Rob Reid (@captainnova) (:mr:`412`, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/121>`__).
 * FSLeyes layouts can now be stored as plain-text files, in the FSLeyes settings
-  directory, or in ``$FSLEYES_SITE_CONFIG_DIR`` (!412).
+  directory, or in ``$FSLEYES_SITE_CONFIG_DIR`` (:mr:`412`).
 * Changed the behaviour of the *Modulate alpha by intensity* setting for mesh
   overlays. Now, if the *Hide clipped areas* setting is enabled, the mesh
   transparency is modulated by intensity. But the *Hide clipped areas* setting
   is disabled, the mesh data colour is blended with its background colour
-  (!411).
+  (:mr:`411`).
 
 
 Fixed
 ^^^^^
 
 * Fixed an issue with mesh depth ordering in the 3D view, when running FSLeyes
-  in legacy environments (!411).
+  in legacy environments (:mr:`411`).
 
 
 1.9.0 (Monday 25th September 2023)
@@ -578,14 +575,14 @@ Added
 
 * New keyboard shortcut (|control_key| + |shift_key| + ``f``) to toggle
   visibility of all overlays except for the first/bottom one, by
-  Christopher G. Schwarz (@CGSchwarzMayo) (!406, `GitHub PR
+  Christopher G. Schwarz (@CGSchwarzMayo) (:mr:`406`, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/118>`__).
 * New *FSLView mode* for the *Display space* setting, which emulates the
-  behaviour of FSLView, by Christopher G. Schwarz (@CGSchwarzMayo) (!407,
+  behaviour of FSLView, by Christopher G. Schwarz (@CGSchwarzMayo) (:mr:`407`,
   `GitHub PR <https://github.com/pauldmccarthy/fsleyes/pull/117>`_).
 * New ``--hideOrientationWarnings`` command-line option, which hides the
   location panel warning regarding different orientations / fields-of-view, by
-  Christopher G. Schwarz (@CGSchwarzMayo) (!407, `GitHub PR
+  Christopher G. Schwarz (@CGSchwarzMayo) (:mr:`407`, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/117>`__).
 
 
@@ -594,14 +591,14 @@ Changed
 
 
 * FSLeyes now attempts to detect FreeSurfer-generated GIfTI surfaces, and will
-  set the coordinate space accordingly (!407).
+  set the coordinate space accordingly (:mr:`407`).
 
 
 Fixed
 ^^^^^
 
 
-* Fixed an issue with colour maps caused by changes in matplotlib 3.8 (!409).
+* Fixed an issue with colour maps caused by changes in matplotlib 3.8 (:mr:`409`).
 
 
 1.8.3 (Thursday 31st August 2023)
@@ -613,7 +610,7 @@ Added
 
 
 * New ``--cmapCycle`` command-line option, which automatically assigns a
-  different colour map to each ``volume`` overlay (!402).
+  different colour map to each ``volume`` overlay (:mr:`402`).
 
 
 Fixed
@@ -621,10 +618,10 @@ Fixed
 
 
 * Fixed an issue with overlays being interleaved when overlapping slices in
-  the lightbox view (!403).
+  the lightbox view (:mr:`403`).
 * Fixed some bugs in edit mode - crashes could occur when drawing/selecting
   voxels in highly anisotropic images, and the cursor size could vary for
-  images with floating point imprecision in their pixdims (!404).
+  images with floating point imprecision in their pixdims (:mr:`404`).
 
 
 1.8.2 (Tuesday 22nd August 2023)
@@ -636,7 +633,7 @@ Fixed
 
 
 * Fixed an issue with loading built-in plugins - the atlas panel (amongst
-  others) was not being loaded (!400).
+  others) was not being loaded (:mr:`400`).
 
 
 1.8.1 (Thursday 17th August 2023)
@@ -647,7 +644,7 @@ Fixed
 ^^^^^
 
 
-* Filtered some irrelevant warning messages from underlying libraries (!395).
+* Filtered some irrelevant warning messages from underlying libraries (:mr:`395`).
 
 
 1.8.0 (Wednesday 16th August 2023)
@@ -661,8 +658,8 @@ Added
 * New features in the lightbox view, allowing slices to be overlapping, and
   the order in which slices are displayed to be reversed. These features are
   available on the command-line via the ``--sliceOverlap`` and
-  ``--reverseSlices`` flags (!379).
-* FSLeyes plugin libraries can now provide custom layouts (!386).
+  ``--reverseSlices`` flags (:mr:`379`).
+* FSLeyes plugin libraries can now provide custom layouts (:mr:`386`).
 
 
 Changed
@@ -672,25 +669,25 @@ Changed
 * The _Nudge_ panel now applies scaling parameters such that the
   centre-of-volume or the current cursor location are preserved. The previous
   behaviour was such that location (0, 0, 0) was preserved by the scaling
-  parameters (!378).
+  parameters (:mr:`378`).
 * The FEAT cluster panel now remembers which contrast for a FEAT analysis was
-  selected when switching between different analyses (!380).
+  selected when switching between different analyses (:mr:`380`).
 * Updated the FSLeyes plugin architecture to use ``importlib`` instead of the
   deprecated ``pkg_resources``. FSLeyes plugin libraries no longer need to have
-  a name beginning with ``fsleyes-plugin`` (!385).
+  a name beginning with ``fsleyes-plugin`` (:mr:`385`).
 * FSLeyes plugins provided by third-party libraries are now hidden by default,
   but are shown when a custom layout defined in the library is applied.  All
   plugins can be shown via the ``--showAllPlugins`` command-line option (which
   can be saved as a :ref:`default argument <command_line_default_arguments>`
-  to be permanently applied) (!386).
+  to be permanently applied) (:mr:`386`).
 
 
 Fixed
 ^^^^^
 
 
-* Updates to the Jupyter Notebook integration to work with Notebook 7.x (!383).
-* Fixed a transparency issue in the ortho panel (!384).
+* Updates to the Jupyter Notebook integration to work with Notebook 7.x (:mr:`383`).
+* Fixed a transparency issue in the ortho panel (:mr:`384`).
 
 
 1.7.0 (Tuesday 13th June 2023)
@@ -703,9 +700,9 @@ Added
 * New *colour range* option (available via the ``--colourRange`` command-line
   option) which can be used on vector overlays when colouring them by a
   secondary image, to specify the mapping between the voxel intensities and
-  the colour map (!371).
+  the colour map (:mr:`371`).
 * New *Show slice location* option, allowing the location of each slice to be
-  displayed in the lightbox view (!375).
+  displayed in the lightbox view (:mr:`375`).
 
 
 Changed
@@ -715,17 +712,17 @@ Changed
 * Changed the ``--initialDisplayRange`` command-line option to have the same
   behaviour as the ``--displayRange`` option - by default, the values will
   now be interpreted as raw intensities. Values can be specified as percentiles
-  by appending a ``%`` to the high value (!366).
+  by appending a ``%`` to the high value (:mr:`366`).
 * Colour map and lookup table files may now have a ``.txt`` suffix instead of
-  ``.cmap`` / ``.lut`` (!368).
+  ``.cmap`` / ``.lut`` (:mr:`368`).
 * Colour map interpolation will now be applied to the colour bar shown in the
-  ortho/lightbox/3D views (!368).
+  ortho/lightbox/3D views (:mr:`368`).
 * Changed the behaviour of the *Clip by* and *Modulate by* settings for volume
   overlays - when clipping/modulating by a secondary image, and a negative
   colour map is in use, the *absolute* values of the secondary image are now
-  used for clipping/modulation (!370).
+  used for clipping/modulation (:mr:`370`).
 * Changes to the mechanism used to save screenshots/movies, which should make
-  the process more robust (!371).
+  the process more robust (:mr:`371`).
 
 
 Fixed
@@ -733,18 +730,18 @@ Fixed
 
 
 * Fixed some issues with parsing command line arguments for RGB vector and
-  complex images (!363, !364).
+  complex images (:mr:`363`, :mr:`364`).
 * Fixed an issue with plotting the MELODIC power spectrum for data with an
-  odd number of timepoints (!365).
+  odd number of timepoints (:mr:`365`).
 * Fixed an issue when passing a colour map file path to the ``--negativeCmap``
-  option (!368).
+  option (:mr:`368`).
 * Fixed an issue related to loading NIfTI ``qform`` matrices which arose
-  with ``nibabel >= 5.1.0`` (!369).
-* Fixed an edit mode issue where a drawn line would have gaps in it (!369).
+  with ``nibabel >= 5.1.0`` (:mr:`369`).
+* Fixed an edit mode issue where a drawn line would have gaps in it (:mr:`369`).
 * Some minor fixes which allow the overlay type of a NIfTI image to be changed
-  whilst it is being edited (!369).
+  whilst it is being edited (:mr:`369`).
 * Fixed a small issue with ``volume`` overlays sometimes not being refreshed
-  (!372).
+  (:mr:`372`).
 
 
 1.6.1 (Thursday 23rd February 2023)
@@ -756,7 +753,7 @@ Changed
 
 
 * Internal changes to avoid having to overwrite built-in ``matplotlib``
-  colour maps (!360).
+  colour maps (:mr:`360`).
 
 
 1.6.0 (Tuesday 20th February 2023)
@@ -768,13 +765,13 @@ Added
 
 
 * Added an *outline* button to the overlay display toolbar for mask overlays
-  (!342).
+  (:mr:`342`).
 * New ``--no3DInterp`` / ``-ni`` option, which prevents interpolation from
-  being enabled for volume overlays when a 3D view is opened (!344).
+  being enabled for volume overlays when a 3D view is opened (:mr:`344`).
 * FSLeyes will now read "default" command-line arguments from a file called
-  ``default_arguments.txt``, stored in the FSLeyes settings directory (!347).
+  ``default_arguments.txt``, stored in the FSLeyes settings directory (:mr:`347`).
 * New ``--numSlices`` command-line option for use with lightbox views, which
-  is an inverted alias for the ``--sliceSpacing`` option (!350).
+  is an inverted alias for the ``--sliceSpacing`` option (:mr:`350`).
 
 
 Changed
@@ -782,9 +779,9 @@ Changed
 
 
 * DICOM directories are now only scanned once, instead of each time they are
-  opened via the *Add from DICOM* menu option (!345).
+  opened via the *Add from DICOM* menu option (:mr:`345`).
 * The ``--useNegativeCmap`` / ``-un`` option is now automatically enabled when
-  ``--negativeCmap`` / ``-nc`` is specified (!350).
+  ``--negativeCmap`` / ``-nc`` is specified (:mr:`350`).
 
 
 
@@ -793,11 +790,11 @@ Fixed
 
 
 * Fixed some issues related to shutting down FSLeyes cleanly, which could
-  occasionally result in segmentation faults (!340).
+  occasionally result in segmentation faults (:mr:`340`).
 * Fixed an issue with tractogram overlays not being drawn in some
-  circumstances (!341).
-* Fixed an issue with loading mesh vertex data (!343).
-* Fixed an issue with loading annotations when using ``fsleyes render`` (!346).
+  circumstances (:mr:`341`).
+* Fixed an issue with loading mesh vertex data (:mr:`343`).
+* Fixed an issue with loading annotations when using ``fsleyes render`` (:mr:`346`).
 
 
 1.5.0 (Wednesday 31st August 2022)
@@ -810,34 +807,34 @@ Added
 
 * ``ViewPanel`` plugin classes can now implement the
   :meth:`~.ViewPanel.defaultLocation` static method to specify an initial
-  location and size within the FSLeyes frame (!334).
+  location and size within the FSLeyes frame (:mr:`334`).
 * New built-in ``defaultlb`` and ``default3d`` layouts, which respectively open
   a lightbox or 3D view with standard toolbars and control panels.
 * New ``--noBrowser`` / ``-nbb`` command-line option, which starts a Jupyter
   kernel without opening the Notebooks home page; this can be used when you
   wish to attach a terminal IPython instance to FSLeyes, instead of a Jupyter
-  notebook (!334).
+  notebook (:mr:`334`).
 
 
 Changed
 ^^^^^^^
 
 
-* Redesigned the lightbox view to simplify behaviour and interaction (!334).
-* Restored low-performance settings for the ortho and lightbox views (!333).
+* Redesigned the lightbox view to simplify behaviour and interaction (:mr:`334`).
+* Restored low-performance settings for the ortho and lightbox views (:mr:`333`).
 * The time series, power spectra and histogram panels now default to
   displaying data series from all compatible overlays, instead of just the
-  currently selected overlay (!334).
+  currently selected overlay (:mr:`334`).
 
 
 Fixed
 ^^^^^
 
 
-* Fixed several issues related to mesh rendering in the lightbox view (!333).
+* Fixed several issues related to mesh rendering in the lightbox view (:mr:`333`).
 * Fixed an issue with the location cursor (and other annotations) not being
-  displayed when running FSLeyes in OpenGL 1.4 compatibility mode on macOS (!334).
-* Fixed a memory leak triggered by the file tree panel (!334).
+  displayed when running FSLeyes in OpenGL 1.4 compatibility mode on macOS (:mr:`334`).
+* Fixed a memory leak triggered by the file tree panel (:mr:`334`).
 
 
 Removed
@@ -845,7 +842,7 @@ Removed
 
 
 * Removed the ``--highDpi`` command-line and interface option - as of wxPython
-  4.1.0, high DPI scaling should be taken care of automatically (!338).
+  4.1.0, high DPI scaling should be taken care of automatically (:mr:`338`).
 
 
 1.4.6 (Tuesday 14th June 2022)
@@ -857,7 +854,7 @@ Fixed
 
 
 * Fixed an issue with mesh outlines not appearing in the orthographic view
-  (!331).
+  (:mr:`331`).
 
 
 1.4.5 (Friday 20th May 2022)
@@ -868,7 +865,7 @@ Fixed
 ^^^^^
 
 
-* Added support for the ``NIFTI_TEMPLATE_XFORM_OTHER`` code (!329).
+* Added support for the ``NIFTI_TEMPLATE_XFORM_OTHER`` code (:mr:`329`).
 
 
 1.4.4 (Tuesday 17th May 2022)
@@ -879,8 +876,8 @@ Fixed
 ^^^^^
 
 
-* Fixed an issue with removing items from the annotation panel (!327).
-* Fixed an issue with toggling ortho view canvases in VNC/SSH sessions (!327).
+* Fixed an issue with removing items from the annotation panel (:mr:`327`).
+* Fixed an issue with toggling ortho view canvases in VNC/SSH sessions (:mr:`327`).
 
 
 1.4.3 (Tuesday 17th May 2022)
@@ -892,7 +889,7 @@ Fixed
 
 
 * Changed GL initialisation logic so that it is compatible with newer GTK2/GLX
-  versions of wxPython (!324).
+  versions of wxPython (:mr:`324`).
 
 
 1.4.2 (Friday 13th May 2022)
@@ -905,7 +902,7 @@ Fixed
 
 * Make sure atlas images (selected through the atlas panel) are loaded into
   RAM. This used to be the case, but default behaviour was changed recently in
-  the ``fsl.data.image`` and ``fsl.data.atlases`` modules (!322).
+  the ``fsl.data.image`` and ``fsl.data.atlases`` modules (:mr:`322`).
 
 
 
@@ -917,7 +914,7 @@ Fixed
 ^^^^^
 
 
-* Fixed an issue with 2D tractogram display on macOS (!318).
+* Fixed an issue with 2D tractogram display on macOS (:mr:`318`).
 
 
 1.4.0 (Monday 2nd May 2022)
@@ -929,17 +926,17 @@ Added
 
 
 * FSLeyes is now able to visualise TrackVis ``.trk`` and Mrtrix3 ``.tck``
-  tractogram files, containing tractography streamlines (!307, !312).
+  tractogram files, containing tractography streamlines (:mr:`307`, :mr:`312`).
 * New *Invert modulata alpha* display setting (available via the
   ``--inverModulateAlpha`` command-line option), which can be used to
-  make regions with high intensity more transparent (!311).
+  make regions with high intensity more transparent (:mr:`311`).
 * New ``--index`` command-line option for ``volume`` overlays, allowing
-  the indices for all non-spatial dimensions to be specified (!304).
+  the indices for all non-spatial dimensions to be specified (:mr:`304`).
 * New option to display the coordinates for the current location on the
   canvases of an ortho view (available on the command-line via
-  ``--showLocation``) (!314).
+  ``--showLocation``) (:mr:`314`).
 * New option to control the location cursor width on ortho/lightbox views
-  (available on the command-line via ``--cursorWidth``) (!314).
+  (available on the command-line via ``--cursorWidth``) (:mr:`314`).
 
 
 Changed
@@ -947,16 +944,16 @@ Changed
 
 
 * Improvements to overlay blending, and default volume quality settings, in
-  the 3D view (!309).
+  the 3D view (:mr:`309`).
 
 
 Fixed
 ^^^^^
 
 
-* Fixed an issue with loading FIRST subcortical segmentation VTK meshes (!306).
-* Fixed an issue with the ``--updatecheck`` commmand line argument (!306).
-* Fixed some bugs in the *File tree panel* (!315).
+* Fixed an issue with loading FIRST subcortical segmentation VTK meshes (:mr:`306`).
+* Fixed an issue with the ``--updatecheck`` commmand line argument (:mr:`306`).
+* Fixed some bugs in the *File tree panel* (:mr:`315`).
 
 
 Removed
@@ -977,9 +974,9 @@ Fixed
 
 
 * Fixed an issue with black screenshot images in some environments (e.g.
-  SSH sessions in mobaxterm) (!301).
+  SSH sessions in mobaxterm) (:mr:`301`).
 * Removed ``pyobj-core`` and ``pyobjc-framework-cocoa`` from the list
-  of dependencies (!302).
+  of dependencies (:mr:`302`).
 
 
 1.3.2 (Thursday 9th December 2021)
@@ -990,7 +987,7 @@ Fixed
 ^^^^^
 
 * Fixed an issue with line vector display when running FSLeyes in an
-  environment which doesn't support floating point textures (!299).
+  environment which doesn't support floating point textures (:mr:`299`).
 
 
 1.3.1  (Thursday 2nd December 2021)
@@ -1001,8 +998,8 @@ Fixed
 ^^^^^
 
 * Updated Jupyter notebook integration to work with newer versions of
-  ``ipykernel`` (!297).
-* Various small tweaks for Python 3.10 compatibility (!297).
+  ``ipykernel`` (:mr:`297`).
+* Various small tweaks for Python 3.10 compatibility (:mr:`297`).
 
 
 1.3.0 (Monday 18th October 2021)
@@ -1014,11 +1011,11 @@ Added
 
 
 * The 3D view now allows the display location to be set to the corresponding
-  location under the mouse on a volume overlay, by shift+clicking (!290).
+  location under the mouse on a volume overlay, by shift+clicking (:mr:`290`).
 * The display range for a ``volume`` overlay can now be adjusted interactively
   by |command_key| + |shift_key| + right clicking (|control_key| + |shift_key|
   on Linux) and dragging to select a region - the display range will be set to
-  the minimum/maximum voxel intensities within that region (!293).
+  the minimum/maximum voxel intensities within that region (:mr:`293`).
 
 
 Changed
@@ -1028,7 +1025,7 @@ Changed
 * The *Sample along line* tool now supports 2D and multi-channel (e.g. RGB)
   images (currently plotting the mean intensity across channels for the
   latter).
-* Small improvementsto the *File* |right_arrow| *Add from XNAT* dialog (!291).
+* Small improvementsto the *File* |right_arrow| *Add from XNAT* dialog (:mr:`291`).
 
 
 Fixed
@@ -1037,9 +1034,9 @@ Fixed
 
 * The **Display space** |right_arrow| *Scaled voxel coordinates* setting no
   longer applies a L/R flip for images with neurological data storage order
-  (!289).
+  (:mr:`289`).
 * The high clipping range is no longer set when loading a Melodic image
-  with the ``--autoDisplay`` / ``-ad`` option.(!293).
+  with the ``--autoDisplay`` / ``-ad`` option.(:mr:`293`).
 
 
 1.2.0 (Monday 13th September 2021)
@@ -1053,7 +1050,7 @@ Added
 * The **Display space** setting can now be set to *Scaled voxel coordinates*
   on ortho and lightbox views. This causes all images to be displayed in
   scaled voxels, with the origin for each image set to the centre of voxel
-  ``(0, 0, 0)`` (!286).
+  ``(0, 0, 0)`` (:mr:`286`).
 
 
 Changed
@@ -1061,7 +1058,7 @@ Changed
 
 
 * The *scale vectors to unit length* option for line vector overlays now
-  scales the vector colouring, in addition to lengths (!285).
+  scales the vector colouring, in addition to lengths (:mr:`285`).
 
 
 Fixed
@@ -1069,9 +1066,9 @@ Fixed
 
 
 * Fixed an issue on macOS / Big Sur whereby an image specified on the
-  command-line could be loaded twice (!285).
+  command-line could be loaded twice (:mr:`285`).
 * Fixed some rendering issues for images stored as type ``NIFTI_TYPE_RGB24``
-  (!285).
+  (:mr:`285`).
 
 
 1.1.0 (Friday 6th August 2021)
@@ -1084,7 +1081,7 @@ Added
 
 * New ``--interpolation`` option for ``mesh`` overlays, which allows
   nearest-neighbour or linear interpolation to be selected when colouring
-  meshes with vertex data. This replaces the ``--flatShading`` option (!278).
+  meshes with vertex data. This replaces the ``--flatShading`` option (:mr:`278`).
 
 
 Changed
@@ -1092,7 +1089,7 @@ Changed
 
 
 * The Location panel now displays the region label associated with the current
-  vertex for mesh overlays which are being coloured with a lookup table (!278).
+  vertex for mesh overlays which are being coloured with a lookup table (:mr:`278`).
 
 
 Fixed
@@ -1100,11 +1097,11 @@ Fixed
 
 
 * Fixed a bug which was preventing the same colour map or lookup table file to
-  be specified more than once on the command line (!278).
+  be specified more than once on the command line (:mr:`278`).
 * Fixed the *Check for updates* menu item - it now queries ``conda-forge`` for
-  the latest available FSLeyes version (!279).
+  the latest available FSLeyes version (:mr:`279`).
 * Fixed a bug which had broken volume navigation in the time series view
-  (!283).
+  (:mr:`283`).
 
 
 Deprecated
@@ -1112,7 +1109,7 @@ Deprecated
 
 
 * The ``--flatShading`` option for ``mesh`` overlays is equivalent to using
-  ``--interpolation nearest`` (!278).
+  ``--interpolation nearest`` (:mr:`278`).
 
 
 1.0.15 (Thursday 22nd July 2021)
@@ -1125,7 +1122,7 @@ Fixed
 
 * Fixed a subtle bug affecting ``fsleyes render``, where taking a screenshot
   of a large 4D image could result in an infinite loop or segmentation fault
-  (!275).
+  (:mr:`275`).
 
 
 1.0.14 (Friday 16th July 2021)
@@ -1137,9 +1134,9 @@ Fixed
 
 
 * Fixed an issue with image copying, which could cause pixdims to be changed
-  slightly (!270).
+  slightly (:mr:`270`).
 * The x-axis of the power spectrum view can can now show frequencies of ICA
-  power spectra for for MELODIC overlays (!271).
+  power spectra for for MELODIC overlays (:mr:`271`).
 
 
 1.0.13 (Tuesday 6th July 2021)
@@ -1150,7 +1147,7 @@ Fixed
 ^^^^^
 
 
-* Fixed a circular import issue, affecting programmatic use of FSLeyes (!268).
+* Fixed a circular import issue, affecting programmatic use of FSLeyes (:mr:`268`).
 
 
 1.0.12 (Monday 28th June 2021)
@@ -1161,7 +1158,7 @@ Fixed
 ^^^^^
 
 
-* Fixed an issue with Jupyter Notebook integration on macOS (!266).
+* Fixed an issue with Jupyter Notebook integration on macOS (:mr:`266`).
 
 
 1.0.11 (Monday 14th June 2021)
@@ -1173,7 +1170,7 @@ Fixed
 
 
 * Fixed a compatibility issue with NoMachine/x2go-like remote environments
-  (!264).
+  (:mr:`264`).
 
 
 1.0.10 (Wednesday 2nd June 2021)
@@ -1184,7 +1181,7 @@ Fixed
 ^^^^^
 
 
-* Fixed an issue with removing data series from plot views (!262).
+* Fixed an issue with removing data series from plot views (:mr:`262`).
 
 
 1.0.9 (Wednesday 2nd June 2021)
@@ -1195,7 +1192,7 @@ Fixed
 ^^^^^
 
 
-* Fixed an issue with opening the overlay display panel in 3D views (!260).
+* Fixed an issue with opening the overlay display panel in 3D views (:mr:`260`).
 
 
 1.0.8 (Wednesday 26th May 2021)
@@ -1206,14 +1203,14 @@ Changed
 ^^^^^^^
 
 
-* Gamma correction is no longer disabled when log scaling is active (!256).
+* Gamma correction is no longer disabled when log scaling is active (:mr:`256`).
 
 
 Fixed
 ^^^^^
 
 
-* Fixed a problem with API documentation generation (!256, !258).
+* Fixed a problem with API documentation generation (:mr:`256`, :mr:`258`).
 
 
 1.0.7 (Monday 24th May 2021)
@@ -1226,7 +1223,7 @@ Added
 
 * New *logarithmic scaling* option (``--logScale`` on the command-line) for
   volume overlays, which causes voxel intensities to be mapped to the colour
-  map logarithmically, rather than linearly (!254).
+  map logarithmically, rather than linearly (:mr:`254`).
 
 
 1.0.6 (Monday 24th May 2021)
@@ -1239,8 +1236,8 @@ Changed
 
 * Overlay display options which refer to other overlays (e.g. *Clip by*) now
   use the display name of the other overlay, rather than their file base name
-  (!251).
-* Restored compatibiilty with wxPython 4.0.* (!250).
+  (:mr:`251`).
+* Restored compatibiilty with wxPython 4.0.* (:mr:`250`).
 
 
 Fixed
@@ -1248,7 +1245,7 @@ Fixed
 
 
 * Fixed a bug related to positioning of line vectors, tensors and FODs for
-  images with non-isotropic voxels (!250).
+  images with non-isotropic voxels (:mr:`250`).
 
 
 1.0.5 (Thursday 6th May 2021)
@@ -1258,8 +1255,8 @@ Fixed
 Fixed
 ^^^^^
 
-* Fixed some issues with shutting down cleanly (!248).
-* Fixed a bug when saving a layout with plugin-provided view panels (!248).
+* Fixed some issues with shutting down cleanly (:mr:`248`).
+* Fixed a bug when saving a layout with plugin-provided view panels (:mr:`248`).
 
 
 1.0.4 (Tuesday 4th May 2021)
@@ -1270,8 +1267,8 @@ Changed
 ^^^^^^^
 
 
-* Improved ortho edit mode performance on large images (!246).
-* Suppressed some warning messages (!246).
+* Improved ortho edit mode performance on large images (:mr:`246`).
+* Suppressed some warning messages (:mr:`246`).
 
 
 Fixed
@@ -1279,8 +1276,8 @@ Fixed
 
 
 * Fixed an issue with the :attr:`.PlotCanvas.limits` becoming out of sync with
-  the ``matplotlib.Axes`` limits (!246).
-* The ``file-tree`` library is now optional (!246).
+  the ``matplotlib.Axes`` limits (:mr:`246`).
+* The ``file-tree`` library is now optional (:mr:`246`).
 
 
 1.0.3 (Friday 23rd April 2021)
@@ -1293,7 +1290,7 @@ Fixed
 
 * Fixed an issue with the management of built-in asset files (e.g. icons,
   colour maps, etc). Asset files are now located inside the ``fsleyes``
-  package directory (!244).
+  package directory (:mr:`244`).
 
 
 1.0.2 (Thursday 22nd April 2021)
@@ -1304,11 +1301,11 @@ Fixed
 ^^^^^
 
 
-* Fixed some issues with FSLeyes plugin management (!242).
+* Fixed some issues with FSLeyes plugin management (:mr:`242`).
 * Fixed some issues with GL initialisations on GTK2 versions of ``wxpython``
-  (!242).
+  (:mr:`242`).
 * New ``--annotations`` command-line option, allowing annotations to be
-  loaded from a file into an ortho view (!242).
+  loaded from a file into an ortho view (:mr:`242`).
 
 
 1.0.1 (Tuesday 20th April 2021)
@@ -1319,7 +1316,7 @@ Fixed
 ^^^^^
 
 
-* Fixed compatibility issues with recent versions of matplotlib (!240).
+* Fixed compatibility issues with recent versions of matplotlib (:mr:`240`).
 
 
 1.0.0 (Monday 19th April 2021)
@@ -1331,23 +1328,23 @@ Added
 
 
 * The lighting effect in the 3D view is now applied to ``volume`` overlays
-  (OpenGL 2.1 or newer only) (!222).
+  (OpenGL 2.1 or newer only) (:mr:`222`).
 * New ``--lightDistance`` option (for 3D view), allowing the distance of the
-  light source from the centre of the display bounding box to be set (!222).
+  light source from the centre of the display bounding box to be set (:mr:`222`).
 * New ``--noBlendByIntensity`` option, for ``volume`` overlays in the 3D view,
-  allowing the modulation of samples by voxel intensity to be disabled (!222).
+  allowing the modulation of samples by voxel intensity to be disabled (:mr:`222`).
 * New ``-ixh``, ``-ixv``, ``-iyh``, ``-iyv``, ``-izh``, and ``-izv`` options,
-  allowing ortho canvases to be inverted vertically or horizontally (!225).
+  allowing ortho canvases to be inverted vertically or horizontally (:mr:`225`).
 * New ``--modulateMode`` option for ``rgbvector``, ``linevector``, ``tensor``
   and ``sh`` overlays, allowing modulation to be applied to either brightness
-  or transparency (!231).
+  or transparency (:mr:`231`).
 * New option to copy/paste 2D selections between slices when editing a NIFTI
-  image (!232).
+  image (:mr:`232`).
 * New *annotation* panel, allowing simple shapes and text to be overlaid on
   the canvases of an ortho view. Annotations can be saved to/loaded from file,
-  via new options in the *Tools* menu (!233).
+  via new options in the *Tools* menu (:mr:`233`).
 * New *Sample along line* tool, allowing data from an image to be sampled
-  along a line and plotted (!235).
+  along a line and plotted (:mr:`235`).
 
 
 Changed
@@ -1355,44 +1352,44 @@ Changed
 
 
 * Text labels drawn on GL canvases are now created using ``matplotilb`` rather
-  than [Free]GLUT (!221).
+  than [Free]GLUT (:mr:`221`).
 * Removed dependence on [Free]GLUT - this means that ``fsleyes render`` can
   now be used on headless systems without using ``xvfb-run``, as long as
-  `OSMesa <https://docs.mesa3d.org/osmesa.html>`_ is installed (!221).
+  `OSMesa <https://docs.mesa3d.org/osmesa.html>`_ is installed (:mr:`221`).
 * The ``--lightPos`` command-line option (for the 3D view) has been changed to
   expect three rotation values (in degrees), which specify the position of the
   light source with respect to the centre of the display bounding box. This
   can be combined with the new ``--lightDistance`` option to specify the
-  position of the light source (!222).
+  position of the light source (:mr:`222`).
 * FSLeyes no longer ignores the ``LIBGL_ALWAYS_INDIRECT`` environment
-  variable (!222).
+  variable (:mr:`222`).
 * FSLeyes attempts to determine a suitable value for ``PYOPENGL_PLATFORM``
-  if it is not already set (!222).
+  if it is not already set (:mr:`222`).
 * FSLeyes should now work with both Wayland/EGL and X11/GLX builds of wxPython
-  on Linux (!222).
+  on Linux (:mr:`222`).
 * The normalisation method used in the power spectrum panel has been adjusted
   so that, instead of the data being normalised to unit variance before the
   fourier transform, the fourier-transformed data itself is normalised to the
-  range [-1, 1] (!224).
+  range [-1, 1] (:mr:`224`).
 * The *Show command line for scene* option will display a warning if any
-  overlays are not saved (!226).
+  overlays are not saved (:mr:`226`).
 * The :class:`.FileTreePanel` has been updated to work with the
-  new `file-tree <https://pypi.org/project/file-tree/>`_ library (!230).
+  new `file-tree <https://pypi.org/project/file-tree/>`_ library (:mr:`230`).
 * Change to the interface for copying/pasting data between images - there is
-  now a single button for copying, pasting, and clearing the clipboard (!232).
+  now a single button for copying, pasting, and clearing the clipboard (:mr:`232`).
 * :class:`.annotations.TextAnnotation` objects can now be positioned in the
   display coordinate system, in addition to being positioned at pixel locations
-  on a canvas (!232).
+  on a canvas (:mr:`232`).
 * Changes to the FSLeyes plugin system to ease the development of FSLeyes
   controls that use custom interaction profiles, and to improve switching
-  between different interaction proflies (!234).
+  between different interaction proflies (:mr:`234`).
 * The FSLeyes plugin system now supports tools which are bound to a specific
-  view panel (!234).
+  view panel (:mr:`234`).
 * Many built-in FSLeyes control panels and tools have been migrated into the
   FSLeyes plugin system so that they are dynamically loaded as plugins, rather
-  than being hard-coded (!234).
+  than being hard-coded (:mr:`234`).
 * It is now possible to save and re-load view/control panel layouts with
-  plugin-provided views and control panels (!234).
+  plugin-provided views and control panels (:mr:`234`).
 
 
 Fixed
@@ -1400,21 +1397,21 @@ Fixed
 
 
 * Various fixes and improvements to the lighting effect on ``mesh`` overlays
-  in the 3D view (!222).
+  in the 3D view (:mr:`222`).
 * When opening a ``melodic_IC.nii.gz`` file with the
   ``--autoDisplay'`/``-ad``, option, the ``melodic_IC`` file is now selected
-  by default, instead of the ``mean`` underlay (!219).
+  by default, instead of the ``mean`` underlay (:mr:`219`).
 * Fixed a bug in image texture preparation for complex data types, when
-  running in a limited GL environment (e.g. VNC) (!220).
-* Compatibility fixes for newer versions of Jupyter `notebook` (!227).
+  running in a limited GL environment (e.g. VNC) (:mr:`220`).
+* Compatibility fixes for newer versions of Jupyter `notebook` (:mr:`227`).
 * Fixed a problem with macOS desktop integration - it should now be possible
   to open a file with FSLeyes as the default application, and to drag a file
-  onto the FSLeyes.app icon (!228).
-* Improved stability when running under macOS+XQuartz (!229).
+  onto the FSLeyes.app icon (:mr:`228`).
+* Improved stability when running under macOS+XQuartz (:mr:`229`).
 * Fixed an issue with screenshots generated by ``fsleyes render`` containing
-  transparent pixels (!233).
+  transparent pixels (:mr:`233`).
 * Fixed a collision between the ``-mc`` and ``-a`` command-line options for
-  mesh overlays (!233).
+  mesh overlays (:mr:`233`).
 
 
 0.34.2 (Tuesday 14th July 2020)
@@ -1425,7 +1422,7 @@ Fixed
 ^^^^^
 
 
-* Added support for high-DPI scaling under macOS with wxPython >= 4.1.0 (!217).
+* Added support for high-DPI scaling under macOS with wxPython >= 4.1.0 (:mr:`217`).
 
 
 0.34.1 (Monday 13th July 2020)
@@ -1437,9 +1434,9 @@ Fixed
 
 
 * Fixed an issue with Jupyter Notebook integration on conda+macOS installations
-  (!215).
+  (:mr:`215`).
 * Fixed an issue with the high-DPI option not appearing in the view settings panel
-  under macOS (!215).
+  under macOS (:mr:`215`).
 
 
 0.34.0 (Wednesday 8th July 2020)
@@ -1451,19 +1448,19 @@ Added
 
 
 * New option under the *Tools* menu which allows data from an image overlay to
-  be projected onto a surface overlay (!213).
-* New *Flat shading* display option when viewing surfaces in 3D (!213).
+  be projected onto a surface overlay (:mr:`213`).
+* New *Flat shading* display option when viewing surfaces in 3D (:mr:`213`).
 
 
 Changed
 ^^^^^^^
 
 
-* Tweaked GL initialisation to avoid errors when running via XQuartz (!211).
-* Minor adjustment to Jupyter Notebook integration (!213).
+* Tweaked GL initialisation to avoid errors when running via XQuartz (:mr:`211`).
+* Minor adjustment to Jupyter Notebook integration (:mr:`213`).
 * NaN values in mesh overlay vertex data are now handled in the same manner as
   clipped values - previously they would be displayed in the low colour from the
-  selected colour map (!213).
+  selected colour map (:mr:`213`).
 
 
 0.33.2 (Tuesday 23rd June 2020)
@@ -1474,31 +1471,31 @@ Added
 ^^^^^
 
 
-* Added some more line styles to the plotting panels (!206).
+* Added some more line styles to the plotting panels (:mr:`206`).
 * Added a new "accessible" lookup table, courtesy of Paul Tol
-  (https://personal.sron.nl/~pault/) (!206).
+  (https://personal.sron.nl/~pault/) (:mr:`206`).
 
 
 Changed
 ^^^^^^^
 
 
-* Increased the default plotting line width (!206).
+* Increased the default plotting line width (:mr:`206`).
 * The default plot colours are now from a pre-generated accessible palette,
-  rather than being randomly generated (!206).
+  rather than being randomly generated (:mr:`206`).
 * The default plot line style is also rotated, in addition the plot colour
-  (!206).
+  (:mr:`206`).
 * Adjusted the histogram panel so that, when plotting a probability histogram,
-  the values are normalised by bin-width (!203).
+  the values are normalised by bin-width (:mr:`203`).
 * A minor adjustment to the default font, to improve readability on some
-  platforms (!202).
+  platforms (:mr:`202`).
 
 
 Fixed
 ^^^^^
 
 
-* Fixed an issue with FSLeyes not shutting down cleanly (!204).
+* Fixed an issue with FSLeyes not shutting down cleanly (:mr:`204`).
 
 
 0.33.1 (Monday 8th June 2020)
@@ -1521,7 +1518,7 @@ Added
 
 
 * New *modulate alpha* option for volume and mesh overlays, which causes
-  opacity to be modulated by voxel/vertex intensity (!193).
+  opacity to be modulated by voxel/vertex intensity (:mr:`193`).
 
 
 Changed
@@ -1529,11 +1526,11 @@ Changed
 
 
 * The minimum supported Python version is now 3.7, due to reliance upon
-  a recent version of `fslpy` (!190).
+  a recent version of `fslpy` (:mr:`190`).
 * The :func:`.embed` function accepts a ``mkFrame`` argument, allowing
-  it to be called without creating a :class:`.FSLeyesFrame` (!195).
+  it to be called without creating a :class:`.FSLeyesFrame` (:mr:`195`).
 * A warning is now displayed in the location panel when images with different
-  orientations, resolutions and/or fields-of-view are being displayed (!198).
+  orientations, resolutions and/or fields-of-view are being displayed (:mr:`198`).
 
 
 Fixed
@@ -1541,15 +1538,15 @@ Fixed
 
 
 * Fixed a bug in the *Export data series* action, which was causing
-  a crash on macOS (!190).
+  a crash on macOS (:mr:`190`).
 * Importing modules from the current directory in the Notebook/shell
-  environments is now possible within standalone versions of FSLeyes (!189).
-* Fixed a small bug in the :func:`.embed` function (!189).
-* Fixed a bug in the *Add from XNAT* action (!192).
+  environments is now possible within standalone versions of FSLeyes (:mr:`189`).
+* Fixed a small bug in the :func:`.embed` function (:mr:`189`).
+* Fixed a bug in the *Add from XNAT* action (:mr:`192`).
 * Adjusted the Jupyter Notebook integration so it does not rely on the
-  existence of a command called ``jupyter-notebook`` (!191).
-* Fixed a couple of bugs in the RGB vector overlay code (!194).
-* Fixed a bug in ortho edit mode (!196).
+  existence of a command called ``jupyter-notebook`` (:mr:`191`).
+* Fixed a couple of bugs in the RGB vector overlay code (:mr:`194`).
+* Fixed a bug in ortho edit mode (:mr:`196`).
 
 
 0.32.3 (Monday 2nd March 2020)
@@ -1860,10 +1857,10 @@ Added
 
 
 * Added metadata to allow better integration with Linux desktop environments,
-  by Ankur Sinha (@sanjayankur31, [GitHub
-  PR](https://github.com/pauldmccarthy/fsleyes/pull/13)).
+  by Ankur Sinha (@sanjayankur31, `GitHub
+  PR <https://github.com/pauldmccarthy/fsleyes/pull/13>`__.
 * Added ability to drag-and-drop files onto the FSLeyes window to open them, by
-  Taylor Hanayik (!99, !100).
+  Taylor Hanayik (:mr:`99`, :mr:`100`).
 * The ``--vertexSet`` and ``--vertexData`` command-line options now cause the
   last vertex set/data to be selected, and also support GIFTI surface files
   which contain multiple vertex sets and vertex data.
