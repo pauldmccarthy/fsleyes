@@ -10,6 +10,17 @@ import fsleyes.actions               as actions
 PluginLayout = 'For a real plugin, this must be a valid FSLeyes layout string'
 
 
+def pluginLoader(filename : str, check : bool = False):
+
+    # check to see if we can load
+    # this file, return True or False
+    if check:
+        return False
+    # Load the file, return a FSLeyes overlay
+    else:
+        return None
+
+
 class PluginView(viewpanel.ViewPanel):
 
     def __init__(self, *args, **kwargs):

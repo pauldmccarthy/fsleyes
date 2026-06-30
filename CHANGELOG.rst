@@ -26,6 +26,9 @@ Added
 * FSLeyes can now load `TRX tractogram files <https://tee-ar-ex.github.io/>`_,
   courtesy of Ariel Rokem (!504, `GitHub PR
   <https://github.com/pauldmccarthy/fsleyes/pull/150>`__).
+* FSLeyes plugins can now register "loader" functions which load and
+  return an overlay. These functions can be added as ``fsleyes_loader``
+  entry points (!505).
 
 
 1.19.0 (Monday 8th June 2026)

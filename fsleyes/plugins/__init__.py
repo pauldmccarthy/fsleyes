@@ -8,9 +8,9 @@
 
 
 FSLeyes uses a simple plugin architecture for loading custom views, controls,
-tools, and layouts. Plugins can be installed from Python libraries (e.g. as
-hosted on `PyPi <https://pypi.org/>`_), or installed directly from a ``.py``
-file.
+tools, layouts, and loader functions. Plugins can be installed from Python
+libraries (e.g. as hosted on `PyPi <https://pypi.org/>`_), or installed
+directly from a ``.py`` file.
 
 
 In both cases, FSLeyes uses `entry points
@@ -22,7 +22,8 @@ Things plugins can provide
 --------------------------
 
 
-FSLeyes plugins can provide custom *views*, *controls*, *tools*, and *layouts*:
+FSLeyes plugins can provide custom *views*, *controls*, *tools*, *layouts*,
+and *loaders*:
 
  - A *view* is a top level panel, such as an :class:`.OrthoPanel`,
    :class:`.Scene3DPanel`, or :class:`.TimeSeriesPanel`. Views provided
@@ -40,6 +41,10 @@ FSLeyes plugins can provide custom *views*, *controls*, *tools*, and *layouts*:
  - A *layout* is a string which specifies the layout of the FSLeyes frame,
    comprising one or more view panels, and a set of control panels for each
    view. Refer to the :mod:`fsleyes.layouts` module for more details.
+
+ - A *loader* is a function which can be used to load an overlay file. When
+   the user loads a file, FSLeyes will attempt to use any registered loader
+   plugins before falling back to its default loading behaviour.
 
 
 FSLeyes plugin sources
@@ -101,14 +106,14 @@ Writing a FSLeyes plugin
           built-in plugins can be found in ``fsleyes/plugins/``.
 
 
-.. warning:: FSLeyes assumes that **all** views, controls, tools, and layouts
-             have unique names.  So expect problems if, for example, you
-             define your own FSLeyes control with a name that is already used
-             by a built-in control, e.g. ``OverlayListPanel``.
+.. warning:: FSLeyes assumes that **all** views, controls, tools, layouts, and
+             loaders have unique names.  So expect problems if, for example,
+             you define your own FSLeyes control with a name that is already
+             used by a built-in control, e.g. ``OverlayListPanel``.
 
 
 A FSLeyes plugin is a Python library, or a ``.py`` file, which contains
-definitions for custom views, controls, tools, and layouts.
+definitions for custom views, controls, tools, layouts, and loaders.
 
  - Views must be sub-classes of the :class:`.ViewPanel` class.
 
@@ -123,10 +128,20 @@ definitions for custom views, controls, tools, and layouts.
    is a tuple, the first value in the tuple is used as the name, and the second
    value is assumed to be the layout string.
 
+ - Loaders must be functions with a signature of the form::
+
+       def load(filename : str, check : bool) -> Any:
+           ...
+
+   The typing annotations on the arguments *must* be present.
+   If the ``check`` argument is ``False``, the function should load a FSLeyes
+   overlay from ``filename`` and return it. If ``check is True``, the function
+   should not load the overlay, but should return ``True`` if it is *capable*
+   of loading the overlay, and ``False`` otherwise.
 
 To write a ``.py`` file which can be loaded as a FSLeyes plugin, simply define
-your views, controls, tools, and layouts in the file. The file path can then be
-passed to the :func:`loadPlugin` or :func:`installPlugin` function.
+your views, controls, tools, layouts, and loaders in the file. The file path
+can then be passed to the :func:`loadPlugin` or :func:`installPlugin` function.
 
 
 To release a FSLeyes plugin as a library, you need to organise your code
@@ -134,8 +149,8 @@ as a Python library. Minimally, this requires the following:
 
  - Arrange your ``.py`` file(s) into a Python package.
 
- - Expose your custom views, controls, tools, and layouts as `entry points
-   <https://packaging.python.org/specifications/entry-points/>`_.
+ - Expose your custom views, controls, tools, layouts, and loaders as `entry
+   points <https://packaging.python.org/specifications/entry-points/>`_.
 
 
 A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this::
@@ -145,25 +160,28 @@ A minimal ``pyproject.toml`` file for a FSLeyes plugin might look like this::
     build-backend = "setuptools.build_meta"
 
     [project]
-    name = "my-cool-fsleyes-plugin"
+    name = "my-fsleyes-plugin"
 
-    # Views, controls, tools, and layouts
-    # must be exposed as entry points
-    # within groups called "fsleyes_views",
-    # "fsleyes_controls", "fsleyes_tools"
-    # and "fsleyes_layouts" respectively.
+    # FSLeyes plugin items must be exposed
+    # as entry points within groups called
+    # "fsleyes_views", "fsleyes_controls",
+    # "fsleyes_tools", "fsleyes_layouts",
+    # and "fsleyes_loaders".
 
     [project.entry-points.fsleyes_views]
-    "My cool view" = "myplugin:MyView"
+    "My view" = "myplugin:MyView"
 
     [project.entry-points.fsleyes_controls]
-    "My cool control" = "myplugin:MyControl"
+    "My control" = "myplugin:MyControl"
 
     [project.entry-points.fsleyes_tools]
-    "My cool tool" = "myplugin.MyTool"
+    "My tool" = "myplugin.MyTool"
 
     [project.entry-points.fsleyes_layouts]
-    "My cool layout" = "myplugin.MyLayout"
+    "My layout" = "myplugin.MyLayout"
+
+    [project.entry-points.fsleyes_loaders]
+    "My loader" = "myplugin.loadMyOverlay"
 
 
 See the `Python Packaging guide
@@ -178,7 +196,7 @@ As plugins provided by installed libraries are automatically taken care of by
 ``importlib``, most of the logic in this module is for managing single-file
 FSLeyes plugins. When a plugin file is loaded, a custom
 ``importlib.metadata.Distribution`` instance is created and registered using a
-custom ``importlib.abvc.MetaPathFinder`` instance. The plugin file is scanned
+custom ``importlib.abc.MetaPathFinder`` instance. The plugin file is scanned
 to identify the plugins that it provides, and these are exposed as entry
 points of the distribution.
 
@@ -208,9 +226,10 @@ The following functions can be used to access plugins:
    listControls
    listTools
    listLayouts
+   listLoaders
    lookupControl
    lookupTool
-   layoutModule
+   pluginModule
    pluginTitle
 """
 
@@ -223,6 +242,7 @@ import                        glob
 import                        random
 import                        string
 import                        fnmatch
+import                        inspect
 import                        pkgutil
 import                        logging
 import                        importlib
@@ -230,8 +250,7 @@ import importlib.util      as imputil
 import importlib.metadata  as impmeta
 import                        collections
 
-
-from typing import Dict, Union, Type, Optional, Sequence
+from typing import Any, Dict, Union, Type, Optional, Sequence, Callable
 from types  import ModuleType
 
 import fsl.utils.settings            as fslsettings
@@ -249,19 +268,40 @@ View    = Type[viewpanel.ViewPanel]
 Control = Union[Type[ctrlpanel.ControlMixin], Type[ctrlpanel.ControlToolBar]]
 Tool    = Type[actions.Action]
 Layout  = Union[str, tuple]
-Plugin  = Union[View, Control, Tool, Layout]
+Loader  = Callable[[str, Optional[bool]], Any]
+Plugin  = Union[View, Control, Tool, Layout, Loader]
 
 
 SHOW_THIRD_PARTY_PLUGINS = set()
 """Global toggle which controls whether plugins provided by installed
 third-party libraries are exposed by the :func:`listViews`,
-:func:`listControls`, and :func:`listTools` functions.  Layouts provided
-by plugins are always visible.
+:func:`listControls`, :func:`listTools`, and :func:`listLoaders` functions.
+Layouts and loaders provided by plugins are always visible.
 
 This field may either be a set containing the names of specific third-party
 plugins to show, or a boolean which will toggle all third party plugins on or
 off.
 """
+
+
+def _isLoader(func : Callable) -> bool:
+    """Checks the signature of ``func`` and returns ``True`` if it
+    looks like a loader function, ``False`` otherwise.
+    """
+
+    if not callable(func):
+        return False
+
+    sig    = inspect.signature(func)
+    params = dict(sig.parameters)
+
+    if len(params) != 2:                          return False
+    if 'filename' not in params:                  return False
+    if 'check'    not in params:                  return False
+    if params['filename'].annotation is not str:  return False
+    if params['check']   .annotation is not bool: return False
+
+    return True
 
 
 def showThirdPartyPlugin(modname : str):
@@ -350,6 +390,9 @@ class FSLeyesPlugin(impmeta.Distribution):
                     else:
                         label = name[15:]
 
+                elif _isLoader(plugin):
+                    label = name
+
                 # View/Control/Tool plugins can implement
                 # a title() staticmethod to specify their
                 # title/label
@@ -370,8 +413,8 @@ class FSLeyesPlugin(impmeta.Distribution):
 
     @staticmethod
     def find_entry_points(mod : ModuleType) -> Dict[str, Dict[str, Plugin]]:
-        """Finds the FSLeyes entry points (views,
-        controls, tools, or layouts) that are defined within the given module.
+        """Finds the FSLeyes entry points (views, controls, tools, layouts, or
+        loaders) that are defined within the given module.
 
         :arg mod: The module to search
         :returns: A dictionary
@@ -436,8 +479,7 @@ class FSLeyesPlugin(impmeta.Distribution):
 
 
 class FSLeyesPluginFinder(importlib.abc.MetaPathFinder):
-    """Custom ``MetaPathFinder`` for single-file FSLeyes plugins.
-    """
+    """Custom ``MetaPathFinder`` for single-file FSLeyes plugins. """
 
     @staticmethod
     def instance() -> 'FSLeyesPluginFinder':
@@ -506,7 +548,7 @@ def initialise():
 
 def _pluginType(item) -> Union[str, bool]:
     """Return the plugin type of the given object - one of ``'view'``,
-    ``'control'``, ``'tool'`` or ``'layout'``.
+    ``'control'``, ``'tool'``, ``'layout'``, or ``'loader'``.
     """
 
     if isinstance(item, type):
@@ -514,6 +556,7 @@ def _pluginType(item) -> Union[str, bool]:
         elif issubclass(item, viewpanel.ViewPanel):    return 'view'
         elif issubclass(item, actions.Action):         return 'tool'
     elif isinstance(item, (str, tuple)):               return 'layout'
+    elif _isLoader(item):                              return 'loader'
 
     return False
 
@@ -527,6 +570,7 @@ def _pluginGroup(plg : Plugin) -> Optional[str]:
     elif ptype == 'control': return 'controls'
     elif ptype == 'tool':    return 'tools'
     elif ptype == 'layout':  return 'layouts'
+    elif ptype == 'loader':  return 'loaders'
     return None
 
 
@@ -564,7 +608,8 @@ def _listEntryPoints(
     https://docs.python.org/3/library/importlib.metadata.html#entry-points
 
     :arg group:   One of ``'fsleyes_views'``, ``'fsleyes_controls``,
-                  ``'fsleyes_tools'``, or ``'fsleyes_layouts'``.
+                  ``'fsleyes_tools'``, ``'fsleyes_layouts'``, or
+                  ``'fsleyes_loaders'``.
 
     :arg showAll: If ``True``, all plugins, including from installed
                   third-party packages will be included. Otherwise (the
@@ -716,6 +761,22 @@ def listLayouts() -> Dict[str, Layout]:
     return layouts
 
 
+def listLoaders() -> Dict[str, Loader]:
+    """Returns a dictionary of ``{name : loader}`` mappings containing
+    the custom loader functions provided by all installed FSLeyes plugins.
+    """
+
+    loaders = _listEntryPoints('fsleyes_loaders', showAll=True)
+
+    for name, func in list(loaders.items()):
+        if not _isLoader(func):
+            log.debug('Ignoring fsleyes_loaders entry point '
+                      '%s - not a loader function', name)
+            loaders.pop(name)
+            continue
+    return loaders
+
+
 def _lookupPlugin(plgname : str, group : str) -> Optional[Plugin]:
     """Looks up the FSLeyes plugin with the given name. """
     entries = _listEntryPoints(f'fsleyes_{group}', True)
@@ -741,15 +802,16 @@ def lookupTool(clsName : str) -> Tool:
     return _lookupPlugin(clsName, 'tools')
 
 
-def layoutModule(name : str) -> str:
-    """Return the module that a given layout is defined iwthin. """
-    layouts = _listEntryPoints('fsleyes_layouts', showAll=True, load=False)
+def pluginModule(name : str, group : str) -> str:
+    """Return the module that a given FSLeyes plugin item is defined within.
+    """
+    items = _listEntryPoints(group, showAll=True, load=False)
 
-    for ep in layouts.values():
+    for ep in items.values():
         if ep.name == name:
             return ep.value.split(':')[0].split('.')[0]
 
-    raise ValueError(f'Could not find layout with name {name}')
+    raise ValueError(f'Could not find plugin item {group}:{name}')
 
 
 def pluginTitle(plugin : Plugin) -> Optional[str]:

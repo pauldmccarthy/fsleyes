@@ -39,7 +39,8 @@ import fsleyes_widgets.utils.status as status
 import fsleyes.autodisplay          as autodisplay
 import fsleyes.strings              as strings
 import fsleyes.data                 as dutils
-from . import                          base
+from   fsleyes                  import plugins
+from   fsleyes.actions          import base
 
 
 log = logging.getLogger(__name__)
@@ -214,17 +215,29 @@ def loadOverlays(paths,
 
         loadFunc(path)
 
-        dtype, _, path = dutils.guessType(path)
-
-        if dtype is None:
-            errorFunc(path, strings.messages['loadOverlays.unknownType'])
-            return
-
-        log.debug('Loading overlay {} (guessed data type: {})'.format(
-            path, dtype.__name__))
-
         try:
-            if   issubclass(dtype, fslimage.Image):
+
+            dtype, _, path = dutils.guessType(path)
+
+            if dtype is None:
+                errorFunc(path, strings.messages['loadOverlays.unknownType'])
+                return
+
+            log.debug('Loading overlay %s (guessed data type: %s)',
+                      path, dtype.__name__)
+
+            # See if any FSLeyes plugins
+            # want to load this file
+            pluginLoader = None
+            for name, loader in plugins.listLoaders().items():
+                if loader(path, check=True):
+                    log.debug('Loading overlay with loader plugin: %s', name)
+                    pluginLoader = name, loader
+                    break
+
+            if pluginLoader is not None:
+                loaded = [pluginLoader[1](path, check=False)]
+            elif issubclass(dtype, fslimage.Image):
                 loaded = loadImage(dtype, path, inmem=inmem)
             elif issubclass(dtype, fslmesh.Mesh):
                 loaded = [dtype(path, fixWinding=True)]
@@ -235,6 +248,13 @@ def loadOverlays(paths,
 
             overlays.extend(loaded)
             pathIdxs.extend([idx] * len(loaded))
+
+            # If a loader function from a third-party
+            # package was used, load any other entry
+            # points provided by that package.
+            if pluginLoader is not None:
+                mod = plugins.pluginModule(pluginLoader[0])
+                plugins.shouldShowThirdPartyPlugin(mod)
 
         except Exception as e:
             errorFunc(path, e)
@@ -298,7 +318,6 @@ def loadImage(dtype, path, inmem=False):
     :returns:   A sequence of :class:`.Image` instances that were loaded.
     """
 
-    import fsl.data.image            as fslimage
     import fsleyes.data.imagewrapper as imagewrapper
 
     # We're going to load the file twice - first to

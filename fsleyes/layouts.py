@@ -296,7 +296,7 @@ def loadLayout(frame, name, **kwargs):
         # the new views from the layout are
         # opened.
         layout = pluginLayouts[name]
-        module = plugins.layoutModule(name)
+        module = plugins.pluginModule(name, 'fsleyes_layouts')
         plugins.showThirdPartyPlugin(module)
         frame.refreshViewMenu()
 
