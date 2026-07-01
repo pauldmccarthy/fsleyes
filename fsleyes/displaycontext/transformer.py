@@ -24,49 +24,60 @@ class Transformer:
     for one :class:`.Nifti` instance between FSLeyes coordinate systems.
     """
 
-    def __init__(self, overlay, displayCtx, displaySpace, postmat=None):
+    def __init__(self, overlay, displayCtx, opts=None, postmat=None):
         """Create a ``Transformer`` instance.
 
-        :arg overlay:      A :class:`.Nifti` instance.
+        ``Transformer`` instances are intended to be re-created as needed,
+        i.e.  whenever changes are made to any settings which affect the how
+        the image is transformed into the display coordinate system.
+
+        :arg overlay:      :class:`.Nifti` instance to calculate
+                           transformations for.
 
         :arg displayCtx:   The :class:`.DisplayContext` responsible for
-                           displaying ``overlay``
+                           displaying ``img``.
 
-
-        :arg displaySpace: Coordinate system into which the :class:`.Nifti`
-                           instance is transformed for display. This is
-                           *not* the :attr:`.DisplayContext.displaySpace`
-                           setting. See the :attr:`.NiftiOpts.transform`
-                           setting for more details.
+        :arg opts:         The :class:`.NiftiOpts` instance containing the
+                           display settings for ``overlay``. This may be
+                           ``None`` (e.g. if ``img`` is not actually a loaded
+                           overlay), in which case default settings are used.
 
         :arg postmat:      Optional world->world affine concatenated onto the
                            overlay voxel->world affine. This is used by the
                            :class:`.NiftiOpts` class for its
                            :attr:`.NiftiOpts.displayXform` setting.
         """
-        self.displaySpace = displaySpace
         self.__overlay    = overlay
         self.__displayCtx = displayCtx
+        self.__opts       = opts
         self.__xforms     = createTransforms(overlay, displayCtx, postmat)
 
 
     @property
     def displaySpace(self):
-        """Return the coordinate system that the :class:`.Nifti` instance
-        associated with this Transformer is being displayed in.
+        """Return the coordinate system that the :class:`.Nifti` overlay
+        associated with this Transformer is being displayed in. For normal
+        overlays that are being displayed by FSLeyes, this returns the
+        current value of the :attr:`.NiftiOpts.transform` property.
         """
-        return self.__displaySpace
 
+        img    = self.__overlay
+        opts   = self.__opts
+        dspace = self.__displayCtx.displaySpace
 
-    @displaySpace.setter
-    def displaySpace(self, displaySpace):
-        """Change the coordinate system that the :class:`.Nifti` instance
-        associated with this Transformer is being displayed in.
-        """
-        if displaySpace not in ('affine', 'pixdim', 'pixdim-flip',
-                                'id', 'reference', 'torig'):
-            raise ValueError(f'Invalid displaySpace value: {displaySpace}')
-        self.__displaySpace = displaySpace
+        # If the image we're managing is in the overlay
+        # list, we use its NiftiOpts.transform setting
+        if opts is not None:
+            return opts.transform
+
+        # Otherwise we use default rules
+        # (see DisplayContetx.displaySpace)
+        else:
+            if   dspace == 'world':       return 'affine'
+            elif dspace == 'scaledVoxel': return 'pixdim'
+            elif dspace == 'fslview':     return 'pixdim-flip'
+            elif dspace is img:           return 'pixdim-flip'
+            else:                         return 'reference'
 
 
     @property

@@ -59,6 +59,10 @@ transformed into the display coordinate system. It allows any of the above
 spaces to be specified (as ``id``, ``pixdim``, ``pixdim-flip``, ``affine```,
 or ``reference`` respectively).
 
+All of the logic for managing these coordinate systems is defined in the
+:class:`.Transformer` class - :class:`.NiftiOpts` instances will create and
+use a new :class:`.Transformer` instance as needed.
+
 
 Pixdim flip
 ^^^^^^^^^^^
@@ -371,8 +375,6 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         :attr:`.DisplayOpts.bounds` property accordingly.
         """
 
-        self.__xforms.displaySpace = self.transform
-
         lo, hi = affine.axisBounds(
             self.overlay.shape[:3],
             self.getTransform('voxel', 'display'))
@@ -440,7 +442,7 @@ class NiftiOpts(fsldisplay.DisplayOpts):
 
         self.__xforms = transformer.Transformer(self.overlay,
                                                 self.displayCtx,
-                                                self.transform,
+                                                self,
                                                 self.displayXform)
 
 
