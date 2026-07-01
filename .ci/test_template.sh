@@ -34,9 +34,9 @@ PIPARGS+="--trusted-host pypi.org "
 
 # Make sure we have latest (possibly development)
 # versions of the core dependencies
-pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
-pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
-pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
+pip install $PIPARGS git+https://gitlab-ci-token:${CI_JOB_TOKEN}@git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
+pip install $PIPARGS git+https://gitlab-ci-token:${CI_JOB_TOKEN}@git.fmrib.ox.ac.uk/fsl/fslpy.git
+pip install $PIPARGS git+https://gitlab-ci-token:${CI_JOB_TOKEN}@git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
 
 # install fsleyes+dependencies
 pip install $PIPARGS ".[extra,test,style]"
