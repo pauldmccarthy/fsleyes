@@ -63,6 +63,12 @@ class Tractogram:
             shape     = np.array(tractFile.header['dimensions'])
             affine    = np.array(tractFile.header['voxel_to_rasmm'])
 
+            # The affine will be set to 0 if the
+            # file has no orientation information
+            if affine[3, 3] == 0:
+                shape  = None
+                affine = None
+
         # tck files contain no information about
         # the reference image from which the
         # tractkgram was derived.
