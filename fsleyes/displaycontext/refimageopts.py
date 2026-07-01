@@ -135,9 +135,14 @@ class RefImageOpts:
         self.__defaultXformer = None
 
         if self.__child:
+
             dctx  = self.displayCtx
             olist = self.overlayList
             lname = self.listenerName
+
+            if defaultRef is not None:
+                self.__defaultXformer = transformer.Transformer(
+                    defaultRef, displayCtx)
 
             dctx .ilisten('displaySpace', lname, self.__displaySpaceChanged)
             olist.ilisten('overlays',     lname, self.__overlayListChanged)
@@ -146,10 +151,6 @@ class RefImageOpts:
 
             self.__overlayListChanged()
             self.__refImageChanged()
-
-            if defaultRef is not None:
-                self.__defaultXformer = transformer.Transformer(
-                    defaultRef, displayCtx)
 
 
     @property
@@ -328,6 +329,7 @@ class RefImageOpts:
         if self.__defaultRef is not None:
             self.__defaultXformer = transformer.Transformer(
                 self.__defaultRef, self.displayCtx)
+            self.updateBounds()
 
 
     def __overlayListChanged(self):
