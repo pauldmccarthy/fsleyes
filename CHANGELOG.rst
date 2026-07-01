@@ -28,6 +28,16 @@ Added
   entry points (:mr:`505`).
 
 
+Changed
+^^^^^^^
+
+
+* FSLeyes now uses information in tractogram file headers to position them in
+  the display coordinate system. This means that a reference NIfTI image no
+  longer needs to be specified for tractogram files which contain the necessary
+  information in their header (:mr:`507`).
+
+
 1.19.0 (Monday 8th June 2026)
 -----------------------------
 
