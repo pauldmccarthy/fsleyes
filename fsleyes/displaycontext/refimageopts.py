@@ -8,13 +8,16 @@
 :class:`.DisplayOpts` sub-classes.
 """
 
-import itertools            as it
 
-import numpy                as np
+import itertools              as     it
 
-import fsl.transform.affine as affine
-import fsl.data.image       as fslimage
-import fsleyes_props        as props
+import numpy                  as     np
+
+import fsl.transform.affine   as     affine
+import fsl.data.image         as     fslimage
+import fsleyes_props          as     props
+
+from   fsleyes.displaycontext import transformer
 
 
 class RefImageOpts:
@@ -44,7 +47,7 @@ class RefImageOpts:
 
              def __init__(self, *args, **kwargs):
                  DisplayOpts.__init__(self, *args, **kwargs)
-                 RefImageOpts.__init__(self)
+                 RefImageOpts.__init__(self, self.displayCtx)
 
       3. Implement the :meth:`getBounds` method to return the overlay bounds
          in its native coordinate system (the value of :attr:`coordSpace`).
@@ -107,29 +110,54 @@ class RefImageOpts:
     """
 
 
-    def __init__(self):
+    def __init__(self, displayCtx, defaultRef=None):
         """Initialise a ``RefImageOpts`` instance. This must be called
         *after* the :meth:`.DisplayOpts.__init__` method.
+
+        :arg displayCtx: :class:`.DisplayContext` responsible for displaying
+                         this overlay.
+
+        :arg defaultRef: Optional :class:`.Nifti` instance to use for
+                         coordinate transformations if the :attr:`refImage` is
+                         not set.
         """
 
         # A copy of the refImage property
         # value is kept here so, when it
         # changes, we can de-register from
         # the previous one.
-        self.__oldRefImage = None
+        self.__oldRefImage    = None
+        self.__child          = self.getParent() is not None
 
-        self.__child = self.getParent() is not None
+        # Default Nifti reference and Transformer
+        # used when refImage is unset.
+        self.__defaultRef     = defaultRef
+        self.__defaultXformer = None
 
         if self.__child:
+            dctx  = self.displayCtx
             olist = self.overlayList
             lname = self.listenerName
 
-            olist.ilisten('overlays',   lname, self.__overlayListChanged)
-            self .ilisten('refImage',   lname, self.__refImageChanged)
-            self .ilisten('coordSpace', lname, self.updateBounds)
+            dctx .ilisten('displaySpace', lname, self.__displaySpaceChanged)
+            olist.ilisten('overlays',     lname, self.__overlayListChanged)
+            self .ilisten('refImage',     lname, self.__refImageChanged)
+            self .ilisten('coordSpace',   lname, self.updateBounds)
 
             self.__overlayListChanged()
             self.__refImageChanged()
+
+            if defaultRef is not None:
+                self.__defaultXformer = transformer.Transformer(
+                    defaultRef, displayCtx)
+
+
+    @property
+    def displayCtx(self):
+        """Return the :class:`.DisplayContext` responsible for displaying
+        the overlay for this ``RefImageOpts`` instance.
+        """
+        return self.__displayCtx
 
 
     @property
@@ -155,15 +183,17 @@ class RefImageOpts:
         De-registers property listeners.
         """
         if self.__child:
+            dctx  = self.displayCtx
             olist = self.overlayList
             lname = self.listenerName
             ref   = self.refImage
 
             self.__oldRefImage = None
 
-            olist.removeListener('overlays',   lname)
-            self .removeListener('refImage',   lname)
-            self .removeListener('coordSpace', lname)
+            dctx .removeListener('displaySpace', lname)
+            olist.removeListener('overlays',     lname)
+            self .removeListener('refImage',     lname)
+            self .removeListener('coordSpace',   lname)
 
             if ref is not None:
                 # An exception may occur if the
@@ -204,17 +234,17 @@ class RefImageOpts:
         value of :attr:`coordSpace`.
         """
 
-        ref = self.refImage
-
-        if ref is None:
-            return coords
-
         if from_ is None: from_ = self.coordSpace
         if to    is None: to    = self.coordSpace
 
-        opts = self.displayCtx.getOpts(ref)
-        return opts.transformCoords(
-            coords, from_, to, **kwargs)
+        if self.refImage is not None:
+            xformer = self.displayCtx.getOpts(self.refImage)
+        elif self.__defaultXformer is not None:
+            xformer = self.__defaultXformer
+        else:
+            return coords
+
+        return xformer.transformCoords(coords, from_, to, **kwargs)
 
 
     def getTransform(self, from_=None, to=None):
@@ -230,16 +260,18 @@ class RefImageOpts:
         If ``from_`` or ``to`` are not provided, they are set to the current
         value of :attr:`coordSpace`.
         """
-        ref = self.refImage
-
-        if ref is None:
-            return np.eye(4)
 
         if from_ is None: from_ = self.coordSpace
         if to    is None: to    = self.coordSpace
 
-        ropts = self.displayCtx.getOpts(ref)
-        return ropts.getTransform(from_, to)
+        if self.refImage is not None:
+            xformer = self.displayCtx.getOpts(self.refImage)
+        elif self.__defaultXformer is not None:
+            xformer = self.__defaultXformer
+        else:
+            return np.eye(4)
+
+        return xformer.getTransform(from_, to)
 
 
     def getBounds(self):
@@ -286,6 +318,16 @@ class RefImageOpts:
         # even if bounds haven't changed
         if np.all(np.isclose(oldBounds, self.bounds)):
             self.propNotify('bounds')
+
+
+    def __displaySpaceChanged(self):
+        """Called when the :attr:`.DisplayContext.displaySpace` changes.
+        If this ``RefImageOpts`` instance has a default reference, its
+        transformation matrices are re-generated.
+        """
+        if self.__defaultRef is not None:
+            self.__defaultXformer = transformer.Transformer(
+                self.__defaultRef, self.displayCtx)
 
 
     def __overlayListChanged(self):

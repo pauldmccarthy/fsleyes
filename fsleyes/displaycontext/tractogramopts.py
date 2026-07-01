@@ -132,9 +132,26 @@ class TractogramOpts(fsldisplay.DisplayOpts,
         nounbind.extend(['refImage', 'coordSpace'])
         kwargs['nounbind'] = nounbind
 
+        # Some tractograms have information about
+        # the image on which they are based, which
+        # allows them to be correctly positioned
+        # in the FSLeyes display coordinate system.
+        # If this information is not present, or
+        # incorrect, the user will need to set an
+        # appropriate reference image in order for
+        # the tractogram to be positioned correctly.
+        if all((overlay.shape  is not None,
+                overlay.affine is not None)):
+            header = nib.Nifti1Header()
+            header.set_data_shape(overlay.shape)
+            header.set_sform(overlay.affine, 2)
+            defaultRef = fslimage.Nifti(header)
+        else:
+            defaultRef = None
+
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
-        refimgopts.RefImageOpts .__init__(self)
+        refimgopts.RefImageOpts .__init__(self, self.displayCtx, defaultRef)
         vectoropts.VectorOpts   .__init__(self)
 
         self.__child = self.getParent() is not None

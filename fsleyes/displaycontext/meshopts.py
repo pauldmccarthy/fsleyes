@@ -192,7 +192,7 @@ class MeshOpts(cmapopts.ColourMapOpts,
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
-        refimgopts.RefImageOpts .__init__(self)
+        refimgopts.RefImageOpts .__init__(self, self.displayCtx)
 
         self.__registered = self.getParent() is not None
 
