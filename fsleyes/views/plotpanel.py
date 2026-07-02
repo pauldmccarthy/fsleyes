@@ -22,13 +22,13 @@ import wx
 import fsleyes_widgets.elistbox           as elistbox
 
 import fsleyes.actions                    as actions
+import fsleyes.utils                      as utils
 import fsleyes.overlay                    as fsloverlay
 import fsleyes.colourmaps                 as fslcm
 import fsleyes.views.viewpanel            as viewpanel
 import fsleyes.plotting                   as plotting
 import fsleyes.plotting.plotcanvas        as plotcanvas
 import fsleyes.controls.overlaylistpanel  as overlaylistpanel
-
 
 
 log = logging.getLogger(__name__)
@@ -114,8 +114,7 @@ class PlotPanel(viewpanel.ViewPanel):
                         elistboxStyle=(elistbox.ELB_REVERSE      |
                                        elistbox.ELB_TOOLTIP_DOWN |
                                        elistbox.ELB_NO_ADD       |
-                                       elistbox.ELB_NO_REMOVE    |
-                                       elistbox.ELB_NO_MOVE),
+                                       elistbox.ELB_NO_REMOVE),
                         location=wx.LEFT,
                         disableFilter=listFilter)
 
@@ -347,7 +346,7 @@ class OverlayPlotPanel(PlotPanel):
         # background colour. So we drop that, and also
         # add darker variants of each for more variety.
         lut  = fslcm.getLookupTable('paul_tol_accessible')[:-1]
-        lut  = [l.colour[:3] for l in lut]
+        lut  = [lbl.colour[:3] for lbl in lut]
         lut += list(fslcm.darken(lut, 0.1))
 
         self.__defaultColours = [tuple(c) for c in lut]
@@ -358,6 +357,10 @@ class OverlayPlotPanel(PlotPanel):
         self.overlayList.addListener('overlays',
                                      self.__name,
                                      self.__overlayListChanged)
+        self.displayCtx .addListener('overlayOrder',
+                                     self.__name,
+                                     self.canvas.asyncDraw)
+
 
         self.__overlayListChanged()
         self.__dataSeriesChanged()
@@ -367,8 +370,9 @@ class OverlayPlotPanel(PlotPanel):
         """Must be called when this ``OverlayPlotPanel`` is no longer needed.
         Removes some property listeners, and calls :meth:`PlotPanel.destroy`.
         """
-        self.overlayList.removeListener('overlays',   self.__name)
-        self.canvas     .removeListener('dataSeries', self.__name)
+        self.overlayList.removeListener('overlays',     self.__name)
+        self.displayCtx .removeListener('overlayOrder', self.__name)
+        self.canvas     .removeListener('dataSeries',   self.__name)
 
         for overlay in list(self.__dataSeries.keys()):
             self.clearDataSeries(overlay)
@@ -385,15 +389,18 @@ class OverlayPlotPanel(PlotPanel):
         to be plotted.
         """
 
-        overlays = self.overlayList[:]
+        overlays = self.displayCtx.getOrderedOverlays()
 
         # Display.enabled
         overlays = [o for o in overlays
                     if self.displayCtx.getDisplay(o).enabled]
 
-        # Replace proxy images
-        overlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage)
-                    else o for o in overlays]
+        # Replace proxy images (e.g. ImageHistogramSeries overlay)
+        overlays = [o.getBase() if isinstance(o, fsloverlay.ProxyImage) else o
+                    for o in overlays]
+
+        # Remove duplicates
+        overlays = utils.dedup(overlays)
 
         # Have data series
         dss = [self.getDataSeries(o) for o in overlays]
@@ -404,10 +411,9 @@ class OverlayPlotPanel(PlotPanel):
         # Gather any extra time series
         # associated with the base time
         # series objects.
-        for i, ds in enumerate(list(reversed(dss))):
+        for ds in dss:
 
             extras = ds.extraSeries()
-            dss    = dss[:i + 1] + extras + dss[i + 1:]
 
             toPlot.append(ds)
             toPlot.extend(extras)
@@ -417,13 +423,6 @@ class OverlayPlotPanel(PlotPanel):
             # be disabled
             for eds in extras:
                 eds.enabled = ds.enabled
-
-        # Remove duplicates
-        dss    = toPlot
-        toPlot = []
-        for ds in dss:
-            if ds not in toPlot:
-                toPlot.append(ds)
 
         return toPlot
 

@@ -646,7 +646,7 @@ class PlotCanvas(props.HasProperties):
             ylabel=None,
             **plotArgs):
         """Called by :meth:`__drawDataSeries`. Plots all of the data
-        associated with the given ``dataSeries``.
+        in the given ``dataSeries`` list.
 
         :arg dataSeries: The list of :class:`.DataSeries` instances to plot.
 
@@ -771,9 +771,12 @@ class PlotCanvas(props.HasProperties):
             if self.invertY: axis.set_ylim((ymax, ymin))
             else:            axis.set_ylim((ymin, ymax))
 
-        # legend
+        # legend. We reverse the order, so that
+        # dataseries drawn last (i.e. on top)
+        # are listed at the top of the legend
         labelledSeries = [ds for ds in self.__drawnDataSeries
                           if ds.label is not None]
+        labelledSeries = list(reversed(labelledSeries))
         if len(labelledSeries) > 0 and self.legend:
 
             labels  = [ds.label for ds in labelledSeries]
