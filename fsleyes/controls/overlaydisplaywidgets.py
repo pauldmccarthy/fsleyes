@@ -1038,9 +1038,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'refImage'     : props.Widget('refImage', labels=imageName),
         'coordSpace'   : props.Widget(
             'coordSpace',
-            enabledWhen=lambda o, ri: ri is not None,
-            labels=strings.choices['RefImageOpts.coordSpace'],
-            dependencies=['refImage']),
+            labels=strings.choices['RefImageOpts.coordSpace']),
 
         'cmap' : props.Widget(
             'cmap',
