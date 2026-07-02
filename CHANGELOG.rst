@@ -36,6 +36,8 @@ Changed
   the display coordinate system. This means that a reference NIfTI image no
   longer needs to be specified for tractogram files which contain the necessary
   information in their header (:mr:`507`).
+* Plot views now plot data series according to the overlay order, and also
+  allow the order to be changed (:mr:`507`).
 
 
 1.19.0 (Monday 8th June 2026)
