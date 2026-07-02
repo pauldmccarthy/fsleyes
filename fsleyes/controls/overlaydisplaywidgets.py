@@ -42,8 +42,10 @@ import fsleyes.actions.loadcolourmap  as loadcmap
 import fsleyes.actions.loadvertexdata as loadvdata
 
 
-_PROPERTIES      = td.TypeDict()
-_3D_PROPERTIES   = td.TypeDict()
+# These dicts contain widget specs for all
+# overlay types. They are updated incrementally
+# on calls to getWidgetSpecs below - subsequent
+# requests will use the cached results.
 _WIDGET_SPECS    = td.TypeDict()
 _3D_WIDGET_SPECS = td.TypeDict()
 
@@ -55,26 +57,35 @@ def _merge_dicts(d1, d2):
 
 
 def getPropertyList(target, threedee=False):
+    """Returns a list of all properties that should be displayed for the given
+    :class:`.Display` / :class:`.DisplayOpts` instance.
+    """
 
-    plist = _getThing(target, '_initPropertyList_', _PROPERTIES, threedee)
+    thismod = sys.modules[__name__]
+    name    = type(target).__name__
+    func    = f'_initPropertyList_{name}'
+    func    = getattr(thismod, func)
 
-    if plist is None:
-        return []
-
-    return functools.reduce(lambda a, b: a + b, plist)
+    return func(threedee)
 
 
 def get3DPropertyList(target):
+    """Returns a list of all 3D-specific properties that should be displayed
+    for the given :class:`.Display` / :class:`.DisplayOpts` instance.
+    """
 
-    plist = _getThing(target, '_init3DPropertyList_', _3D_PROPERTIES)
+    thismod = sys.modules[__name__]
+    name    = type(target).__name__
+    func    = f'_init3DPropertyList_{name}'
+    func    = getattr(thismod, func)
 
-    if plist is None:
-        return []
-
-    return functools.reduce(lambda a, b: a + b, plist)
+    return func()
 
 
 def getWidgetSpecs(target, displayCtx, threedee=False):
+    """Returns a dict of widget specifications for the given
+    target instance.
+    """
 
     sdicts = _getThing(target, '_initWidgetSpec_', _WIDGET_SPECS,
                        displayCtx, threedee)
@@ -90,6 +101,9 @@ def getWidgetSpecs(target, displayCtx, threedee=False):
 
 
 def get3DWidgetSpecs(target, displayCtx):
+    """Returns a dict of 3D widget specifications for the given
+    target instance.
+    """
 
     sdicts = _getThing(target, '_init3DWidgetSpec_', _3D_WIDGET_SPECS,
                        displayCtx)
@@ -184,7 +198,7 @@ def _initPropertyList_VolumeOpts(threedee):
 
 
 def _initPropertyList_ComplexOpts(threedee):
-    return ['component']
+    return ['component'] + _initPropertyList_VolumeOpts(threedee)
 
 
 def _init3DPropertyList_VolumeOpts():
@@ -225,22 +239,21 @@ def _initPropertyList_NiftiVectorOpts(threedee):
 
 
 def _initPropertyList_RGBVectorOpts(threedee):
-    return ['interpolation']
-
+    return ['interpolation'] + _initPropertyList_NiftiVectorOpts(threedee)
 
 def _initPropertyList_LineVectorOpts(threedee):
     return ['directed',
             'unitLength',
             'orientFlip',
             'lineWidth',
-            'lengthScale']
+            'lengthScale'] + _initPropertyList_NiftiVectorOpts(threedee)
 
 
 def _initPropertyList_TensorOpts(threedee):
     return ['lighting',
             'orientFlip',
             'tensorResolution',
-            'tensorScale']
+            'tensorScale'] + _initPropertyList_NiftiVectorOpts(threedee)
 
 
 def _initPropertyList_MeshOpts(threedee):
@@ -282,19 +295,19 @@ def _init3DPropertyList_MeshOpts():
 
 
 def _initPropertyList_GiftiOpts(threedee):
-    return []
+    return _initPropertyList_MeshOpts(threedee)
 
 
 def _init3DPropertyList_GiftiOpts():
-    return []
+    return _init3DPropertyList_MeshOpts()
 
 
 def _initPropertyList_FreesurferOpts(threedee):
-    return []
+    return _initPropertyList_MeshOpts(threedee)
 
 
 def _init3DPropertyList_FreesurferOpts():
-    return []
+    return _init3DPropertyList_MeshOpts()
 
 
 def _initPropertyList_LabelOpts(threedee):
@@ -312,7 +325,7 @@ def _initPropertyList_SHOpts(threedee):
             'normalise',
             'size',
             'radiusThreshold',
-            'colourMode']
+            'colourMode'] + _initPropertyList_NiftiVectorOpts(threedee)
 
 
 def _initPropertyList_MIPOpts(threedee):
@@ -379,6 +392,10 @@ def _initPropertyList_TractogramOpts(threedee):
               'suppressZ',
               'suppressMode']
     return plist
+
+
+def _init3DPropertyList_TractogramOpts():
+    return []
 
 
 def _initWidgetSpec_Display(displayCtx, threedee):
@@ -998,8 +1015,6 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
     orientOpts  = dict(dependencies=['colourMode'],
                        enabledWhen=lambda o, cm: cm == 'orientation')
     sliderOpts  = dict(spin=True, slider=True, showLimits=False)
-    zclipOpts   = dict(dependencies=['pseudo3D'],
-                       enabledWhen=lambda o, p: p)
     clipdirOpts = dict(dependencies=['pseudo3D'],
                        enabledWhen=lambda o, p: p,
                        labels=strings.choices['TractogramOpts.clipdir'])

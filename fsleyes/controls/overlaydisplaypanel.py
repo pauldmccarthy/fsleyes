@@ -49,12 +49,11 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
 
       - Settings which are specific to the current
         :attr:`.Display.overlayType` - these are defined in the
-        :class:`.DisplayOpts` sub-classes.
-
+        :class:`.DisplayOpts` sub-classes, and may be split across multiple
+        sections.
 
     The settings that are displayed on an ``OverlayDisplayPanel`` are
-    defined in the :attr:`_DISPLAY_PROPS` and :attr:`_DISPLAY_WIDGETS`
-    dictionaries.
+    defined in the :mod:`.overlaydisplaywidgets` module.
     """
 
 
