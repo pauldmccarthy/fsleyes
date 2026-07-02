@@ -11,8 +11,8 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
-1.20.0 (Under development)
---------------------------
+1.20.0 (Friday 3rd July 2026)
+-----------------------------
 
 
 Added
@@ -38,6 +38,8 @@ Changed
   information in their header (:mr:`507`).
 * Plot views now plot data series according to the overlay order, and also
   allow the order to be changed (:mr:`507`).
+* Re-organised the widgets on the overlay display panel to ease use on smaller
+  screens (:mr:`507`).
 
 
 1.19.0 (Monday 8th June 2026)
