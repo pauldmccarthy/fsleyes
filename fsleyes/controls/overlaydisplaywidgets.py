@@ -40,16 +40,36 @@ import fsleyes.actions.loadcolourmap  as loadcmap
 import fsleyes.actions.loadvertexdata as loadvdata
 
 
-# This dicts contains widget specs for all
-# overlay types. It is updated incrementally
-# on calls to getWidgetSpecs below - subsequent
-# requests will use the cached results.
 _WIDGET_SPECS = td.TypeDict()
+"""This dict contains widget specs for all overlay types. It is updated
+incrementally on calls to :func:`getWidgetSpecs` below - subsequent requests
+will use the cached results.
+"""
+
+EXPANDED_GROUPS = td.TypeDict({
+    'VolumeOpts'     : ['vol', 'colour'],
+    'LabelOpts'      : ['opts'],
+    'MaskOpts'       : ['opts'],
+    'MIPOpts'        : ['vol', 'colour'],
+    'VolumeRGBOpts'  : ['vol', 'colour'],
+    'RGBVectorOpts'  : ['opts'],
+    'LineVectorOpts' : ['line', 'opts'],
+    'TensorOpts'     : ['tensor', 'opts'],
+    'SHOpts'         : ['sh', 'opts'],
+    'MeshOpts'       : ['mesh', 'data'],
+    'TractogramOpts' : ['opts', 'pseudo3d'],
+})
+"""This dict contains a list of all widget groups which should be
+shown/expanded by default. It is accessed directly by the
+:class:`.OverlayDisplayPanel`.
+"""
 
 
 def getPropertyList(target, threedee=False):
-    """Returns a list of all properties that should be displayed for the given
-    :class:`.Display` / :class:`.DisplayOpts` instance.
+    """Returns a dictionary of all properties that should be displayed for the given
+    :class:`.Display` / :class:`.DisplayOpts` instance. The dictionary has the form::
+
+        { 'groupName' : ['property', ...], ...}
     """
 
     thismod = sys.modules[__name__]
@@ -68,8 +88,7 @@ def _merge_dicts(d1, d2):
 
 
 def getWidgetSpecs(target, displayCtx):
-    """Returns a dict of widget specifications for the given
-    target instance.
+    """Returns a dict of widget specifications for the given target instance.
     """
 
     sdicts = _getThing(target, '_initWidgetSpec_', _WIDGET_SPECS, displayCtx)
@@ -205,6 +224,7 @@ def _initPropertyList_NiftiVectorOpts(threedee):
             'normaliseColour',
             'colourImage',
             'modulateImage',
+            'modulateMode',
             'clipImage',
             'cmap'
         ],
@@ -212,7 +232,6 @@ def _initPropertyList_NiftiVectorOpts(threedee):
             'colourRange',
             'clippingRange',
             'modulateRange',
-            'modulateMode',
         ],
         'vector' : [
             'xColour',
@@ -280,6 +299,7 @@ def _initPropertyList_MeshOpts(threedee):
         'mesh' : [
             'refImage',
             'coordSpace',
+            'colour',
             'outline',
             'outlineWidth'],
         'data' : [
@@ -287,7 +307,6 @@ def _initPropertyList_MeshOpts(threedee):
             'custom_vertexData',
             'vertexDataIndex'],
         'colour' : [
-            'colour',
             'interpolation',
             'custom_lut',
             'custom_cmap',
@@ -926,11 +945,11 @@ def _initWidgetSpec_MeshOpts(displayCtx):
         'wireframe' : props.Widget('wireframe')
     }
 
-# def _initWidgetSpec_GiftiOpts(displayCtx):
-#     return {}
+def _initWidgetSpec_GiftiOpts(displayCtx):
+    return {}
 
-# def _initWidgetSpec_FreesurferOpts(displayCtx):
-#     return {}
+def _initWidgetSpec_FreesurferOpts(displayCtx):
+    return {}
 
 def _initWidgetSpec_MIPOpts(displayCtx):
 

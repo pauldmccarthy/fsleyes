@@ -159,17 +159,19 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
         labels     = [strings.labels[self, display]] + \
                      [strings.labels[self, opts, grp] for grp in optgroups]
 
-        # Just show display settings and
-        # first opts group by default
+        # Initial expanded state of each widget group
         keepExpanded = {g : False for g in groups}
-        keepExpanded['display']    = True
-        keepExpanded[optgroups[0]] = True
+        keepExpanded['display'] = True
+        for grp in odw.EXPANDED_GROUPS[opts]:
+            keepExpanded[grp] = True
 
         if lastOverlay is not None and lastOverlay in self.overlayList:
 
             lastDisplay = self.displayCtx.getDisplay(lastOverlay)
             lastDisplay.removeListener('overlayType', self.name)
 
+        # Preserve expanded state if changing
+        # between similar overlay types
         if lastOverlay is not None:
             for g in groups:
                 if widgetList.HasGroup(g):
@@ -181,11 +183,11 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
 
         widgetList.Clear()
 
-        for g, l, t in zip(groups, labels, targets):
+        for grp, lbl, tgt in zip(groups, labels, targets):
 
-            widgetList.AddGroup(g, l)
-            self.__widgets[g] = self.__updateWidgets(t, g)
-            widgetList.Expand(g, keepExpanded[g])
+            widgetList.AddGroup(grp, lbl)
+            self.__widgets[grp] = self.__updateWidgets(tgt, grp)
+            widgetList.Expand(grp, keepExpanded[grp])
 
         self.setNavOrder()
         self.Layout()
