@@ -151,7 +151,7 @@ class TractogramOpts(fsldisplay.DisplayOpts,
 
         fsldisplay.DisplayOpts  .__init__(self, overlay, *args, **kwargs)
         cmapopts  .ColourMapOpts.__init__(self)
-        refimgopts.RefImageOpts .__init__(self, self.displayCtx, defaultRef)
+        refimgopts.RefImageOpts .__init__(self, defaultRef)
         vectoropts.VectorOpts   .__init__(self)
 
         self.__child = self.getParent() is not None

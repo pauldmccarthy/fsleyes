@@ -110,12 +110,9 @@ class RefImageOpts:
     """
 
 
-    def __init__(self, displayCtx, defaultRef=None):
+    def __init__(self, defaultRef=None):
         """Initialise a ``RefImageOpts`` instance. This must be called
         *after* the :meth:`.DisplayOpts.__init__` method.
-
-        :arg displayCtx: :class:`.DisplayContext` responsible for displaying
-                         this overlay.
 
         :arg defaultRef: Optional :class:`.Nifti` instance to use for
                          coordinate transformations if the :attr:`refImage` is
@@ -126,8 +123,8 @@ class RefImageOpts:
         # value is kept here so, when it
         # changes, we can de-register from
         # the previous one.
-        self.__oldRefImage    = None
-        self.__child          = self.getParent() is not None
+        self.__oldRefImage = None
+        self.__child       = self.getParent() is not None
 
         # Default Nifti reference and Transformer
         # used when refImage is unset.
@@ -142,7 +139,7 @@ class RefImageOpts:
 
             if defaultRef is not None:
                 self.__defaultXformer = transformer.Transformer(
-                    defaultRef, displayCtx)
+                    defaultRef, dctx)
 
             dctx .ilisten('displaySpace', lname, self.__displaySpaceChanged)
             olist.ilisten('overlays',     lname, self.__overlayListChanged)
@@ -151,14 +148,6 @@ class RefImageOpts:
 
             self.__overlayListChanged()
             self.__refImageChanged()
-
-
-    @property
-    def displayCtx(self):
-        """Return the :class:`.DisplayContext` responsible for displaying
-        the overlay for this ``RefImageOpts`` instance.
-        """
-        return self.__displayCtx
 
 
     @property
@@ -189,8 +178,6 @@ class RefImageOpts:
             lname = self.listenerName
             ref   = self.refImage
 
-            self.__oldRefImage = None
-
             dctx .removeListener('displaySpace', lname)
             olist.removeListener('overlays',     lname)
             self .removeListener('refImage',     lname)
@@ -200,7 +187,7 @@ class RefImageOpts:
                 # An exception may occur if the
                 # DC has been/is being destroyed
                 try:
-                    ropts = self.displayCtx.getOpts(ref)
+                    ropts = dctx.getOpts(ref)
                     ropts.removeListener('bounds', lname)
                 except Exception:
                     pass
@@ -211,10 +198,14 @@ class RefImageOpts:
                 # An exception may occur if the
                 # DC has been/is being destroyed
                 try:
-                    display = self.displayCtx.getDisplay(overlay)
+                    display = dctx.getDisplay(overlay)
                     display.remove('name', lname)
                 except Exception:
                     pass
+
+        self.__oldRefImage    = None
+        self.__defaultRef     = None
+        self.__defaultXformer = None
 
 
     def transformCoords(self, coords, from_=None, to=None, **kwargs):
