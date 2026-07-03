@@ -1,5 +1,5 @@
 [build-system]
-requires      = ["setuptools", "setuptools-scm"]
+requires      = ["setuptools >=77", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 
@@ -8,7 +8,7 @@ name            = "fsleyes"
 dynamic         = ["version"]
 description     = "FSLeyes, the FSL image viewer"
 readme          = {file = "README.rst", content-type="text/x-rst"}
-license         = {text = "Apache License Version 2.0"}
+license-files   = ["LICENSE"]
 requires-python = ">=3.9"
 authors         = [{name = "Paul McCarthy", email = "pauldmccarthy@gmail.com"}]
 

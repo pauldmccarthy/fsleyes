@@ -1059,6 +1059,14 @@ details.
              tractogram was generated. This allows FSLeyes to correctly
              position the tractogram in the display coordinate system.
 
+             Many tractogram files already contain the information required to
+             correctly position the streamlines - FSLeyes will use this
+             information if it is present, but if not, you will need to
+             associate the tractogram with a reference image for it to be
+             correctly positioned. For example, MRtrix ``.tck`` files must be
+             associated with a reference image in order for them to be
+             correctly positioned.
+
 
 The overlay display settings dialog (the |gear_icon| button) has several
 options allowing you to control how tractograms are displayed.

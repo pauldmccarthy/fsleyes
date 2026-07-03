@@ -35,3 +35,13 @@ def isValidMapKey(key):
 
     valid = string.ascii_lowercase + string.digits + '_-'
     return all(c in valid for c in key)
+
+
+def dedup(seq):
+    """Remove duplicates from a sequence, preserving order.  Returns a list.
+    """
+    newseq = []
+    for i in seq:
+        if i not in newseq:
+            newseq.append(i)
+    return newseq

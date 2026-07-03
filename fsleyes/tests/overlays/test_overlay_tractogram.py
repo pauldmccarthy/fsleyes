@@ -6,11 +6,13 @@
 #
 
 from unittest import mock
-import itertools as it
+import os
 import os.path as op
 import random
 import shutil
 
+import nibabel.streamlines     as nibstrm
+import nibabel.streamlines.trk as nibtrk
 import numpy as np
 
 import pytest
@@ -98,10 +100,18 @@ cli_tests = """
 """
 
 cli_refImage_tests = """
-tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk              -lw 10
-tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -lw 10
-tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk              -lw 10
-tractogram/dipy_ref.nii.gz tractogram/dipy_tracks.trk -ri dipy_ref -cs pixdim -lw 10
+# dipy_tracks.trk has orientation info in
+# its header, so should align by default
+tractogram/dipy_ref.nii.gz             tractogram/dipy_tracks.trk                  -lw 10             # aligned
+tractogram/dipy_ref.nii.gz             tractogram/dipy_tracks.trk     -ri dipy_ref -lw 10             # aligned
+tractogram/dipy_ref.nii.gz {{stripref('tractogram/dipy_tracks.trk')}}              -lw 10             # misaligned
+tractogram/dipy_ref.nii.gz {{stripref('tractogram/dipy_tracks.trk')}} -ri dipy_ref -lw 10             # aligned
+
+# wrong coordspace should cause a range of misalignments
+tractogram/dipy_ref.nii.gz             tractogram/dipy_tracks.trk                  -cs pixdim -lw 10  # misaligned
+tractogram/dipy_ref.nii.gz             tractogram/dipy_tracks.trk     -ri dipy_ref -cs pixdim -lw 10  # misaligned
+tractogram/dipy_ref.nii.gz {{stripref('tractogram/dipy_tracks.trk')}}              -cs pixdim -lw 10  # misaligned
+tractogram/dipy_ref.nii.gz {{stripref('tractogram/dipy_tracks.trk')}} -ri dipy_ref -cs pixdim -lw 10  # misaligned
 
 {{trx_gs('gs.nii')}} {{trx_gs('gs.trx')}} -ri gs
 """
@@ -158,19 +168,42 @@ def reseed(f):
     return f
 
 
+# Retrieve a file from the trx-python
+# "gold_standard" test dataset
 def trx_gold_standard(filename):
-    homedir   = trxfetch.get_home()
-    testfiles = trxfetch.get_testing_files_dict()
 
-    trxfetch.fetch_data(testfiles, keys="gold_standard.zip")
+    with mock.patch.dict(os.environ, TRX_HOME=os.getcwd()):
+        homedir   = trxfetch.get_home()
+        testfiles = trxfetch.get_testing_files_dict()
 
-    shutil.copy(op.join(homedir, 'gold_standard', filename), '.')
+        trxfetch.fetch_data(testfiles, keys="gold_standard.zip")
+
+        shutil.copy(op.join(homedir, 'gold_standard', filename), '.')
 
     return filename
 
+
+# Remove orientation information
+# from the given trk tractogram file
+def stripref(trkfile):
+
+    # mrtrix .tck files have no orientation info
+    basename  = op.splitext(op.basename(trkfile))[0]
+    outfile   = f'stripref_{basename}.tck'
+    tracto    = nibstrm.load(trkfile).tractogram
+
+    newtracto = nibstrm.Tractogram(
+        streamlines=tracto.streamlines,
+        data_per_streamline=tracto.data_per_streamline,
+        data_per_point=tracto.data_per_point,
+        affine_to_rasmm=np.eye(4))
+    nibstrm.TckFile(newtracto).save(outfile)
+    return outfile
+
 extras = {
-    'reseed' : reseed,
-    'trx_gs' : trx_gold_standard
+    'reseed'   : reseed,
+    'trx_gs'   : trx_gold_standard,
+    'stripref' : stripref
 }
 
 @pytest.mark.skipif('(not haveGL(2.1)) or haveGL(3.3)')

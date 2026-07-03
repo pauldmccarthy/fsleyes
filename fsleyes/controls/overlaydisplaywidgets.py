@@ -14,9 +14,7 @@ where a widget does not directly map to a :class:`.Display` or
 
 
 ``_initPropertyList_[DisplayOptsType]``
-``_init3DPropertyList_[DisplayOptsType]``
 ``_initWidgetSpec_[DisplayOptsType]``
-``_init3DWidgetSpec_[DisplayOptsType]``
 """
 
 
@@ -42,42 +40,58 @@ import fsleyes.actions.loadcolourmap  as loadcmap
 import fsleyes.actions.loadvertexdata as loadvdata
 
 
-_PROPERTIES      = td.TypeDict()
-_3D_PROPERTIES   = td.TypeDict()
-_WIDGET_SPECS    = td.TypeDict()
-_3D_WIDGET_SPECS = td.TypeDict()
+_WIDGET_SPECS = td.TypeDict()
+"""This dict contains widget specs for all overlay types. It is updated
+incrementally on calls to :func:`getWidgetSpecs` below - subsequent requests
+will use the cached results.
+"""
+
+EXPANDED_GROUPS = td.TypeDict({
+    'VolumeOpts'     : ['vol', 'colour'],
+    'LabelOpts'      : ['opts'],
+    'MaskOpts'       : ['opts'],
+    'MIPOpts'        : ['vol', 'colour'],
+    'VolumeRGBOpts'  : ['vol', 'colour'],
+    'RGBVectorOpts'  : ['opts'],
+    'LineVectorOpts' : ['line', 'opts'],
+    'TensorOpts'     : ['tensor', 'opts'],
+    'SHOpts'         : ['sh', 'opts'],
+    'MeshOpts'       : ['mesh', 'data'],
+    'TractogramOpts' : ['opts', 'pseudo3d'],
+})
+"""This dict contains a list of all widget groups which should be
+shown/expanded by default. It is accessed directly by the
+:class:`.OverlayDisplayPanel`.
+"""
+
+
+def getPropertyList(target, threedee=False):
+    """Returns a dictionary of all properties that should be displayed for the given
+    :class:`.Display` / :class:`.DisplayOpts` instance. The dictionary has the form::
+
+        { 'groupName' : ['property', ...], ...}
+    """
+
+    thismod = sys.modules[__name__]
+    name    = type(target).__name__
+    func    = f'_initPropertyList_{name}'
+    func    = getattr(thismod, func)
+
+    return func(threedee)
 
 
 def _merge_dicts(d1, d2):
+    """Merge two dicts together."""
     d3 = d1.copy()
     d3.update(d2)
     return d3
 
 
-def getPropertyList(target, threedee=False):
+def getWidgetSpecs(target, displayCtx):
+    """Returns a dict of widget specifications for the given target instance.
+    """
 
-    plist = _getThing(target, '_initPropertyList_', _PROPERTIES, threedee)
-
-    if plist is None:
-        return []
-
-    return functools.reduce(lambda a, b: a + b, plist)
-
-
-def get3DPropertyList(target):
-
-    plist = _getThing(target, '_init3DPropertyList_', _3D_PROPERTIES)
-
-    if plist is None:
-        return []
-
-    return functools.reduce(lambda a, b: a + b, plist)
-
-
-def getWidgetSpecs(target, displayCtx, threedee=False):
-
-    sdicts = _getThing(target, '_initWidgetSpec_', _WIDGET_SPECS,
-                       displayCtx, threedee)
+    sdicts = _getThing(target, '_initWidgetSpec_', _WIDGET_SPECS, displayCtx)
 
     if sdicts is None:
         return {}
@@ -86,17 +100,6 @@ def getWidgetSpecs(target, displayCtx, threedee=False):
     # base-class (last). As we want sub-class settings
     # to have priority, we merge the dicts in recerse
     # order.
-    return functools.reduce(_merge_dicts, reversed(sdicts))
-
-
-def get3DWidgetSpecs(target, displayCtx):
-
-    sdicts = _getThing(target, '_init3DWidgetSpec_', _3D_WIDGET_SPECS,
-                       displayCtx)
-
-    if sdicts is None:
-        return {}
-
     return functools.reduce(_merge_dicts, reversed(sdicts))
 
 
@@ -146,195 +149,236 @@ def _getInitFuncs(prefix, target):
 
 
 def _initPropertyList_Display(threedee):
-    return ['name',
+    return {
+        'display' : [
+            'name',
             'overlayType',
             'enabled',
             'alpha',
             'brightness',
-            'contrast']
+            'contrast'
+        ]
+    }
 
 
 def _initPropertyList_VolumeOpts(threedee):
-    plist = ['custom_volume',
-             'channel',
-             'interpolation',
-             'custom_cmap',
-             'cmapResolution',
-             'gamma',
-             'logScale',
-             'interpolateCmaps',
-             'invert',
-             'invertClipping',
-             'custom_linkRanges',
-             'custom_modulateAlpha',
-             'clipImage',
-             'modulateImage',
-             'displayRange',
-             'clippingRange',
-             'modulateRange',
-             'custom_overrideDataRange']
+    plist = {
+        'vol' : [
+            'custom_volume',
+            'channel',
+            'interpolation'],
+        'colour' : [
+            'custom_cmap',
+            'cmapResolution',
+            'gamma',
+            'logScale',
+            'interpolateCmaps',
+            'invert',
+            'invertClipping',
+            'custom_linkRanges',
+            'custom_modulateAlpha'],
+        'ranges' : [
+            'clipImage',
+            'modulateImage',
+            'displayRange',
+            'clippingRange',
+            'modulateRange',
+            'custom_overrideDataRange']}
 
     if threedee:
-        plist.remove('custom_modulateAlpha')
-        plist.remove('clipImage')
-        plist.remove('modulateImage')
-        plist.remove('modulateRange')
-
-    return plist
-
-
-def _initPropertyList_ComplexOpts(threedee):
-    return ['component']
-
-
-def _init3DPropertyList_VolumeOpts():
-    return ['blendFactor',
+        plist['colour'].remove('custom_modulateAlpha')
+        plist['ranges'].remove('clipImage')
+        plist['ranges'].remove('modulateImage')
+        plist['ranges'].remove('modulateRange')
+        plist['3d'] = [
+            'blendFactor',
             'blendByIntensity',
             'numSteps',
             'resolution',
             'custom_clipPlanes']
 
+    return plist
+
+
+def _initPropertyList_ComplexOpts(threedee):
+    plist = _initPropertyList_VolumeOpts(threedee)
+    plist['vol'].insert(0, 'component')
+    return plist
+
 
 def _initPropertyList_MaskOpts(threedee):
-    return ['custom_volume',
+    return {
+        'opts' : [
+            'custom_volume',
             'colour',
             'invert',
             'threshold',
             'interpolation',
             'outline',
-            'outlineWidth']
+            'outlineWidth']}
 
 
 def _initPropertyList_NiftiVectorOpts(threedee):
-    return ['normaliseColour',
+    return {
+        'opts' : [
+            'normaliseColour',
             'colourImage',
             'modulateImage',
+            'modulateMode',
             'clipImage',
-            'cmap',
+            'cmap'
+        ],
+        'ranges' : [
             'colourRange',
             'clippingRange',
             'modulateRange',
-            'modulateMode',
+        ],
+        'vector' : [
             'xColour',
             'yColour',
             'zColour',
             'suppressX',
             'suppressY',
             'suppressZ',
-            'suppressMode']
+            'suppressMode']}
 
 
 def _initPropertyList_RGBVectorOpts(threedee):
-    return ['interpolation']
+    plist = _initPropertyList_NiftiVectorOpts(threedee)
+    plist['opts'].append('interpolation')
+    return plist
 
 
 def _initPropertyList_LineVectorOpts(threedee):
-    return ['directed',
-            'unitLength',
-            'orientFlip',
-            'lineWidth',
-            'lengthScale']
+    plist         =  _initPropertyList_NiftiVectorOpts(threedee)
+    plist['line'] = ['directed',
+                     'unitLength',
+                     'orientFlip',
+                     'lineWidth',
+                     'lengthScale']
+    # re-order
+    return {
+        'line'   : plist['line'],
+        'opts'   : plist['opts'],
+        'ranges' : plist['ranges'],
+        'vector' : plist['vector']}
 
 
 def _initPropertyList_TensorOpts(threedee):
-    return ['lighting',
-            'orientFlip',
-            'tensorResolution',
-            'tensorScale']
+    plist           = _initPropertyList_NiftiVectorOpts(threedee)
+    plist['tensor'] = ['lighting',
+                       'orientFlip',
+                       'tensorResolution',
+                       'tensorScale']
+    return {
+        'tensor' : plist['tensor'],
+        'opts'   : plist['opts'],
+        'ranges' : plist['ranges'],
+        'vector' : plist['vector']}
+
+
+def _initPropertyList_SHOpts(threedee):
+    plist       = _initPropertyList_NiftiVectorOpts(threedee)
+    plist['sh'] = ['shResolution',
+                   'shOrder',
+                   'orientFlip',
+                   'lighting',
+                   'normalise',
+                   'size',
+                   'radiusThreshold',
+                   'colourMode']
+    return {
+        'sh'     : plist['sh'],
+        'opts'   : plist['opts'],
+        'ranges' : plist['ranges'],
+        'vector' : plist['vector']}
 
 
 def _initPropertyList_MeshOpts(threedee):
-    plist = ['refImage',
-             'coordSpace',
-             'outline',
-             'outlineWidth',
-             'colour',
-             'custom_vertexSet',
-             'custom_vertexData',
-             'vertexDataIndex',
-             'interpolation',
-             'custom_lut',
-             'custom_cmap',
-             'cmapResolution',
-             'gamma',
-             'interpolateCmaps',
-             'invert',
-             'invertClipping',
-             'discardClipped',
-             'custom_linkRanges',
-             'custom_modulateAlpha',
-             'modulateData',
-             'displayRange',
-             'clippingRange',
-             'modulateRange']
+    plist = {
+        'mesh' : [
+            'refImage',
+            'coordSpace',
+            'colour',
+            'outline',
+            'outlineWidth'],
+        'data' : [
+            'custom_vertexSet',
+            'custom_vertexData',
+            'vertexDataIndex'],
+        'colour' : [
+            'interpolation',
+            'custom_lut',
+            'custom_cmap',
+            'cmapResolution',
+            'gamma',
+            'interpolateCmaps',
+            'invert',
+            'invertClipping',
+            'discardClipped',
+            'custom_linkRanges',
+            'custom_modulateAlpha',
+            'modulateData'],
+        'ranges' : [
+            'displayRange',
+            'clippingRange',
+            'modulateRange']}
 
     # Remove outline
     # options for 3D
     if threedee:
-        plist.remove('outlineWidth')
-        plist.remove('outline')
+        plist['mesh'].remove('outlineWidth')
+        plist['mesh'].remove('outline')
+        plist['3d'] = ['wireframe']
 
     return plist
 
 
-def _init3DPropertyList_MeshOpts():
-    return ['wireframe']
-
-
 def _initPropertyList_GiftiOpts(threedee):
-    return []
-
-
-def _init3DPropertyList_GiftiOpts():
-    return []
+    return _initPropertyList_MeshOpts(threedee)
 
 
 def _initPropertyList_FreesurferOpts(threedee):
-    return []
-
-
-def _init3DPropertyList_FreesurferOpts():
-    return []
+    return _initPropertyList_MeshOpts(threedee)
 
 
 def _initPropertyList_LabelOpts(threedee):
-    return ['lut',
+    return {
+        'opts' : [
+            'lut',
             'outline',
             'outlineWidth',
-            'custom_volume']
-
-
-def _initPropertyList_SHOpts(threedee):
-    return ['shResolution',
-            'shOrder',
-            'orientFlip',
-            'lighting',
-            'normalise',
-            'size',
-            'radiusThreshold',
-            'colourMode']
+            'custom_volume']}
 
 
 def _initPropertyList_MIPOpts(threedee):
-    return ['custom_volume',
-            'interpolation',
+    return {
+        'vol': [
+            'custom_volume',
+            'interpolation'],
+        'colour' : [
             'cmap',
             'cmapResolution',
             'gamma',
             'interpolateCmaps',
             'invert',
             'invertClipping',
-            'custom_linkRanges',
+            'custom_linkRanges'],
+        'ranges' : [
             'displayRange',
-            'clippingRange',
+            'clippingRange'],
+        'mip' : [
             'window',
             'minimum',
-            'absolute']
+            'absolute']}
 
 
 def _initPropertyList_VolumeRGBOpts(threedee):
-    return ['custom_volume',
-            'interpolation',
+    return {
+        'vol' : [
+            'custom_volume',
+            'interpolation'],
+        'colour' : [
             'rColour',
             'gColour',
             'bColour',
@@ -342,46 +386,53 @@ def _initPropertyList_VolumeRGBOpts(threedee):
             'suppressG',
             'suppressB',
             'suppressA',
-            'suppressMode']
+            'suppressMode']}
 
 
 def _initPropertyList_TractogramOpts(threedee):
-    plist = ['lineWidth',
-             'resolution',
-             'subsample']
+    plist = {
+        'opts' : [
+            'refImage',
+            'coordSpace',
+            'lineWidth',
+            'resolution',
+            'subsample'],
+        'pseudo3d' : [
+            'sliceWidth',
+            'pseudo3D',
+            'custom_zclipping'],
+        'colour' : [
+            'custom_colourMode',
+            'clipMode',
+            'custom_cmap',
+            'cmapResolution',
+            'gamma',
+            'logScale',
+            'interpolateCmaps',
+            'invert',
+            'invertClipping',
+            'custom_linkRanges',
+            'custom_modulateAlpha'],
+        'ranges' : [
+            'displayRange',
+            'clippingRange',
+            'modulateRange'],
+        'vector' : [
+            'xColour',
+            'yColour',
+            'zColour',
+            'suppressX',
+            'suppressY',
+            'suppressZ',
+            'suppressMode']}
 
-    if not threedee:
-        plist.append('sliceWidth')
-        plist.append('pseudo3D')
-        plist.append('custom_zclipping')
+    if threedee:
+        plist.pop('pseudo3d')
 
-    plist += ['refImage',
-              'coordSpace',
-              'custom_colourMode',
-              'clipMode',
-              'custom_cmap',
-              'cmapResolution',
-              'gamma',
-              'logScale',
-              'interpolateCmaps',
-              'invert',
-              'invertClipping',
-              'custom_linkRanges',
-              'custom_modulateAlpha',
-              'displayRange',
-              'clippingRange',
-              'modulateRange',
-              'xColour',
-              'yColour',
-              'zColour',
-              'suppressX',
-              'suppressY',
-              'suppressZ',
-              'suppressMode']
     return plist
 
 
-def _initWidgetSpec_Display(displayCtx, threedee):
+def _initWidgetSpec_Display(displayCtx):
     return {
         'name'        : props.Widget('name'),
         'overlayType' : props.Widget(
@@ -394,7 +445,7 @@ def _initWidgetSpec_Display(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
+def _initWidgetSpec_ColourMapOpts(displayCtx):
     return {
         'custom_cmap'     : _ColourMapOpts_ColourMapWidget,
         'cmap'            : props.Widget(
@@ -452,7 +503,7 @@ def _initWidgetSpec_ColourMapOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_VolumeOpts(displayCtx, threedee):
+def _initWidgetSpec_VolumeOpts(displayCtx):
 
     def imageName(img):
         if img is None or img not in displayCtx.overlayList:
@@ -494,12 +545,8 @@ def _initWidgetSpec_VolumeOpts(displayCtx, threedee):
             slider=False,
             dependencies=['enableOverrideDataRange'],
             enabledWhen=lambda vo, en: en),
-    }
 
-
-def _init3DWidgetSpec_VolumeOpts(displayCtx):
-
-    return {
+        # 3D settings
         'numSteps'          : props.Widget('numSteps',
                                            showLimits=False),
         'blendFactor'       : props.Widget('blendFactor',
@@ -524,7 +571,7 @@ def _init3DWidgetSpec_VolumeOpts(displayCtx):
     }
 
 
-def _initWidgetSpec_ComplexOpts(displayCtx, threedee):
+def _initWidgetSpec_ComplexOpts(displayCtx):
     return {
         'component' : props.Widget(
             'component',
@@ -532,7 +579,7 @@ def _initWidgetSpec_ComplexOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_MaskOpts(displayCtx, threedee):
+def _initWidgetSpec_MaskOpts(displayCtx):
     return {
         'custom_volume'  : _NiftiOpts_VolumeWidget,
         'volume'         : props.Widget(
@@ -557,7 +604,7 @@ def _initWidgetSpec_MaskOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_LabelOpts(displayCtx, threedee):
+def _initWidgetSpec_LabelOpts(displayCtx):
     return {
         'lut'          : props.Widget('lut', labels=lambda l: l.name),
         'outline'      : props.Widget('outline'),
@@ -577,7 +624,7 @@ def _initWidgetSpec_LabelOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
+def _initWidgetSpec_NiftiVectorOpts(displayCtx):
     def imageName(img):
         if (img is None) or (img not in displayCtx.overlayList):
             return 'None'
@@ -664,7 +711,7 @@ def _initWidgetSpec_NiftiVectorOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_RGBVectorOpts(displayCtx, threedee):
+def _initWidgetSpec_RGBVectorOpts(displayCtx):
     return {
         'interpolation' : props.Widget(
             'interpolation',
@@ -673,7 +720,7 @@ def _initWidgetSpec_RGBVectorOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_LineVectorOpts(displayCtx, threedee):
+def _initWidgetSpec_LineVectorOpts(displayCtx):
     return {
         'directed'     : props.Widget('directed'),
         'unitLength'   : props.Widget('unitLength'),
@@ -688,7 +735,7 @@ def _initWidgetSpec_LineVectorOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_TensorOpts(displayCtx, threedee):
+def _initWidgetSpec_TensorOpts(displayCtx):
     return {
         'lighting'         : props.Widget('lighting'),
         'orientFlip'       : props.Widget('orientFlip'),
@@ -704,7 +751,7 @@ def _initWidgetSpec_TensorOpts(displayCtx, threedee):
             spin=True),
     }
 
-def _initWidgetSpec_SHOpts(displayCtx, threedee):
+def _initWidgetSpec_SHOpts(displayCtx):
     return {
         'shResolution'    : props.Widget(
             'shResolution',
@@ -764,7 +811,7 @@ def _initWidgetSpec_SHOpts(displayCtx, threedee):
 
 
 
-def _initWidgetSpec_MeshOpts(displayCtx, threedee):
+def _initWidgetSpec_MeshOpts(displayCtx):
 
     def imageName(img):
         if (img is None) or (img not in displayCtx.overlayList):
@@ -895,26 +942,16 @@ def _initWidgetSpec_MeshOpts(displayCtx, threedee):
         'discardClipped' : props.Widget(
             'discardClipped',
             **colourKwargs),
+        'wireframe' : props.Widget('wireframe')
     }
 
-
-def _init3DWidgetSpec_MeshOpts(displayCtx):
-    return {'wireframe' : props.Widget('wireframe')}
-
-
-def _initWidgetSpec_GiftiOpts(displayCtx, threedee):
-    return {}
-def _init3DWidgetSpec_GiftiOpts(displayCtx):
+def _initWidgetSpec_GiftiOpts(displayCtx):
     return {}
 
-
-def _initWidgetSpec_FreesurferOpts(displayCtx, threedee):
-    return {}
-def _init3DWidgetSpec_FreesurferOpts(displayCtx):
+def _initWidgetSpec_FreesurferOpts(displayCtx):
     return {}
 
-
-def _initWidgetSpec_MIPOpts(displayCtx, threedee):
+def _initWidgetSpec_MIPOpts(displayCtx):
 
     return {
         'custom_volume' : _NiftiOpts_VolumeWidget,
@@ -942,7 +979,7 @@ def _initWidgetSpec_MIPOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_VolumeRGBOpts(displayCtx, threedee):
+def _initWidgetSpec_VolumeRGBOpts(displayCtx):
 
     return {
         'custom_volume'  : _NiftiOpts_VolumeWidget,
@@ -971,7 +1008,7 @@ def _initWidgetSpec_VolumeRGBOpts(displayCtx, threedee):
     }
 
 
-def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
+def _initWidgetSpec_TractogramOpts(displayCtx):
     def cmodeName(data):
         if data == 'orientation':
             return 'Orientation'
@@ -998,8 +1035,6 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
     orientOpts  = dict(dependencies=['colourMode'],
                        enabledWhen=lambda o, cm: cm == 'orientation')
     sliderOpts  = dict(spin=True, slider=True, showLimits=False)
-    zclipOpts   = dict(dependencies=['pseudo3D'],
-                       enabledWhen=lambda o, p: p)
     clipdirOpts = dict(dependencies=['pseudo3D'],
                        enabledWhen=lambda o, p: p,
                        labels=strings.choices['TractogramOpts.clipdir'])
@@ -1038,9 +1073,7 @@ def _initWidgetSpec_TractogramOpts(displayCtx, threedee):
         'refImage'     : props.Widget('refImage', labels=imageName),
         'coordSpace'   : props.Widget(
             'coordSpace',
-            enabledWhen=lambda o, ri: ri is not None,
-            labels=strings.choices['RefImageOpts.coordSpace'],
-            dependencies=['refImage']),
+            labels=strings.choices['RefImageOpts.coordSpace']),
 
         'cmap' : props.Widget(
             'cmap',
@@ -1080,8 +1113,7 @@ def _ColourMapOpts_ColourMapWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains widgets for controlling the
     :attr:`.ColourMapOpts.cmap`, :attr:`.ColourMapOpts.negativeCmap`, and
     :attr:`.ColourMapOpts.useNegativeCmap`.
@@ -1099,9 +1131,9 @@ def _ColourMapOpts_ColourMapWidget(
 
     loadAction.bindToWidget(panel, wx.EVT_BUTTON, loadButton)
 
-    cmap       = getWidgetSpecs(target, displayCtx, threedee)['cmap']
-    negCmap    = getWidgetSpecs(target, displayCtx, threedee)['negativeCmap']
-    useNegCmap = getWidgetSpecs(target, displayCtx, threedee)['useNegativeCmap']
+    cmap       = getWidgetSpecs(target, displayCtx)['cmap']
+    negCmap    = getWidgetSpecs(target, displayCtx)['negativeCmap']
+    useNegCmap = getWidgetSpecs(target, displayCtx)['useNegativeCmap']
 
     cbpanel    = imagepanel.ImagePanel(parent)
     cbpanel.SetMinSize((-1, 30))
@@ -1161,14 +1193,13 @@ def _ColourMapOpts_modulateAlphaWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains widgets for the
     :attr:`.ColourMapOpts.modulateAlpha` and
     :attr:`.ColourMapOpts.invertModulateAlpha` properties.
     """
-    mod = getWidgetSpecs(target, displayCtx, threedee)['modulateAlpha']
-    inv = getWidgetSpecs(target, displayCtx, threedee)['invertModulateAlpha']
+    mod = getWidgetSpecs(target, displayCtx)['modulateAlpha']
+    inv = getWidgetSpecs(target, displayCtx)['invertModulateAlpha']
 
     mod = props.buildGUI(parent, target, mod)
     inv = props.buildGUI(parent, target, inv)
@@ -1188,14 +1219,13 @@ def _ColourMapOpts_linkRangesWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains widgets for the
     :attr:`.ColourMapOpts.linkLowRanges` and
     :attr:`.ColourMapOpts.linkHighRanges` properties.
     """
-    lo = getWidgetSpecs(target, displayCtx, threedee)['linkLowRanges']
-    hi = getWidgetSpecs(target, displayCtx, threedee)['linkHighRanges']
+    lo = getWidgetSpecs(target, displayCtx)['linkLowRanges']
+    hi = getWidgetSpecs(target, displayCtx)['linkHighRanges']
 
     lo = props.buildGUI(parent, target, lo)
     hi = props.buildGUI(parent, target, hi)
@@ -1215,14 +1245,13 @@ def _NiftiOpts_VolumeWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains widgets for the
     :attr:`.NiftiOpts.volume` and :attr:`.NiftiOpts.volumeDim` properties.
     """
 
-    volume    = getWidgetSpecs(target, displayCtx, threedee)['volume']
-    volumeDim = getWidgetSpecs(target, displayCtx, threedee)['volumeDim']
+    volume    = getWidgetSpecs(target, displayCtx)['volume']
+    volumeDim = getWidgetSpecs(target, displayCtx)['volumeDim']
 
     volume    = props.buildGUI(parent, target, volume)
     volumeDim = props.buildGUI(parent, target, volumeDim)
@@ -1246,8 +1275,7 @@ def _VolumeOpts_OverrideDataRangeWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains widgets for enabling and adjusting
     the :attr:`.VolumeOpts.overrideDataRange`.
 
@@ -1255,8 +1283,8 @@ def _VolumeOpts_OverrideDataRangeWidget(
     """
 
     # Override data range widget
-    enable   = getWidgetSpecs(target, displayCtx, threedee)['enableOverrideDataRange']
-    ovrRange = getWidgetSpecs(target, displayCtx, threedee)['overrideDataRange']
+    enable   = getWidgetSpecs(target, displayCtx)['enableOverrideDataRange']
+    ovrRange = getWidgetSpecs(target, displayCtx)['overrideDataRange']
 
     enable   = props.buildGUI(parent, target, enable)
     ovrRange = props.buildGUI(parent, target, ovrRange)
@@ -1274,8 +1302,7 @@ def _VolumeOpts_3DClipPlanes(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Generates widget specifications for the ``VolumeOpts`` 3D settings.
     A different number of widgets are shown depending on the value of the
     :attr:`.VolumeOpts.numClipPlanes` setting.
@@ -1288,13 +1315,12 @@ def _VolumeOpts_3DClipPlanes(
     # settings section.
     #
     # TODO what is the lifespan of this listener?
-    def numClipPlanesChanged(*a):
+    def numClipPlanesChanged():
         if fwidgets.isalive(panel) and \
            fwidgets.isalive(parent):
             idle.idle(panel.updateWidgets, target, '3d')
 
-    name = '{}_{}_VolumeOpts_3DClipPlanes'.format(
-        target.name, id(panel))
+    name = f'{target.name}_{id(panel)}_VolumeOpts_3DClipPlanes'
 
     target.addListener('numClipPlanes',
                        name,
@@ -1303,12 +1329,12 @@ def _VolumeOpts_3DClipPlanes(
                        weak=False)
 
     numPlanes    = target.numClipPlanes
-    numPlaneSpec = get3DWidgetSpecs(target, displayCtx)['numClipPlanes']
-    clipMode     = get3DWidgetSpecs(target, displayCtx)['clipMode']
-    showPlanes   = get3DWidgetSpecs(target, displayCtx)['showClipPlanes']
-    position     = get3DWidgetSpecs(target, displayCtx)['clipPosition']
-    azimuth      = get3DWidgetSpecs(target, displayCtx)['clipAzimuth']
-    inclination  = get3DWidgetSpecs(target, displayCtx)['clipInclination']
+    numPlaneSpec = getWidgetSpecs(target, displayCtx)['numClipPlanes']
+    clipMode     = getWidgetSpecs(target, displayCtx)['clipMode']
+    showPlanes   = getWidgetSpecs(target, displayCtx)['showClipPlanes']
+    position     = getWidgetSpecs(target, displayCtx)['clipPosition']
+    azimuth      = getWidgetSpecs(target, displayCtx)['clipAzimuth']
+    inclination  = getWidgetSpecs(target, displayCtx)['clipInclination']
 
     specs = [numPlaneSpec, showPlanes, clipMode]
 
@@ -1338,8 +1364,7 @@ def _MeshOpts_vertexDataWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains a widget for controlling the
     :attr:`.MeshOpts.vertexData` property, and also has a button
     which opens a file dialog, allowing the user to select other
@@ -1357,7 +1382,7 @@ def _MeshOpts_vertexDataWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexData']
+    vdata = getWidgetSpecs(target, displayCtx)['vertexData']
     vdata = props.buildGUI(parent, target, vdata)
 
     sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
@@ -1371,8 +1396,7 @@ def _MeshOpts_vertexSetWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains a widget for controlling the
     :attr:`.MeshOpts.vertexSet` property, and also has a button
     which opens a file dialog, allowing the user to select other
@@ -1390,7 +1414,7 @@ def _MeshOpts_vertexSetWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    vdata = getWidgetSpecs(target, displayCtx, threedee)['vertexSet']
+    vdata = getWidgetSpecs(target, displayCtx)['vertexSet']
     vdata = props.buildGUI(parent, target, vdata)
 
     sizer.Add(vdata,      flag=wx.EXPAND, proportion=1)
@@ -1404,15 +1428,14 @@ def _MeshOpts_LutWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains the provided :attr:`.MeshOpts.lut`
     widget, and also a widget for :attr:`.MeshOpts.useLut`.
     """
 
     # enable lut widget
-    lut    = getWidgetSpecs(target, displayCtx, threedee)['lut']
-    enable = getWidgetSpecs(target, displayCtx, threedee)['useLut']
+    lut    = getWidgetSpecs(target, displayCtx)['lut']
+    enable = getWidgetSpecs(target, displayCtx)['useLut']
 
     lut    = props.buildGUI(parent, target, lut)
     enable = props.buildGUI(parent, target, enable)
@@ -1430,15 +1453,14 @@ def _TractogramOpts_zclippingWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel containing widgets for changing the
     :attr:`.TractogramOpts.xclipdir` and related properties.
     """
 
-    xclipdir  = getWidgetSpecs(target, displayCtx, threedee)['xclipdir']
-    yclipdir  = getWidgetSpecs(target, displayCtx, threedee)['yclipdir']
-    zclipdir  = getWidgetSpecs(target, displayCtx, threedee)['zclipdir']
+    xclipdir  = getWidgetSpecs(target, displayCtx)['xclipdir']
+    yclipdir  = getWidgetSpecs(target, displayCtx)['yclipdir']
+    zclipdir  = getWidgetSpecs(target, displayCtx)['zclipdir']
 
     xclipdir  = props.buildGUI(parent, target, xclipdir)
     yclipdir  = props.buildGUI(parent, target, yclipdir)
@@ -1466,8 +1488,7 @@ def _TractogramOpts_colourModeWidget(
         parent,
         panel,
         overlayList,
-        displayCtx,
-        threedee):
+        displayCtx):
     """Builds a panel which contains a widget for controlling the
     :attr:`.TractogramOpts.colourMode` property, and also has a button
     which opens a file dialog, allowing the user to load vertex data files.
@@ -1484,7 +1505,7 @@ def _TractogramOpts_colourModeWidget(
 
     sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-    cmode = getWidgetSpecs(target, displayCtx, threedee)['colourMode']
+    cmode = getWidgetSpecs(target, displayCtx)['colourMode']
     cmode = props.buildGUI(parent, target, cmode)
 
     sizer.Add(cmode,      flag=wx.EXPAND, proportion=1)

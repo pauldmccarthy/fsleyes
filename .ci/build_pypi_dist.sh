@@ -19,9 +19,9 @@ PIPARGS="--retries 10 --timeout 30"
 # dependencies, unless we're
 # on a release branch or tag
 if [[ "$CI_PROJECT_PATH" != "$UPSTREAM_PROJECT"  || "$CI_COMMIT_REF_NAME" == "main" ]]; then
-  pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
-  pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fslpy.git
-  pip install $PIPARGS git+https://git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
+  pip install $PIPARGS git+https://gitlab-ci-token:${CI_JOB_TOKEN}@git.fmrib.ox.ac.uk/fsl/fsleyes/widgets.git
+  pip install $PIPARGS git+https://gitlab-ci-token:${CI_JOB_TOKEN}@git.fmrib.ox.ac.uk/fsl/fslpy.git
+  pip install $PIPARGS git+https://gitlab-ci-token:${CI_JOB_TOKEN}@git.fmrib.ox.ac.uk/fsl/fsleyes/props.git
 fi
 
 

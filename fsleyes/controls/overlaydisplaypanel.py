@@ -22,7 +22,7 @@ import fsleyes.controls.controlpanel  as ctrlpanel
 import fsleyes.strings                as strings
 import fsleyes.tooltips               as fsltooltips
 
-from . import overlaydisplaywidgets   as odwidgets
+from . import overlaydisplaywidgets   as odw
 
 
 log = logging.getLogger(__name__)
@@ -49,12 +49,11 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
 
       - Settings which are specific to the current
         :attr:`.Display.overlayType` - these are defined in the
-        :class:`.DisplayOpts` sub-classes.
-
+        :class:`.DisplayOpts` sub-classes, and may be split across multiple
+        sections.
 
     The settings that are displayed on an ``OverlayDisplayPanel`` are
-    defined in the :attr:`_DISPLAY_PROPS` and :attr:`_DISPLAY_WIDGETS`
-    dictionaries.
+    defined in the :mod:`.overlaydisplaywidgets` module.
     """
 
 
@@ -102,7 +101,6 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
                                  self.__selectedOverlayChanged)
 
         self.__threedee       = isinstance(parent, Scene3DPanel)
-        self.__viewPanel      = canvasPanel
         self.__widgets        = None
         self.__currentOverlay = None
 
@@ -125,7 +123,6 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
 
             display.removeListener('overlayType', self.name)
 
-        self.__viewPanel      = None
         self.__widgets        = None
         self.__currentOverlay = None
 
@@ -150,48 +147,47 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
             self.Layout()
             return
 
-        if overlay is lastOverlay:
-            return
-
         self.__currentOverlay = overlay
         self.__widgets        = collections.OrderedDict()
 
         display = self.displayCtx.getDisplay(overlay)
         opts    = display.opts
 
-        if self.__threedee:
-            groups  = ['display', 'opts', '3d']
-            targets = [ display,   opts,   opts]
-            labels  = [strings.labels[self, display],
-                       strings.labels[self, opts],
-                       strings.labels[self, '3d']]
+        optgroups =  list(odw.getPropertyList(opts, self.__threedee).keys())
+        groups     = ['display'] + optgroups
+        targets    = [display] + [opts] * len(optgroups)
+        labels     = [strings.labels[self, display]] + \
+                     [strings.labels[self, opts, grp] for grp in optgroups]
 
-        else:
-            groups  = ['display', 'opts']
-            targets = [ display,   opts]
-            labels  = [strings.labels[self, display],
-                       strings.labels[self, opts]]
-
-        keepExpanded = {g : True for g in groups}
+        # Initial expanded state of each widget group
+        keepExpanded = {g : False for g in groups}
+        keepExpanded['display'] = True
+        for grp in odw.EXPANDED_GROUPS[opts]:
+            keepExpanded[grp] = True
 
         if lastOverlay is not None and lastOverlay in self.overlayList:
 
             lastDisplay = self.displayCtx.getDisplay(lastOverlay)
             lastDisplay.removeListener('overlayType', self.name)
 
+        # Preserve expanded state if changing
+        # between similar overlay types
         if lastOverlay is not None:
             for g in groups:
-                keepExpanded[g] = widgetList.IsExpanded(g)
+                if widgetList.HasGroup(g):
+                    keepExpanded[g] = widgetList.IsExpanded(g)
 
-        display.addListener('overlayType', self.name, self.__ovlTypeChanged)
+        display.addListener('overlayType',
+                            self.name,
+                            self.__selectedOverlayChanged)
 
         widgetList.Clear()
 
-        for g, l, t in zip(groups, labels, targets):
+        for grp, lbl, tgt in zip(groups, labels, targets):
 
-            widgetList.AddGroup(g, l)
-            self.__widgets[g] = self.__updateWidgets(t, g)
-            widgetList.Expand(g, keepExpanded[g])
+            widgetList.AddGroup(grp, lbl)
+            self.__widgets[grp] = self.__updateWidgets(tgt, grp)
+            widgetList.Expand(grp, keepExpanded[grp])
 
         self.setNavOrder()
         self.Layout()
@@ -203,27 +199,6 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
         allWidgets = functools.reduce(lambda a, b: a + b, allWidgets)
 
         ctrlpanel.SettingsPanel.setNavOrder(self, allWidgets)
-
-
-    def __ovlTypeChanged(self, *a):
-        """Called when the :attr:`.Display.overlayType` of the current overlay
-        changes. Refreshes the :class:`.DisplayOpts` settings which are shown,
-        as a new :class:`.DisplayOpts` instance will have been created for the
-        overlay.
-        """
-
-        opts       = self.displayCtx.getOpts(self.__currentOverlay)
-        widgetList = self.getWidgetList()
-
-        self.__widgets[opts] = self.__updateWidgets(opts, 'opts')
-
-        widgetList.RenameGroup('opts', strings.labels[self, opts])
-
-        if '3d' in self.__widgets:
-            self.__widgets['3d'] = self.__updateWidgets(opts, '3d')
-
-        self.setNavOrder()
-        self.Layout()
 
 
     def updateWidgets(self, target, groupName):
@@ -243,9 +218,9 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
                         which contains the properties that controls are to be
                         created for.
 
-        :arg groupName: Either ``'display'`` or ``'opts'``/``'3d'``,
-                        corresponding to :class:`.Display` or
-                        :class:`.DisplayOpts` properties.
+        :arg groupName: Name of the widget group to update - see the
+                        individual ``_initPropertyList`` functions in
+                        :mod:`.overlaydisplaywidgets`
 
         :returns:       A list containing all of the new widgets that
                         were created.
@@ -255,15 +230,8 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
 
         widgetList.ClearGroup(groupName)
 
-        if groupName == '3d':
-            dispProps = odwidgets.get3DPropertyList(target)
-            dispSpecs = odwidgets.get3DWidgetSpecs( target, self.displayCtx)
-        else:
-            dispProps = odwidgets.getPropertyList(target,
-                                                  self.__threedee)
-            dispSpecs = odwidgets.getWidgetSpecs( target,
-                                                  self.displayCtx,
-                                                  self.__threedee)
+        dispProps = odw.getPropertyList(target, self.__threedee)[groupName]
+        dispSpecs = odw.getWidgetSpecs( target, self.displayCtx)
 
         allLabels     = []
         allTooltips   = []
@@ -290,8 +258,7 @@ class OverlayDisplayPanel(ctrlpanel.SettingsPanel):
                     widgetList,
                     self,
                     self.overlayList,
-                    self.displayCtx,
-                    self.__threedee)
+                    self.displayCtx)
 
                 if isinstance(container, abc.Sequence):
                     specs    = container

@@ -21,7 +21,6 @@ import logging
 
 import wx
 
-import fsl.data.image                          as fslimage
 import fsleyes_widgets.utils.layout            as fsllayout
 
 import fsleyes.strings                         as strings
@@ -685,16 +684,8 @@ class OrthoPanel(canvaspanel.CanvasPanel):
         self.__radioOrientationChanged()
 
         if selOverlay is not None:
-
-            display    = self.displayCtx.getDisplay(selOverlay)
-            isImage    = isinstance(selOverlay, fslimage.Image) and \
-                             display.overlayType in ('volume',
-                                                     'mask',
-                                                     'label',
-                                                     'mip')
             isEditable = editor.isEditable(selOverlay, self.displayCtx)
         else:
-            isImage    = False
             isEditable = False
 
         # Kill edit mode if a non-
