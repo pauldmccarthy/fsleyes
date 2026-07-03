@@ -141,7 +141,7 @@ class RefImageOpts:
                 self.__defaultXformer = transformer.Transformer(
                     defaultRef, dctx)
 
-            dctx .ilisten('displaySpace', lname, self.__displaySpaceChanged)
+            dctx . listen('displaySpace', lname, self.__displaySpaceChanged)
             olist.ilisten('overlays',     lname, self.__overlayListChanged)
             self .ilisten('refImage',     lname, self.__refImageChanged)
             self .ilisten('coordSpace',   lname, self.updateBounds)
@@ -320,7 +320,8 @@ class RefImageOpts:
         if self.__defaultRef is not None:
             self.__defaultXformer = transformer.Transformer(
                 self.__defaultRef, self.displayCtx)
-            self.updateBounds()
+            if self.refImage is None:
+                self.updateBounds()
 
 
     def __overlayListChanged(self):
@@ -333,7 +334,7 @@ class RefImageOpts:
         imgVal   = self.refImage
         overlays = self.displayCtx.getOrderedOverlays()
 
-        # the overlay for this MeshOpts
+        # the overlay for this RefImageOpts
         # instance has been removed
         if self.overlay not in overlays:
             self.overlayList.removeListener('overlays', self.listenerName)
