@@ -35,10 +35,10 @@ Changed
 * FSLeyes now uses information in tractogram file headers to position them in
   the display coordinate system. This means that a reference NIfTI image no
   longer needs to be specified for tractogram files which contain the necessary
-  information in their header (:mr:`507`).
+  header information (:mr:`507`).
 * Plot views now plot data series according to the overlay order, and also
   allow the order to be changed (:mr:`507`).
-* Re-organised the widgets on the overlay display panel to ease use on smaller
+* Re-organised the overlay display panel widgets to ease use on smaller
   screens (:mr:`507`).
 
 
