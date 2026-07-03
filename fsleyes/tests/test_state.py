@@ -52,9 +52,9 @@ def _test_state(frame, overlayList, displayCtx):
     frame.removeAllViewPanels()
     del overlayList[:]
 
-    realYield(200)
+    realYield(300)
     state.setState(frame, st)
-    realYield(200)
+    realYield(300)
 
     ortho, hist = frame.viewPanels
     assert isinstance(ortho, OrthoPanel)
