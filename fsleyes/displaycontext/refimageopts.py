@@ -39,7 +39,7 @@ class RefImageOpts:
       1. Define your class to inherit from both :class:`.DisplayOpts` and
          ``RefImageOpts``::
 
-             class MyOpts(DisplayOpts, RefImageOpts):
+             class MyOpts(RefImageOpts, DisplayOpts):
                  ...
 
       2. Call the ``RefImageOpts.__init__`` method *after*

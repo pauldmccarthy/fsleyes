@@ -21,10 +21,10 @@ import fsleyes.displaycontext.vectoropts    as vectoropts
 import fsleyes.displaycontext.refimageopts  as refimgopts
 
 
-class TractogramOpts(fsldisplay.DisplayOpts,
-                     cmapopts.ColourMapOpts,
+class TractogramOpts(cmapopts.ColourMapOpts,
                      refimgopts.RefImageOpts,
-                     vectoropts.VectorOpts):
+                     vectoropts.VectorOpts,
+                     fsldisplay.DisplayOpts):
     """Display options for :class:`.Tractogram` overlays. """
 
 

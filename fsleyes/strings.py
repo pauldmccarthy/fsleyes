@@ -847,7 +847,7 @@ labels = TypeDict({
     'OverlayInfoPanel.MIFImage'                 : 'NIFTI Image (from MRtrix)',
     'OverlayInfoPanel.MIFImage.headerInfo'      : 'MRtrix header fields',
 
-    'OverlayInfoPanel.Tractogram'                : 'Trqctogram',
+    'OverlayInfoPanel.Tractogram'                : 'Tractogram',
     'OverlayInfoPanel.Tractogram.dataSource'     : 'Data source',
     'OverlayInfoPanel.Tractogram.numStreamlines' : 'Total number of streamlines',
     'OverlayInfoPanel.Tractogram.numVertices'    : 'Total number of vertices',
