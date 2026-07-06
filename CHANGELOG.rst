@@ -11,6 +11,19 @@ This document contains the ``fsleyes`` release history in reverse
 chronological order.
 
 
+
+1.20.1 (Tuesday 7th July 2026)
+------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed an issue with incorrect anatomical labels being displayed for
+  tractograms (:mr:`508`).
+
+
 1.20.0 (Friday 3rd July 2026)
 -----------------------------
 
