@@ -593,17 +593,18 @@ class SampleLinePanel(ctrlpanel.ControlPanel):
 
         overlay = self.displayCtx.getSelectedOverlay()
         opts    = self.displayCtx.getOpts(overlay)
-        image   = opts.referenceImage
+        xfm     = opts.transformer
 
         # display world and voxel coordinates
-        if image is not None:
-            opts   = self.displayCtx.getOpts(image)
-            units  = image.xyzUnits
-            units  = strings.nifti.get(('xyz_unit', units), '(unknown units)')
-            ws     = opts.transformCoords(start, 'display', 'world')
-            we     = opts.transformCoords(end,   'display', 'world')
-            vs     = opts.transformCoords(start, 'display', 'voxel')
-            ve     = opts.transformCoords(end,   'display', 'voxel')
+        if xfm is not None:
+
+            units = xfm.overlay.xyzUnits
+            units = strings.nifti.get(('xyz_unit', units), '(unknown units)')
+
+            ws     = xfm.transformCoords(start, 'display', 'world')
+            we     = xfm.transformCoords(end,   'display', 'world')
+            vs     = xfm.transformCoords(start, 'display', 'voxel')
+            ve     = xfm.transformCoords(end,   'display', 'voxel')
             length = affine.veclength(ws - we)[0]
 
             vs     = '[{:.2f}, {:.2f}, {:.2f}]'.format(*vs)
