@@ -192,25 +192,6 @@ class Tractogram:
 
 
     @property
-    def orientation(self):
-        """Returns codes indicating the orientation of the coordinate
-        system in which the streamline vertices are defined.
-        """
-        # Currently always RAS - TRX/mrtrix coordinates are always RAS,
-        # and trackvis files contain a coordinate-to-RAS affine (which
-        # is further adjusted by nibabel to encode a half-voxel shift):
-        #
-        #   - https://mrtrix.readthedocs.io/en/latest/getting_started/\
-        #       image_data.html?highlight=format#coordinate-system
-        #   - http://trackvis.org/docs/?subsect=fileformat
-        #   - https://nipy.org/nibabel/reference/\
-        #       nibabel.streamlines.html#trkfile
-        return [constants.ORIENT_L2R,
-                constants.ORIENT_P2A,
-                constants.ORIENT_I2S]
-
-
-    @property
     @ft.lru_cache()
     def vertexOrientations(self):
         """Calculates and returns an orientation vector for every vertex of

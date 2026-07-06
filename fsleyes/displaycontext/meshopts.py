@@ -14,9 +14,7 @@ import              logging
 
 import numpy as np
 
-import fsl.data.mghimage    as fslmgh
 import fsl.data.utils       as dutils
-import fsl.transform.affine as affine
 import fsleyes_props        as props
 
 import fsleyes.overlay      as fsloverlay
