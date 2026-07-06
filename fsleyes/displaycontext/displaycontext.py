@@ -58,7 +58,7 @@ class DisplayContext(props.SyncableHasProperties):
 
         getDisplay
         getOpts
-        getReferenceImage
+        getTransformer
         displaySpaceIsRadiological
         selectOverlay
         getSelectedOverlay
@@ -574,16 +574,19 @@ class DisplayContext(props.SyncableHasProperties):
         return self.getDisplay(overlay).opts
 
 
-    def getReferenceImage(self, overlay):
-        """Convenience method which returns the reference image associated
-        with the given overlay, or ``None`` if there is no reference image.
+    def getTransformer(self, overlay):
+        """Convenience method which returns the :class:`.Transformer`
+        associated with the given overlay, or ``None`` if the overlay has no
+        reference image or transformer.
 
-        See the :class:`.DisplayOpts.referenceImage` method.
+        See the :class:`.DisplayOpts.transformer` method.
         """
         if overlay is None:
             return None
+        if overlay not in self.overlayList:
+             None
 
-        return self.getOpts(overlay).referenceImage
+        return self.getOpts(overlay).transformer
 
 
     def displaySpaceIsRadiological(self):
@@ -599,7 +602,6 @@ class DisplayContext(props.SyncableHasProperties):
         if len(self.__overlayList) == 0:
             return True
 
-        opts  = None
         space = self.displaySpace
 
         # Display space is one of 'world', 'scaledVoxel',
@@ -627,12 +629,10 @@ class DisplayContext(props.SyncableHasProperties):
         # Use the FSL / FLIRT convention - if the affine
         # determinant is negative, assume neurological
         # storage order.
-        if space is not None:
-            ref = self.getOpts(space).referenceImage
-            if ref is not None:
-                opts  = self.getOpts(space)
-                xform = opts.getTransform(srcSpace, 'display')
-                return np.linalg.det(xform) > 0
+        xformer = self.getTransformer(space)
+        if xformer is not None:
+            xform = xformer.getTransform(srcSpace, 'display')
+            return np.linalg.det(xform) > 0
 
         # no nifti overlays loaded
         return False
