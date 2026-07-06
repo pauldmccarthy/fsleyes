@@ -487,6 +487,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         if xfm is None:
             return 0.02
 
+        overlay = xfm.overlay
+
         # Otherwise return a spacing
         # appropriate for the current
         # display space
@@ -502,8 +504,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             # Get the voxel z axis that corresponds
             # to the display z axis
-            axmap = xfm.overlay.axisMapping(xfm.getTransform('display',
-                                                             'voxel'))
+
+            axmap = overlay.axisMapping(xfm.getTransform('display', 'voxel'))
             zax   = abs(axmap[copts.zax]) - 1
             return 1 / overlay.shape[zax]
 
