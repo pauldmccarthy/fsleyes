@@ -477,25 +477,20 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
         for the given overlay. The returned value is a proportion between 0 and
         1.
         """
-        copts      = self.opts
-        displayCtx = self.displayCtx
-        dopts      = displayCtx.getOpts(overlay)
-        overlay    = displayCtx.getReferenceImage(overlay)
+        copts   = self.opts
+        dctx    = self.displayCtx
+        xfm     = dctx.getTransformer(overlay)
 
         # If the overlay does not have a
         # reference NIFTI image, choose
         # an arbitrary slice spacing.
-        if overlay is None:
+        if xfm is None:
             return 0.02
-
-        # Get the DisplayOpts instance
-        # for the reference image
-        dopts = displayCtx.getOpts(overlay)
 
         # Otherwise return a spacing
         # appropriate for the current
         # display space
-        rots = affine.decompose(dopts.getTransform('voxel', 'display'))[2]
+        rots = affine.decompose(xfm.getTransform('voxel', 'display'))[2]
         rots = np.array(rots)
 
         # image to display transform comprises
@@ -507,7 +502,8 @@ class LightBoxCanvas(slicecanvas.SliceCanvas):
 
             # Get the voxel z axis that corresponds
             # to the display z axis
-            axmap = overlay.axisMapping(dopts.getTransform('display', 'voxel'))
+            axmap = xfm.overlay.axisMapping(xfm.getTransform('display',
+                                                             'voxel'))
             zax   = abs(axmap[copts.zax]) - 1
             return 1 / overlay.shape[zax]
 

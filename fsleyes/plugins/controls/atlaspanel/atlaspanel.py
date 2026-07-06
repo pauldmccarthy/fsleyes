@@ -537,15 +537,16 @@ class AtlasPanel(ctrlpanel.ControlPanel):
 
         atlasDesc = atlases.getAtlasDescription(atlasID)
         label     = atlasDesc.labels[labelIdx]
-        overlay   = self.displayCtx.getReferenceImage(
-            self.displayCtx.getSelectedOverlay())
+        dctx      = self.displayCtx
+        overlay   = dctx.getSelectedOverlay()
+        xfm       = dctx.getTransformer(overlay)
 
-        if overlay is None:
+        if xfm is None:
             log.warn('No reference image available - cannot locate region')
+            return
 
-        opts     = self.displayCtx.getOpts(overlay)
         worldLoc = (label.x, label.y, label.z)
-        dispLoc  = opts.transformCoords([worldLoc], 'world', 'display')[0]
+        dispLoc  = xfm.transformCoords([worldLoc], 'world', 'display')[0]
 
         self.displayCtx.location.xyz = dispLoc
 
