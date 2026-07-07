@@ -39,7 +39,7 @@ class RefImageOpts:
       1. Define your class to inherit from both :class:`.DisplayOpts` and
          ``RefImageOpts``::
 
-             class MyOpts(DisplayOpts, RefImageOpts):
+             class MyOpts(RefImageOpts, DisplayOpts):
                  ...
 
       2. Call the ``RefImageOpts.__init__`` method *after*
@@ -151,13 +151,16 @@ class RefImageOpts:
 
 
     @property
-    def referenceImage(self):
-        """Overrides :meth:`.DisplayOpts.referenceImage`.
-
-        If a :attr:`refImage` is selected, it is returned. Otherwise,``None``
-        is returned.
+    def transformer(self):
+        """Overrides :meth:`.DisplayOpts.transformer`. If :attr:`refImage`
+        is set, returns the :class:`.Transformer` associated with it. Otherwise
+        returns the ``Transformer`` for the default reference, or ``None``.
         """
-        return self.refImage
+
+        if self.refImage is not None:
+            return self.displayCtx.getTransformer(self.refImage)
+        else:
+            return self.__defaultXformer
 
 
     @property

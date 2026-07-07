@@ -61,11 +61,10 @@ class LightBoxLabels:
         in the label space coordinate system, with respect to the given
         overlay.
         """
-        canvas = self.__canvas
-        dctx   = canvas.displayCtx
-        ref    = dctx.getReferenceImage(overlay)
 
-        if ref is None:
+        xfm = self.__canvas.displayCtx.getTransformer(overlay)
+
+        if xfm is None:
             space = 'world'
 
         if space == 'voxel': fmt = '{} = {:.0f}'
@@ -82,19 +81,17 @@ class LightBoxLabels:
 
         canvas = self.__canvas
         zax    = canvas.opts.zax
-        dctx   = canvas.displayCtx
-        ref    = dctx.getReferenceImage(overlay)
+        xfm    = canvas.displayCtx.getTransformer(overlay)
 
         # non-NIFTI overlay, e.g. mesh, tractogram.
         # The display coordinate system is aligned
         # with the overlay world coordinate system.
-        if ref is None:
+        if xfm is None:
             return zax, 'XYZ'[zax]
 
         # Find the axis in the destination coordinate system
         # which most closely matches the canvas depth axis.
-        opts  = dctx.getOpts(ref)
-        axmap = ref.axisMapping(opts.getTransform('display', space))
+        axmap = xfm.overlay.axisMapping(xfm.getTransform('display', space))
         zax   = abs(axmap[zax]) - 1
         axlbl = 'XYZ'[zax]
 
@@ -107,11 +104,11 @@ class LightBoxLabels:
         :class:`.LightBoxCanvas` slice.
         """
 
-        canvas = self.__canvas
-        copts  = canvas.opts
-        dctx   = canvas.displayCtx
-        bounds = dctx.bounds
-        ref    = dctx.getReferenceImage(overlay)
+        canvas  = self.__canvas
+        copts   = canvas.opts
+        dctx    = canvas.displayCtx
+        xfm     = dctx.getTransformer(overlay)
+        bounds  = dctx.bounds
 
         # Get the display coord sys (d) location
         # for the centre of this slice. If None,
@@ -126,9 +123,8 @@ class LightBoxLabels:
         # We can only transform into the destination
         # coordinate system for NIFTI overlays, or
         # overlays with a NIFTI reference.
-        if ref is not None:
-            opts = dctx.getOpts(ref)
-            wpos = opts.transformCoords(dpos, 'display', space)
+        if xfm is not None:
+            wpos = xfm.transformCoords(dpos, 'display', space)
         else:
             wpos = dpos
 

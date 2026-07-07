@@ -454,6 +454,15 @@ class NiftiOpts(fsldisplay.DisplayOpts):
         return ['volume', 'volumeDim']
 
 
+    @property
+    def transformer(self):
+        """Overrides :meth:`.DisplayOpts.transformer`. Returns the
+        :class:`.Transformer` instance  used by this :class:`.NiftiOpts`
+        instance to transform coordinates.
+        """
+        return self.__xforms
+
+
     def getTransform(self, from_, to):
         """Return a matrix which may be used to transform coordinates
         from ``from_`` to ``to``.
