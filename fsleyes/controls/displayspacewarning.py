@@ -16,6 +16,7 @@ import           wx
 import wx.aui as aui
 
 import fsl.utils.idle  as idle
+import fsl.data.image  as fslimage
 import fsleyes.panel   as fslpanel
 import fsleyes.strings as strings
 
@@ -127,9 +128,10 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         displayCtx   = self.displayCtx
         displaySpace = displayCtx.displaySpace
         overlay      = displayCtx.getSelectedOverlay()
+        xfm          = displayCtx.getTransformer(overlay)
 
-        if overlay is not None:
-            overlay = displayCtx.getOpts(overlay).referenceImage
+        if xfm is not None:
+            overlay = xfm.overlay
 
         if   condition == 'overlay':     show = displaySpace is overlay
         elif condition == 'not overlay': show = displaySpace is not overlay
@@ -182,14 +184,24 @@ class DisplaySpaceWarning(fslpanel.FSLeyesPanel):
         specified by the ``changeTo`` argument passed to :meth:`__init__`.
         """
 
-        changeTo   = self.__changeTo
-        displayCtx = self.displayCtx
+        changeTo = self.__changeTo
+        dctx     = self.displayCtx
+        olist    = self.overlayList
 
         if changeTo == 'world':
             newSpace = 'world'
-        elif changeTo == 'overlay' and len(self.overlayList) > 0:
-            newSpace = displayCtx.getSelectedOverlay()
-            newSpace = displayCtx.getReferenceImage(newSpace)
 
-        log.debug('Changing displaySpace to %s', newSpace)
-        displayCtx.displaySpace = newSpace
+        elif changeTo == 'overlay' and len(olist) > 0:
+            newSpace = dctx.getSelectedOverlay()
+            xfm      = dctx.getTransformer(newSpace)
+
+            if not isinstance(newSpace, fslimage.Nifti):
+                if xfm is None or xfm.overlay not in olist:
+                    log.warning('Cannot change displaySpace for %s', newSpace)
+                    newSpace = None
+                else:
+                    newSpace = xfm.overlay
+
+        if newSpace is not None:
+            log.debug('Changing displaySpace to %s', newSpace)
+            dctx.displaySpace = newSpace

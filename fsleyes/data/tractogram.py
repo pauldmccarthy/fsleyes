@@ -71,7 +71,7 @@ class Tractogram:
 
         # tck files contain no information about
         # the reference image from which the
-        # tractkgram was derived.
+        # tractogram was derived.
         else:
             tractFile = nibstrm.load(fname)
             shape     = None
@@ -189,26 +189,6 @@ class Tractogram:
     def nvertices(self):
         """Returns the total number of vertices across all streamlines. """
         return len(self.vertices)
-
-
-    @property
-    def orientation(self):
-        """Returns codes indicating the orientation of the coordinate
-        system in which the streamline vertices are defined.
-        """
-        # Currently always RAS - TRX/mrtrix coordinates are always RAS
-        # (and the affine is typically an identity transform), and
-        # trackvis files contain a coordinate-to-RAS affine (which
-        # is further adjusted by nibabel to encode a half-voxel shift):
-        #
-        #   - https://mrtrix.readthedocs.io/en/latest/getting_started/\
-        #       image_data.html?highlight=format#coordinate-system
-        #   - http://trackvis.org/docs/?subsect=fileformat
-        #   - https://nipy.org/nibabel/reference/\
-        #       nibabel.streamlines.html#trkfile
-        return [constants.ORIENT_L2R,
-                constants.ORIENT_P2A,
-                constants.ORIENT_I2S]
 
 
     @property

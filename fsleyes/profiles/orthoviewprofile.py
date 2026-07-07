@@ -295,15 +295,14 @@ class OrthoViewProfile(profiles.Profile):
     def centreCursorWorld(self):
         """Sets the :attr:`.DisplayContext.location` to world location
         (0, 0, 0), where the 'world' is in terms of the currently selected
-        ovelray.
+        overlay.
         """
 
-        ovl    = self.displayCtx.getSelectedOverlay()
-        refOvl = self.displayCtx.getReferenceImage(ovl)
+        ovl = self.displayCtx.getSelectedOverlay()
+        xfm = self.displayCtx.getTransformer(ovl)
 
-        if refOvl is not None:
-            opts   = self.displayCtx.getOpts(refOvl)
-            origin = opts.transformCoords([0, 0, 0], 'world', 'display')
+        if xfm is not None:
+            origin = xfm.transformCoords([0, 0, 0], 'world', 'display')
         else:
             origin = [0, 0, 0]
 
@@ -337,8 +336,8 @@ class OrthoViewProfile(profiles.Profile):
         the same along an axis.
         """
 
-        overlay = self.displayCtx.getReferenceImage(
-            self.displayCtx.getSelectedOverlay())
+        overlay = self.displayCtx.getSelectedOverlay()
+        xfm     = self.displayCtx.getTransformer(overlay)
 
         # If non-zero, round to -1 or +1
         x = np.sign(x) * np.ceil(np.abs(np.clip(x, -1, 1)))
@@ -350,7 +349,7 @@ class OrthoViewProfile(profiles.Profile):
         # have a reference image, we'll just
         # move by +/-1 along each axis (as
         # specified by the x/y/z parameters).
-        if overlay is None:
+        if xfm is None:
             dloc     = self.displayCtx.location.xyz
             dloc[0] += x
             dloc[1] += y
@@ -387,20 +386,17 @@ class OrthoViewProfile(profiles.Profile):
             #
             #   3. Transform the voxel coordinates back
             #      into the display coordinate system.
-
-            offsets  = [x, y, z]
-            opts     = self.displayCtx.getOpts(overlay)
-            vround   = opts.transform in ('id', 'pixdim', 'pixdim-flip')
-            vloc     = opts.getVoxel(clip=False, vround=vround)
-            voxAxes  = overlay.axisMapping(opts.getTransform('voxel',
-                                                             'display'))
+            offsets = [x, y, z]
+            vround  = xfm.displaySpace in ('id', 'pixdim', 'pixdim-flip')
+            vloc    = xfm.getVoxel(clip=False, vround=vround)
+            voxAxes = xfm.overlay.axisMapping(xfm.getTransform('voxel', 'display'))
 
             for i in range(3):
                 vdir       = np.sign(voxAxes[i])
                 vax        = np.abs(voxAxes[i]) - 1
                 vloc[vax] += vdir * offsets[i]
 
-            dloc = opts.transformCoords([vloc], 'voxel', 'display')[0]
+            dloc = xfm.transformCoords([vloc], 'voxel', 'display')[0]
 
         return dloc
 
@@ -851,8 +847,8 @@ class OrthoViewProfile(profiles.Profile):
         overlay = self.displayCtx.getSelectedOverlay()
         if overlay is None:
             return
+
         display = self.displayCtx.getDisplay(overlay)
-        opts    = self.displayCtx.getOpts(   overlay)
         if display.overlayType != 'volume':
             return
 

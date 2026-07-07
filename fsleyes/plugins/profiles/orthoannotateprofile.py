@@ -183,12 +183,11 @@ class OrthoAnnotateProfile(orthoviewprofile.OrthoViewProfile):
                       the size is an area).
         """
         displayCtx = self.displayCtx
-        opts       = displayCtx.getOpts(displayCtx.getSelectedOverlay())
-        refimage   = opts.referenceImage
+        xfm        = displayCtx.getTransformer(displayCtx.getSelectedOverlay())
 
-        if refimage is not None:
-            units  = refimage.xyzUnits
-            units  = strings.nifti.get(('xyz_unit', units), '(unknown units)')
+        if xfm is not None:
+            units = xfm.overlay.xyzUnits
+            units = strings.nifti.get(('xyz_unit', units), '(unknown units)')
 
             if squared:
                 units = f'{units}\u00B2'

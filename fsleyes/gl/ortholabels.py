@@ -35,9 +35,9 @@ class OrthoLabels:
 
     Anatomical labels are only shown if the currently selected overlay (as
     dictated by the :attr:`.DisplayContext.selectedOverlay` property) is a
-    :class:`.Image` instance, **or** the :meth:`.DisplayOpts.referenceImage`
-    property for the currently selected overlay returns an :class:`.Image`
-    instance.
+    :class:`.Image` instance, **or** the :meth:`.DisplayOpts.transformer`
+    property for the currently selected overlay returns a
+    :class:`.Transformer` instance.
 
     If the currently selected overlay is an :class:`.Image`, both voxel and
     world coordinates are shown. Otherwise only world coordinates are shown.
@@ -233,8 +233,7 @@ class OrthoLabels:
         sopts      = self.__orthoOpts
         annots     = self.__annots
         overlay    = displayCtx.getSelectedOverlay()
-        ref        = displayCtx.getReferenceImage(overlay)
-        opts       = None
+        xfm        = displayCtx.getTransformer(overlay)
         wx, wy, wz = displayCtx.worldLocation
 
         if overlay is None:
@@ -251,12 +250,10 @@ class OrthoLabels:
         elif sopts.showLocation == 'Y': locLbl = annots[1]['location']
         elif sopts.showLocation == 'Z': locLbl = annots[2]['location']
 
-
-        if ref is None:
+        if xfm is None:
             locstr     = f'{wx:0.2f} {wy:0.2f} {wz:0.2f}'
         else:
-            opts       = displayCtx.getOpts(ref)
-            vx, vy, vz = opts.getVoxel()
+            vx, vy, vz = xfm.getVoxel()
             locstr     = f'{wx:0.2f} {wy:0.2f} {wz:0.2f}' + \
                          f'\n[voxel {vx} {vy} {vz}]'
 

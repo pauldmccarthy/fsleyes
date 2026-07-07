@@ -191,9 +191,9 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
     The ``LocationInfoPanel`` is primarily designed to work with
     :class:`.Image` overlays. If the :attr:`.DisplayContext.selectedOverlay`
     is an :class:`.Image`, or has an associated reference image (see
-    :meth:`.DisplayOpts.referenceImage`), the ``LocationInfoPanel`` will
-    display the current :class:`.DisplayContext.location` in both the the
-    voxel coordinates and world coordinates of the ``Image`` instance.
+    :attr:`.DisplayOpts.transformer`), the ``LocationInfoPanel`` will display
+    the current :class:`.DisplayContext.location` in both the the voxel
+    coordinates and world coordinates of the ``Image`` instance.
 
 
     **Other overlays**
@@ -690,13 +690,12 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         selected overlay (or reference image).
         """
 
-        overlay = self.__registeredOverlay
-        opts    = self.__registeredOpts
+        opts = self.__registeredOpts
 
-        if overlay is not None: refImage = opts.referenceImage
-        else:                   refImage = None
+        if opts is not None: xfm = opts.transformer
+        else:                xfm = None
 
-        haveRef = refImage is not None
+        haveRef = xfm is not None
 
         self.__voxelX     .Enable(haveRef)
         self.__voxelY     .Enable(haveRef)
@@ -709,9 +708,9 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
 
         label = strings.labels[self, 'worldLocation']
 
-        if haveRef: label += strings.anatomy[refImage,
+        if haveRef: label += strings.anatomy[xfm.overlay,
                                              'space',
-                                             refImage.getXFormCode()]
+                                             xfm.overlay.getXFormCode()]
         else:       label += strings.labels[ self,
                                              'worldLocation',
                                              'unknown']
@@ -725,13 +724,12 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         # Figure out the limits for the
         # voxel/world location widgets
         if haveRef:
-            opts     = self.displayCtx.getOpts(refImage)
-            v2w      = opts.getTransform('voxel', 'world')
-            shape    = refImage.shape[:3]
+            v2w      = xfm.getTransform('voxel', 'world')
+            shape    = xfm.overlay.shape[:3]
             vlo      = [0, 0, 0]
             vhi      = np.array(shape) - 1
             wlo, whi = affine.axisBounds(shape, v2w)
-            wstep    = refImage.pixdim[:3]
+            wstep    = xfm.overlay.pixdim[:3]
         else:
             vlo     = [0, 0, 0]
             vhi     = [0, 0, 0]
@@ -740,8 +738,8 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
             whi     = wbounds[1::2]
             wstep   = [1, 1, 1]
 
-        log.debug('Setting voxelLocation limits: {} - {}'.format(vlo, vhi))
-        log.debug('Setting worldLocation limits: {} - {}'.format(wlo, whi))
+        log.debug('Setting voxelLocation limits: %s - %s', vlo, vhi)
+        log.debug('Setting worldLocation limits: %s - %s', wlo, whi)
 
         # Update the voxel and world location limits,
         # but don't trigger a listener callback, as
@@ -853,19 +851,18 @@ class LocationInfoPanel(fslpanel.FSLeyesPanel):
         elif source == 'voxel':   coords = self.voxelLocation.xyz
         elif source == 'world':   coords = self.worldLocation.xyz
 
-        refImage = self.__registeredOpts.referenceImage
+        xfm = self.__registeredOpts.transformer
 
-        if refImage is not None:
-            opts    = self.displayCtx.getOpts(refImage)
-            xformed = opts.transformCoords([coords],
-                                           source,
-                                           target,
-                                           vround=target == 'voxel')[0]
+        if xfm is not None:
+            xformed = xfm.transformCoords([coords],
+                                          source,
+                                          target,
+                                          vround=target == 'voxel')[0]
         else:
             xformed = coords
 
-        log.debug('Updating location ({} {} -> {} {})'.format(
-            source, coords, target, xformed))
+        log.debug('Updating location (%s %s -> %s %s)',
+                  source, coords, target, xformed)
 
         if   target == 'display': self.displayCtx.location.xyz = xformed
         elif target == 'voxel':   self.voxelLocation      .xyz = xformed
@@ -1233,12 +1230,11 @@ class LocationHistoryPanel(fslpanel.FSLeyesPanel):
         if overlay is None:
             return
 
-        opts    = self.displayCtx.getOpts(overlay)
-        overlay = opts.referenceImage
+        opts = self.displayCtx.getOpts(overlay)
+        xfm  = opts.transformer
 
-        if overlay is not None:
-            opts     = self.displayCtx.getOpts(overlay)
-            worldLoc = opts.transformCoords(canvasLoc, 'display', 'world')
+        if xfm is not None:
+            worldLoc = xfm.transformCoords(canvasLoc, 'display', 'world')
         else:
             worldLoc = canvasLoc
 

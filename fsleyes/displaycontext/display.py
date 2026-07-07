@@ -513,31 +513,23 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
 
 
     @property
-    def referenceImage(self):
-        """Return the reference image associated with this ``DisplayOpts``
-        instance.
+    def transformer(self):
+        """Returns a :class:`.Transformer` instance associated with this
+        overlay, which can be used to transform between different coordinate
+        systems. This implementation returns ``None``, but it is intended to
+        be overridden by sub-classes.
 
-        Some non-volumetric overlay types (e.g. the :class:`.Mesh` -
-        see :class:`.MeshOpts`) may have a *reference* :class:`.Nifti` instance
+        Some non-volumetric overlay types (e.g. the :class:`.Mesh` - see
+        :class:`.MeshOpts`) may have a *reference* :class:`.Nifti` instance
         associated with them, allowing the overlay to be localised in the
         coordinate space defined by the :class:`.Nifti`. The
-        :class:`.DisplayOpts` sub-class which corresponds to
-        such non-volumetric overlays should override this method to return
-        that reference image.
+        :class:`.DisplayOpts` sub-class which corresponds to such
+        non-volumetric overlays should override this method to return
+        a ``Transformer`` for that reference image.
 
-        :class:`.DisplayOpts` sub-classes which are associated with volumetric
-        overlays (i.e. :class:`.Nifti` instances) do not need to override
-        this method - in this case, the overlay itself is considered to be
-        its own reference image, and is returned by the base-class
-        implementation of this method.
-
-        .. note:: The reference :class:`.Nifti` instance returned by
-                  sub-class implementations of this method must be in
-                  the :class:`.OverlayList`.
+        The :class:`.NiftiOpts` class creates and uses a ``Transformer``
+        to manage its :class:`.Nifti` overlay.
         """
-
-        if isinstance(self.overlay, fslimage.Nifti):
-            return self.overlay
         return None
 
 
@@ -555,14 +547,13 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
             :meth:`.Image.getOrientation`)
         """
 
-        refImage = self.referenceImage
+        xfm = self.transformer
 
         # No reference image (e.g. an unassociated mesh)
-        if refImage is None:
+        if xfm is None:
             return ('??????', [constants.ORIENT_UNKNOWN] * 3)
 
         dctx    = self.displayCtx
-        opts    = dctx.getOpts(refImage)
         xorient = None
         yorient = None
         zorient = None
@@ -583,17 +574,18 @@ class DisplayOpts(props.SyncableHasProperties, actions.ActionProvider):
         else:
             # Estimate a mapping between each axis of
             # the display and world coordinate systems
-            xform   = opts.getTransform('display', 'world')
-            xorient = refImage.getOrientation(0, xform)
-            yorient = refImage.getOrientation(1, xform)
-            zorient = refImage.getOrientation(2, xform)
+            refImage = xfm.overlay
+            xform    = xfm.getTransform('display', 'world')
+            xorient  = refImage.getOrientation(0, xform)
+            yorient  = refImage.getOrientation(1, xform)
+            zorient  = refImage.getOrientation(2, xform)
 
-            xlo     = strings.anatomy['Nifti', 'lowshort',  xorient]
-            ylo     = strings.anatomy['Nifti', 'lowshort',  yorient]
-            zlo     = strings.anatomy['Nifti', 'lowshort',  zorient]
-            xhi     = strings.anatomy['Nifti', 'highshort', xorient]
-            yhi     = strings.anatomy['Nifti', 'highshort', yorient]
-            zhi     = strings.anatomy['Nifti', 'highshort', zorient]
+            xlo = strings.anatomy['Nifti', 'lowshort',  xorient]
+            ylo = strings.anatomy['Nifti', 'lowshort',  yorient]
+            zlo = strings.anatomy['Nifti', 'lowshort',  zorient]
+            xhi = strings.anatomy['Nifti', 'highshort', xorient]
+            yhi = strings.anatomy['Nifti', 'highshort', yorient]
+            zhi = strings.anatomy['Nifti', 'highshort', zorient]
 
         return ((xlo, ylo, zlo, xhi, yhi, zhi),
                 (xorient, yorient, zorient))
