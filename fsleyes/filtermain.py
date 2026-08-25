@@ -107,8 +107,8 @@ def filter_stream(stream, die, filters=None):
     os.dup2(pipew, fd)
     os.close(pipew)
 
-    fin  = os.fdopen(piper,  'r')
-    fout = os.fdopen(origfd, 'w')
+    fin  = os.fdopen(piper,  'r', closefd=False)
+    fout = os.fdopen(origfd, 'w', closefd=False)
 
     # Use a queue to pass lines from
     # the input stream to the output
@@ -123,12 +123,15 @@ def filter_stream(stream, die, filters=None):
     # just putting lines in the queue.
     def read_loop():
         alive.wait()
-        while True:
-            line = fin.readline()
-            if line != '':
-                q.put(line)
-            if fin.closed or die.is_set():
-                break
+        try:
+            while True:
+                line = fin.readline()
+                if line != '':
+                    q.put(line)
+                if fin.closed or die.is_set():
+                    break
+        finally:
+            os.close(piper)
 
     def testline(line):
         for pat in filters:
@@ -167,8 +170,7 @@ def filter_stream(stream, die, filters=None):
         # Restore the original stream
         try:
             os.dup2(origfd, fd)
-            os.close(pipew)
-            os.close(piper)
+            os.close(origfd)
         except Exception:
             pass
 
