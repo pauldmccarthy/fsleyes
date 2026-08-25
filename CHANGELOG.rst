@@ -12,6 +12,18 @@ chronological order.
 
 
 
+1.20.2 (Wednesday 26th August 2026)
+-----------------------------------
+
+
+Fixed
+^^^^^
+
+
+* Fixed some error messages being emitted when FSLeyes is closed, on Python
+3.14 (:mr:`510`).
+
+
 1.20.1 (Tuesday 7th July 2026)
 ------------------------------
 
