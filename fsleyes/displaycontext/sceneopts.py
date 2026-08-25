@@ -130,8 +130,10 @@ class SceneOpts(props.HasProperties):
         These heuristics are not perfect - the movieSyncRefresh property can
         therefore be overridden by the user.
         """
+        unsyncRenderers = ['gallium',
+                           'mesa dri intel(r)',
+                           'mesa intel(r)']
         renderer        = fslgl.GL_RENDERER.lower()
-        unsyncRenderers = ['gallium', 'mesa dri intel(r)']
         unsync          = any(r in renderer for r in unsyncRenderers)
 
         return not unsync
