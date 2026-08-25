@@ -102,13 +102,13 @@ def filter_stream(stream, die, filters=None):
     # Redirect the stream into a pipe,
     # and filter the pipe output
     fd           = stream.fileno()
-    oldfd        = os.dup(fd)
+    origfd       = os.dup(fd)
     piper, pipew = os.pipe()
     os.dup2(pipew, fd)
     os.close(pipew)
 
-    fin  = os.fdopen(piper, 'r')
-    fout = os.fdopen(oldfd, 'w')
+    fin  = os.fdopen(piper,  'r')
+    fout = os.fdopen(origfd, 'w')
 
     # Use a queue to pass lines from
     # the input stream to the output
@@ -125,10 +125,10 @@ def filter_stream(stream, die, filters=None):
         alive.wait()
         while True:
             line = fin.readline()
-            if line == '':
+            if line != '':
+                q.put(line)
+            if fin.closed or die.is_set():
                 break
-            q.put(line)
-
 
     def testline(line):
         for pat in filters:
@@ -162,15 +162,13 @@ def filter_stream(stream, die, filters=None):
             skip = testline(line) - 1
 
             if skip < 0:
-                fout.write(line)
-                fout.flush()
+                print(line, file=fout)
 
         # Restore the original stream
         try:
-            os.close(fd)
+            os.dup2(origfd, fd)
+            os.close(pipew)
             os.close(piper)
-            os.dup2(oldfd, fd)
-            os.close(oldfd)
         except Exception:
             pass
 
@@ -232,9 +230,10 @@ def main(args=None):
         result = e.code
     finally:
         die.set()
-        wtstderr.join()
+
         wtstdout.join()
         rtstdout.join()
+        wtstderr.join()
         rtstderr.join()
 
     sys.exit(result)
